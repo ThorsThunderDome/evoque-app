@@ -57,25 +57,21 @@
     
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        console.log("Dashboard page loaded. Checking for user data in sessionStorage...");
         // --- 1. CHECK USER AUTHENTICATION ---
         const userDisplay = document.getElementById('username-display');
         const piUserString = sessionStorage.getItem('piUser');
         
-        console.log("Data found in sessionStorage:", piUserString);
-
         if (!piUserString) {
-            // If no user data is found, they are not logged in. Redirect to login page.
-            console.log("No user data found. Redirecting back to index.html.");
-            window.location.href = 'index.html';
-            return; // Stop executing the rest of the script
+            // *** THIS IS THE MODIFIED PART ***
+            // If no user data is found, redirect back and show the data in the URL.
+            window.location.href = 'index.html?error=session_data_missing&data=' + piUserString;
+            return; 
         }
 
-        console.log("User data found. Welcome!");
         const piUser = JSON.parse(piUserString);
         userDisplay.textContent = piUser.username;
 
-        // --- 2. MOCK DATA (for now, we will replace this with Firebase calls) ---
+        // --- 2. MOCK DATA ---
         const mockUserData = {
             memberships: [
                 { creatorName: 'Aria Synth', tier: 'Gold Tier', tierIcon: '🏆' },
@@ -97,11 +93,7 @@
         const royaltiesList = document.getElementById('royalties-list');
 
         function renderMemberships() {
-            membershipsGrid.innerHTML = ''; // Clear existing content
-            if(mockUserData.memberships.length === 0) {
-                membershipsGrid.innerHTML = '<p>You have no active memberships.</p>';
-                return;
-            }
+            membershipsGrid.innerHTML = '';
             mockUserData.memberships.forEach(m => {
                 const card = document.createElement('div');
                 card.className = 'membership-card';
@@ -116,10 +108,6 @@
         
         function renderCollection() {
             collectionGrid.innerHTML = '';
-            if(mockUserData.collection.length === 0) {
-                collectionGrid.innerHTML = '<p>Your collection is empty.</p>';
-                return;
-            }
             mockUserData.collection.forEach(nft => {
                  const card = document.createElement('div');
                 card.className = 'nft-card';
@@ -135,10 +123,6 @@
 
         function renderRoyalties() {
             royaltiesList.innerHTML = '';
-             if(mockUserData.royalties.length === 0) {
-                royaltiesList.innerHTML = '<p>You are not earning any royalties yet.</p>';
-                return;
-            }
             mockUserData.royalties.forEach(r => {
                 const item = document.createElement('div');
                 item.className = 'royalty-item';
@@ -159,3 +143,4 @@
 </body>
 
 </html>
+
