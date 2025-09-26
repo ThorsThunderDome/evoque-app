@@ -45,13 +45,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const scopes = ['username', 'payments'];
             const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
             
-            console.log("Authentication successful:", authResult);
-            authStatus.textContent = `Welcome, ${authResult.user.username}! Redirecting...`;
+            console.log("Authentication successful. User data received:", authResult.user);
             
             // Store user data in sessionStorage to access on other pages
             sessionStorage.setItem('piUser', JSON.stringify(authResult.user));
+            console.log("User data stored in sessionStorage.");
 
-            // *** KEY CHANGE FOR MULTI-PAGE STRUCTURE ***
+            authStatus.textContent = `Welcome, ${authResult.user.username}! Redirecting...`;
+
+            console.log("Redirecting to dashboard.html...");
             // Redirect to the dashboard page after successful login
             window.location.href = 'dashboard.html';
 
@@ -73,4 +75,5 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.error("Connect button not found.");
     }
+
 });
