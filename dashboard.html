@@ -56,103 +56,106 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- 1. CHECK USER AUTHENTICATION ---
-            const userDisplay = document.getElementById('username-display');
-            const piUserString = sessionStorage.getItem('piUser');
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("Dashboard page loaded. Checking for user data in sessionStorage...");
+        // --- 1. CHECK USER AUTHENTICATION ---
+        const userDisplay = document.getElementById('username-display');
+        const piUserString = sessionStorage.getItem('piUser');
+        
+        console.log("Data found in sessionStorage:", piUserString);
 
-            if (!piUserString) {
-                // If no user data is found, they are not logged in. Redirect to login page.
-                window.location.href = 'index.html';
-                return; // Stop executing the rest of the script
+        if (!piUserString) {
+            // If no user data is found, they are not logged in. Redirect to login page.
+            console.log("No user data found. Redirecting back to index.html.");
+            window.location.href = 'index.html';
+            return; // Stop executing the rest of the script
+        }
+
+        console.log("User data found. Welcome!");
+        const piUser = JSON.parse(piUserString);
+        userDisplay.textContent = piUser.username;
+
+        // --- 2. MOCK DATA (for now, we will replace this with Firebase calls) ---
+        const mockUserData = {
+            memberships: [
+                { creatorName: 'Aria Synth', tier: 'Gold Tier', tierIcon: '🏆' },
+                { creatorName: 'Leo Quill', tier: 'Silver Tier', tierIcon: '🥈' }
+            ],
+            collection: [
+                { type: 'Membership NFT', creatorName: 'Aria Synth', tier: 'Gold Tier', img: 'https://i.imgur.com/example.png' },
+                { type: 'First Supporter Badge', creatorName: 'Ben Carter', img: 'https://i.imgur.com/example2.png' }
+            ],
+            royalties: [
+                { creatorName: 'Ben Carter', earnings: 12.5, daysLeft: 280 },
+                { creatorName: 'Pixel Pioneers', earnings: 4.2, daysLeft: 150 }
+            ]
+        };
+        
+        // --- 3. RENDER FUNCTIONS TO DISPLAY DATA ---
+        const membershipsGrid = document.getElementById('memberships-grid');
+        const collectionGrid = document.getElementById('collection-grid');
+        const royaltiesList = document.getElementById('royalties-list');
+
+        function renderMemberships() {
+            membershipsGrid.innerHTML = ''; // Clear existing content
+            if(mockUserData.memberships.length === 0) {
+                membershipsGrid.innerHTML = '<p>You have no active memberships.</p>';
+                return;
             }
-
-            const piUser = JSON.parse(piUserString);
-            userDisplay.textContent = piUser.username;
-
-            // --- 2. MOCK DATA (for now, we will replace this with Firebase calls) ---
-            const mockUserData = {
-                memberships: [
-                    { creatorName: 'Aria Synth', tier: 'Gold Tier', tierIcon: '🏆' },
-                    { creatorName: 'Leo Quill', tier: 'Silver Tier', tierIcon: '🥈' }
-                ],
-                collection: [
-                    { type: 'Membership NFT', creatorName: 'Aria Synth', tier: 'Gold Tier', img: 'https://i.imgur.com/example.png' },
-                    { type: 'First Supporter Badge', creatorName: 'Ben Carter', img: 'https://i.imgur.com/example2.png' }
-                ],
-                royalties: [
-                    { creatorName: 'Ben Carter', earnings: 12.5, daysLeft: 280 },
-                    { creatorName: 'Pixel Pioneers', earnings: 4.2, daysLeft: 150 }
-                ]
-            };
-            
-            // --- 3. RENDER FUNCTIONS TO DISPLAY DATA ---
-            const membershipsGrid = document.getElementById('memberships-grid');
-            const collectionGrid = document.getElementById('collection-grid');
-            const royaltiesList = document.getElementById('royalties-list');
-
-            function renderMemberships() {
-                membershipsGrid.innerHTML = ''; // Clear existing content
-                if(mockUserData.memberships.length === 0) {
-                    membershipsGrid.innerHTML = '<p>You have no active memberships.</p>';
-                    return;
-                }
-                mockUserData.memberships.forEach(m => {
-                    const card = document.createElement('div');
-                    card.className = 'membership-card';
-                    card.innerHTML = `
-                        <div class="card-icon">${m.tierIcon}</div>
-                        <h3>${m.creatorName}</h3>
-                        <p>${m.tier}</p>
-                    `;
-                    membershipsGrid.appendChild(card);
-                });
+            mockUserData.memberships.forEach(m => {
+                const card = document.createElement('div');
+                card.className = 'membership-card';
+                card.innerHTML = `
+                    <div class="card-icon">${m.tierIcon}</div>
+                    <h3>${m.creatorName}</h3>
+                    <p>${m.tier}</p>
+                `;
+                membershipsGrid.appendChild(card);
+            });
+        }
+        
+        function renderCollection() {
+            collectionGrid.innerHTML = '';
+            if(mockUserData.collection.length === 0) {
+                collectionGrid.innerHTML = '<p>Your collection is empty.</p>';
+                return;
             }
-            
-            function renderCollection() {
-                collectionGrid.innerHTML = '';
-                if(mockUserData.collection.length === 0) {
-                    collectionGrid.innerHTML = '<p>Your collection is empty.</p>';
-                    return;
-                }
-                mockUserData.collection.forEach(nft => {
-                     const card = document.createElement('div');
-                    card.className = 'nft-card';
-                    card.innerHTML = `
-                        <img src="${nft.img}" alt="NFT Image">
-                        <h4>${nft.type}</h4>
-                        <p>Creator: ${nft.creatorName}</p>
-                        ${nft.tier ? `<p>Tier: ${nft.tier}</p>` : ''}
-                    `;
-                    collectionGrid.appendChild(card);
-                });
+            mockUserData.collection.forEach(nft => {
+                 const card = document.createElement('div');
+                card.className = 'nft-card';
+                card.innerHTML = `
+                    <img src="${nft.img}" alt="NFT Image">
+                    <h4>${nft.type}</h4>
+                    <p>Creator: ${nft.creatorName}</p>
+                    ${nft.tier ? `<p>Tier: ${nft.tier}</p>` : ''}
+                `;
+                collectionGrid.appendChild(card);
+            });
+        }
+
+        function renderRoyalties() {
+            royaltiesList.innerHTML = '';
+             if(mockUserData.royalties.length === 0) {
+                royaltiesList.innerHTML = '<p>You are not earning any royalties yet.</p>';
+                return;
             }
+            mockUserData.royalties.forEach(r => {
+                const item = document.createElement('div');
+                item.className = 'royalty-item';
+                item.innerHTML = `
+                    <p><strong>${r.creatorName}:</strong> You've earned ${r.earnings.toFixed(2)} π</p>
+                    <span>${r.daysLeft} days left</span>
+                `;
+                royaltiesList.appendChild(item);
+            });
+        }
 
-            function renderRoyalties() {
-                royaltiesList.innerHTML = '';
-                 if(mockUserData.royalties.length === 0) {
-                    royaltiesList.innerHTML = '<p>You are not earning any royalties yet.</p>';
-                    return;
-                }
-                mockUserData.royalties.forEach(r => {
-                    const item = document.createElement('div');
-                    item.className = 'royalty-item';
-                    item.innerHTML = `
-                        <p><strong>${r.creatorName}:</strong> You've earned ${r.earnings.toFixed(2)} π</p>
-                        <span>${r.daysLeft} days left</span>
-                    `;
-                    royaltiesList.appendChild(item);
-                });
-            }
-
-            // --- 4. INITIALIZE PAGE ---
-            renderMemberships();
-            renderCollection();
-            renderRoyalties();
-
-            // Note: We'll need to add some additional CSS for these new cards.
-            // I will provide that in the next step to keep things clean.
-        });
-    </script>
+        // --- 4. INITIALIZE PAGE ---
+        renderMemberships();
+        renderCollection();
+        renderRoyalties();
+    });
+</script>
 </body>
+
 </html>
