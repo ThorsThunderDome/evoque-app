@@ -51,26 +51,24 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
+        <script>
         document.addEventListener('DOMContentLoaded', async () => {
             // --- 1. CHECK USER AUTHENTICATION ---
             const userDisplay = document.getElementById('username-display');
             const piUserString = sessionStorage.getItem('piUser');
-            if (!piUserString) {
-                window.location.href = 'index.html';
-                return;
-            }
+            if (!piUserString) { window.location.href = 'index.html'; return; }
             const piUser = JSON.parse(piUserString);
             userDisplay.textContent = piUser.username;
 
-            // --- 2. GET CREATOR ID FROM URL ---
-            const params = new URLSearchParams(window.location.search);
-            const creatorId = params.get('id');
+            // --- 2. GET CREATOR ID FROM SESSIONSTORAGE ---
+            const creatorId = sessionStorage.getItem('selectedCreatorId');
 
             if (!creatorId) {
-                document.getElementById('main-content').innerHTML = "<h1>Error: Creator ID not found in URL.</h1>";
+                document.getElementById('main-content').innerHTML = "<h1>Error: Creator ID not found in session. Please go back to Explore and select a creator.</h1>";
                 return;
             }
 
+            // --- 3. INITIALIZE FIREBASE ---
             // **IMPORTANT**: PASTE YOUR FIREBASE CONFIGURATION OBJECT HERE
         const firebaseConfig = {
             apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
@@ -81,19 +79,15 @@
             appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
             measurementId: "G-DG6WWPYQ3Z"
         };
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
+            if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
             const db = firebase.firestore();
 
             // --- 4. FETCH SPECIFIC CREATOR'S DATA ---
             try {
                 const docRef = db.collection("creators").doc(creatorId);
                 const docSnap = await docRef.get();
-
                 if (docSnap.exists) {
                     const creator = docSnap.data();
-                    // Populate the page with the creator's data
                     document.getElementById('creator-name').textContent = creator.name;
                     document.getElementById('creator-bio').textContent = creator.bio;
                     document.getElementById('creator-avatar').src = creator.profileImage;
