@@ -44,17 +44,11 @@
             // --- 1. CHECK USER AUTHENTICATION ---
             const userDisplay = document.getElementById('username-display');
             const piUserString = sessionStorage.getItem('piUser');
-
-            if (!piUserString) {
-                window.location.href = 'index.html';
-                return;
-            }
-
+            if (!piUserString) { window.location.href = 'index.html'; return; }
             const piUser = JSON.parse(piUserString);
             userDisplay.textContent = piUser.username;
 
-            // --- 2. INITIALIZE FIREBASE ---
-            // **IMPORTANT**: PASTE YOUR FIREBASE CONFIGURATION OBJECT HERE
+           // **IMPORTANT**: PASTE YOUR FIREBASE CONFIGURATION OBJECT HERE
         const firebaseConfig = {
             apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
             authDomain: "evoque-app.firebaseapp.com",
@@ -64,35 +58,38 @@
             appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
             measurementId: "G-DG6WWPYQ3Z"
         };
-            
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
+            if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
             const db = firebase.firestore();
 
             // --- 3. FETCH AND RENDER CREATORS ---
             const creatorsGrid = document.getElementById('creators-grid');
-            
             try {
                 const snapshot = await db.collection("creators").get();
-                
                 if (snapshot.empty) {
                     creatorsGrid.innerHTML = "<p>No creators found.</p>";
                     return;
                 }
-
                 snapshot.forEach(doc => {
                     const creator = doc.data();
                     const card = document.createElement('div');
                     card.className = 'creator-card';
-                    // The only change is in the <a> tag's href below
+                    // We add a data-id attribute to the button to store the creator's ID
                     card.innerHTML = `
                         <img src="${creator.profileImage}" alt="${creator.name} profile picture" class="creator-avatar">
                         <h3>${creator.name}</h3>
                         <p>${creator.bio}</p>
-                        <a href="creator.html?id=${doc.id}" class="btn btn-primary">View Profile</a>
+                        <button class="btn btn-primary view-profile-btn" data-id="${doc.id}">View Profile</button>
                     `;
                     creatorsGrid.appendChild(card);
+                });
+
+                // --- 4. ADD CLICK LISTENERS TO BUTTONS ---
+                document.querySelectorAll('.view-profile-btn').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const creatorId = event.target.dataset.id;
+                        sessionStorage.setItem('selectedCreatorId', creatorId);
+                        window.location.href = 'creator.html';
+                    });
                 });
 
             } catch (error) {
