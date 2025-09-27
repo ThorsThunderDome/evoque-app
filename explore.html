@@ -85,11 +85,12 @@
                     const creator = doc.data();
                     const card = document.createElement('div');
                     card.className = 'creator-card';
+                    // The only change is in the <a> tag's href below
                     card.innerHTML = `
                         <img src="${creator.profileImage}" alt="${creator.name} profile picture" class="creator-avatar">
                         <h3>${creator.name}</h3>
                         <p>${creator.bio}</p>
-                        <a href="#" class="btn btn-primary">View Profile</a>
+                        <a href="creator.html?id=${doc.id}" class="btn btn-primary">View Profile</a>
                     `;
                     creatorsGrid.appendChild(card);
                 });
