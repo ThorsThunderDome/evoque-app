@@ -3,39 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debugger</title>
+    <title>Evoque - My Dashboard</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body style="text-align: center; padding: 40px;">
+<body>
 
-    <h1>DEBUGGER V2 - I AM THE NEW PAGE</h1>
-    <p>This page will show the data that was saved after you logged in.</p>
-    <hr style="margin: 20px 0;">
+    <div id="app-content">
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <img src="https://i.imgur.com/your-new-logo.png" alt="Evoque Logo" class="logo"> <h2>Evoque</h2>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li><a href="dashboard.html" class="active">Dashboard</a></li>
+                    <li><a href="explore.html">Explore</a></li>
+                    <li><a href="chat.html">Chat</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="creator_hub.html" class="btn btn-secondary">Switch to Creator Space</a>
+                <div id="user-profile">
+                    <p>Connected as: <strong id="username-display"></strong></p>
+                </div>
+            </div>
+        </aside>
 
-    <h2>Data found in sessionStorage:</h2>
-    <pre id="debug-output" style="background-color: #333; padding: 20px; border-radius: 8px; color: #fff; font-size: 1.2em; word-wrap: break-word; white-space: pre-wrap;">
-        Loading...
-    </pre>
+        <main id="main-content">
+            <h1>My Supporter Dashboard</h1>
+            <section id="my-memberships-section">
+                <h2>My Memberships</h2>
+                <div id="memberships-grid" class="grid-container"></div>
+            </section>
+            <section id="my-collection-section">
+                <h2>My Collection (NFTs)</h2>
+                <div id="collection-grid" class="grid-container"></div>
+            </section>
+            <section id="my-royalties-section">
+                <h2>My Royalties</h2>
+                <div id="royalties-list"></div>
+            </section>
+        </main>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const outputElement = document.getElementById('debug-output');
+            // --- 1. CHECK USER AUTHENTICATION ---
+            const userDisplay = document.getElementById('username-display');
             const piUserString = sessionStorage.getItem('piUser');
-            
-            // This will display exactly what is (or isn't) in sessionStorage
-            if (piUserString === null) {
-                outputElement.textContent = "null (This means the keycard is completely missing)";
-            } else if (piUserString === undefined) {
-                outputElement.textContent = "undefined (This would be very strange)";
-            } else if (piUserString.trim() === "") {
-                outputElement.textContent = "An empty string (This means the keycard exists but is blank)";
-            } else {
-                // If there is data, we show it
-                outputElement.textContent = piUserString;
+
+            if (!piUserString) {
+                window.location.href = 'index.html';
+                return;
             }
+
+            const piUser = JSON.parse(piUserString);
+            userDisplay.textContent = piUser.username;
+
+            // --- 2. MOCK DATA (for now) ---
+            const mockUserData = {
+                memberships: [ { creatorName: 'Aria Synth', tier: 'Gold Tier', tierIcon: '🏆' }, { creatorName: 'Leo Quill', tier: 'Silver Tier', tierIcon: '🥈' } ],
+                collection: [ { type: 'Membership NFT', creatorName: 'Aria Synth', tier: 'Gold Tier', img: 'https://i.imgur.com/example.png' }, { type: 'First Supporter Badge', creatorName: 'Ben Carter', img: 'https://i.imgur.com/example2.png' } ],
+                royalties: [ { creatorName: 'Ben Carter', earnings: 12.5, daysLeft: 280 }, { creatorName: 'Pixel Pioneers', earnings: 4.2, daysLeft: 150 } ]
+            };
+            
+            // --- 3. RENDER FUNCTIONS ---
+            const membershipsGrid = document.getElementById('memberships-grid');
+            const collectionGrid = document.getElementById('collection-grid');
+            const royaltiesList = document.getElementById('royalties-list');
+
+            function renderMemberships() {
+                mockUserData.memberships.forEach(m => {
+                    const card = document.createElement('div');
+                    card.className = 'membership-card';
+                    card.innerHTML = `<div class="card-icon">${m.tierIcon}</div><h3>${m.creatorName}</h3><p>${m.tier}</p>`;
+                    membershipsGrid.appendChild(card);
+                });
+            }
+            
+            function renderCollection() {
+                mockUserData.collection.forEach(nft => {
+                     const card = document.createElement('div');
+                    card.className = 'nft-card';
+                    card.innerHTML = `<img src="${nft.img}" alt="NFT Image"><h4>${nft.type}</h4><p>Creator: ${nft.creatorName}</p>${nft.tier ? `<p>Tier: ${nft.tier}</p>` : ''}`;
+                    collectionGrid.appendChild(card);
+                });
+            }
+
+            function renderRoyalties() {
+                mockUserData.royalties.forEach(r => {
+                    const item = document.createElement('div');
+                    item.className = 'royalty-item';
+                    item.innerHTML = `<p><strong>${r.creatorName}:</strong> You've earned ${r.earnings.toFixed(2)} π</p><span>${r.daysLeft} days left</span>`;
+                    royaltiesList.appendChild(item);
+                });
+            }
+
+            // --- 4. INITIALIZE PAGE ---
+            renderMemberships();
+            renderCollection();
+            renderRoyalties();
         });
     </script>
-
 </body>
 </html>
-
