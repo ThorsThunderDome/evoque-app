@@ -38,11 +38,13 @@
             </div>
 
             <div class="profile-content">
-                <h2>Tiers</h2>
-                <p>Creator's membership tiers will be displayed here.</p>
-                
-                <h2>Products</h2>
-                <p>Creator's digital products will be displayed here.</p>
+                <h2>Membership Tiers</h2>
+                <div id="tiers-list" class="grid-container"></div>
+            </div>
+
+            <div class="profile-content">
+                <h2>Recent Posts</h2>
+                <div id="posts-feed"></div>
             </div>
         </main>
     </div>
@@ -51,40 +53,30 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-        <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // --- 1. CHECK USER AUTHENTICATION ---
-            const userDisplay = document.getElementById('username-display');
+            // --- 1. Standard login check and Firebase init ---
             const piUserString = sessionStorage.getItem('piUser');
             if (!piUserString) { window.location.href = 'index.html'; return; }
             const piUser = JSON.parse(piUserString);
-            userDisplay.textContent = piUser.username;
+            document.getElementById('username-display').textContent = piUser.username;
 
-            // --- 2. GET CREATOR ID FROM SESSIONSTORAGE ---
-            const creatorId = sessionStorage.getItem('selectedCreatorId');
-
-            if (!creatorId) {
-                document.getElementById('main-content').innerHTML = "<h1>Error: Creator ID not found in session. Please go back to Explore and select a creator.</h1>";
-                return;
-            }
-
-            // --- 3. INITIALIZE FIREBASE ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
-            authDomain: "evoque-app.firebaseapp.com",
-            projectId: "evoque-app",
-            storageBucket: "evoque-app.firebasestorage.app",
-            messagingSenderId: "790735748571",
-            appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
-            measurementId: "G-DG6WWPYQ3Z"
-        };
+            const firebaseConfig = { /* YOUR FIREBASE CONFIG */ };
             if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
             const db = firebase.firestore();
 
-            // --- 4. FETCH SPECIFIC CREATOR'S DATA ---
+            // --- 2. Get Creator ID from session ---
+            const creatorId = sessionStorage.getItem('selectedCreatorId');
+            if (!creatorId) {
+                document.getElementById('main-content').innerHTML = "<h1>Error: Creator ID not found.</h1>";
+                return;
+            }
+
+            const creatorDocRef = db.collection("creators").doc(creatorId);
+
+            // --- 3. Fetch and Display Creator Profile, Tiers, and Posts ---
             try {
-                const docRef = db.collection("creators").doc(creatorId);
-                const docSnap = await docRef.get();
+                // Fetch creator's main profile
+                const docSnap = await creatorDocRef.get();
                 if (docSnap.exists) {
                     const creator = docSnap.data();
                     document.getElementById('creator-name').textContent = creator.name;
@@ -92,10 +84,58 @@
                     document.getElementById('creator-avatar').src = creator.profileImage;
                 } else {
                     document.getElementById('main-content').innerHTML = "<h1>Creator not found.</h1>";
+                    return; // Stop if creator doesn't exist
                 }
+
+                // Fetch creator's tiers
+                const tiersSnapshot = await creatorDocRef.collection('tiers').orderBy('price').get();
+                const tiersListDiv = document.getElementById('tiers-list');
+                const tierNames = {}; // To store tier names for easy lookup
+                if (!tiersSnapshot.empty) {
+                    tiersSnapshot.forEach(doc => {
+                        const tier = doc.data();
+                        tierNames[doc.id] = tier.name; // Store name against ID
+                        const tierCard = document.createElement('div');
+                        tierCard.className = 'tier-card'; // We'll style this
+                        tierCard.innerHTML = `
+                            <h3>${tier.name}</h3>
+                            <p class="price">${tier.price} π/month</p>
+                            <ul>${tier.description.split('\\n').map(b => `<li>${b}</li>`).join('')}</ul>
+                            <button class="btn btn-primary">Subscribe</button>
+                        `;
+                        tiersListDiv.appendChild(tierCard);
+                    });
+                }
+
+                // Fetch creator's posts
+                const postsSnapshot = await creatorDocRef.collection('posts').orderBy('createdAt', 'desc').get();
+                const postsFeedDiv = document.getElementById('posts-feed');
+                if (postsSnapshot.empty) {
+                    postsFeedDiv.innerHTML = "<p>This creator hasn't made any posts yet.</p>";
+                } else {
+                    postsSnapshot.forEach(doc => {
+                        const post = doc.data();
+                        const accessibleTierNames = post.accessibleTiers.map(tierId => tierNames[tierId] || 'A tier').join(', ');
+                        
+                        const postCard = document.createElement('div');
+                        postCard.className = 'post-card'; // We'll style this
+                        postCard.innerHTML = `
+                            <h3>${post.title}</h3>
+                            <p class="post-meta">Published on ${new Date(post.createdAt.seconds * 1000).toLocaleDateString()}</p>
+                            <div class="post-content">
+                                <p>${post.content.substring(0, 200)}...</p>
+                            </div>
+                            <div class="post-lock-info">
+                                🔒 Unlocks for: ${accessibleTierNames}
+                            </div>
+                        `;
+                        postsFeedDiv.appendChild(postCard);
+                    });
+                }
+
             } catch (error) {
-                console.error("Error fetching creator profile: ", error);
-                document.getElementById('main-content').innerHTML = "<h1>Error loading profile.</h1>";
+                console.error("Error fetching creator page content: ", error);
+                document.getElementById('main-content').innerHTML = "<h1>Error loading page content.</h1>";
             }
         });
     </script>
