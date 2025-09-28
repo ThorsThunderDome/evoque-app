@@ -60,8 +60,7 @@
             const piUser = JSON.parse(piUserString);
             document.getElementById('username-display').textContent = piUser.username;
 
-            // **IMPORTANT**: PASTE YOUR FIREBASE CONFIGURATION OBJECT HERE
-        const firebaseConfig = {
+            const firebaseConfig = {
             apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
             authDomain: "evoque-app.firebaseapp.com",
             projectId: "evoque-app",
@@ -70,6 +69,7 @@
             appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
             measurementId: "G-DG6WWPYQ3Z"
         };
+
             if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
             const db = firebase.firestore();
 
@@ -81,25 +81,21 @@
 
             const creatorDocRef = db.collection("creators").doc(creatorId);
 
-            // --- 2. NEW: SIMULATED MEMBERSHIP CHECK ---
-            // We create a unique key for this creator's membership in sessionStorage
+            // --- 2. Simulated Membership Check ---
             const membershipKey = `membership_${creatorId}`;
             const subscribedTierId = sessionStorage.getItem(membershipKey);
 
-            // --- 3. UPDATED: PAYMENT SIMULATION NOW SAVES THE MEMBERSHIP ---
             function handleSubscription(tierId, tierName, tierPrice) {
                 const confirmationMessage = `Do you want to subscribe to ${tierName} for ${tierPrice} π?`;
-                
                 if (window.confirm(confirmationMessage)) {
                     alert("Subscription successful! (This is a simulation). Refresh the page to see your new access.");
-                    // Save the ID of the tier the user just subscribed to
                     sessionStorage.setItem(membershipKey, tierId);
                 } else {
                     alert("Subscription cancelled.");
                 }
             }
 
-            // --- 4. Fetch and Display Creator Page Content ---
+            // --- 3. Fetch and Display All Page Content ---
             try {
                 // Fetch creator's main profile (same as before)
                 const docSnap = await creatorDocRef.get();
@@ -113,14 +109,14 @@
                     return;
                 }
 
-                // Fetch creator's tiers (updated to pass tierId to the button)
+                // --- HIERARCHY LOGIC PART 1: Fetch and sort all tiers ---
                 const tiersSnapshot = await creatorDocRef.collection('tiers').orderBy('price').get();
                 const tiersListDiv = document.getElementById('tiers-list');
-                const tierNames = {};
+                const allTiers = []; // To store tiers with their price for sorting
                 if (!tiersSnapshot.empty) {
                     tiersSnapshot.forEach(doc => {
                         const tier = doc.data();
-                        tierNames[doc.id] = tier.name;
+                        allTiers.push({ id: doc.id, name: tier.name, price: tier.price, description: tier.description });
                         const tierCard = document.createElement('div');
                         tierCard.className = 'tier-card';
                         tierCard.innerHTML = `
@@ -136,7 +132,19 @@
                     });
                 }
 
-                // Fetch creator's posts (UPDATED WITH ACCESS CONTROL LOGIC)
+                // --- HIERARCHY LOGIC PART 2: Determine all accessible tiers for the user ---
+                let userAccessibleTierIds = [];
+                if (subscribedTierId) {
+                    const subscribedTier = allTiers.find(t => t.id === subscribedTierId);
+                    if (subscribedTier) {
+                        // User has access to their tier and any cheaper tiers
+                        userAccessibleTierIds = allTiers
+                            .filter(t => t.price <= subscribedTier.price)
+                            .map(t => t.id);
+                    }
+                }
+
+                // --- HIERARCHY LOGIC PART 3: Fetch posts and check access ---
                 const postsSnapshot = await creatorDocRef.collection('posts').orderBy('createdAt', 'desc').get();
                 const postsFeedDiv = document.getElementById('posts-feed');
                 if (postsSnapshot.empty) {
@@ -144,10 +152,11 @@
                 } else {
                     postsSnapshot.forEach(doc => {
                         const post = doc.data();
+                        const tierNames = allTiers.reduce((acc, tier) => ({...acc, [tier.id]: tier.name }), {});
                         const accessibleTierNames = post.accessibleTiers.map(tierId => tierNames[tierId] || 'A tier').join(', ');
                         
-                        // *** ACCESS CONTROL LOGIC STARTS HERE ***
-                        const userHasAccess = post.accessibleTiers.includes(subscribedTierId);
+                        // Check if ANY of the post's required tiers are in the user's list of accessible tiers
+                        const userHasAccess = post.accessibleTiers.some(requiredTierId => userAccessibleTierIds.includes(requiredTierId));
                         
                         let postContentHTML = '';
                         if (userHasAccess) {
@@ -155,7 +164,6 @@
                         } else {
                             postContentHTML = `<div class="post-locked"><p>This post is locked. Subscribe to the correct tier to view.</p></div>`;
                         }
-                        // *** ACCESS CONTROL LOGIC ENDS HERE ***
 
                         const postCard = document.createElement('div');
                         postCard.className = 'post-card';
