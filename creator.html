@@ -54,22 +54,13 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // All of the previous code for checking login, getting the creator ID, and initializing Firebase stays the same.
+            // --- 1. Standard login check and Firebase init ---
             const piUserString = sessionStorage.getItem('piUser');
             if (!piUserString) { window.location.href = 'index.html'; return; }
             const piUser = JSON.parse(piUserString);
             document.getElementById('username-display').textContent = piUser.username;
 
-            // **IMPORTANT**: PASTE YOUR FIREBASE CONFIGURATION OBJECT HERE
-        const firebaseConfig = {
-            apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
-            authDomain: "evoque-app.firebaseapp.com",
-            projectId: "evoque-app",
-            storageBucket: "evoque-app.firebasestorage.app",
-            messagingSenderId: "790735748571",
-            appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
-            measurementId: "G-DG6WWPYQ3Z"
-        };
+            const firebaseConfig = { /* YOUR FIREBASE CONFIG */ };
             if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
             const db = firebase.firestore();
 
@@ -80,26 +71,28 @@
             }
 
             const creatorDocRef = db.collection("creators").doc(creatorId);
-            
-            // --- NEW FUNCTION: SIMULATED PAYMENT ---
-            function handleSubscription(tierName, tierPrice) {
-                const memo = `1-month subscription to ${tierName} on Evoque.`;
-                const confirmationMessage = `Do you want to subscribe to ${tierName} for ${tierPrice} π?\n\nMemo: ${memo}`;
+
+            // --- 2. NEW: SIMULATED MEMBERSHIP CHECK ---
+            // We create a unique key for this creator's membership in sessionStorage
+            const membershipKey = `membership_${creatorId}`;
+            const subscribedTierId = sessionStorage.getItem(membershipKey);
+
+            // --- 3. UPDATED: PAYMENT SIMULATION NOW SAVES THE MEMBERSHIP ---
+            function handleSubscription(tierId, tierName, tierPrice) {
+                const confirmationMessage = `Do you want to subscribe to ${tierName} for ${tierPrice} π?`;
                 
                 if (window.confirm(confirmationMessage)) {
-                    // This is where the real Pi.createPayment() call would go.
-                    // For now, we just simulate a successful payment.
-                    alert("Subscription successful! (This is a simulation). You have not been charged.");
-                    
-                    // In a real app, we would now save the subscription record to our database.
+                    alert("Subscription successful! (This is a simulation). Refresh the page to see your new access.");
+                    // Save the ID of the tier the user just subscribed to
+                    sessionStorage.setItem(membershipKey, tierId);
                 } else {
                     alert("Subscription cancelled.");
                 }
             }
 
-            // --- Fetch and Display Creator Page Content ---
+            // --- 4. Fetch and Display Creator Page Content ---
             try {
-                // Fetch creator's main profile
+                // Fetch creator's main profile (same as before)
                 const docSnap = await creatorDocRef.get();
                 if (docSnap.exists) {
                     const creator = docSnap.data();
@@ -111,7 +104,7 @@
                     return;
                 }
 
-                // Fetch creator's tiers
+                // Fetch creator's tiers (updated to pass tierId to the button)
                 const tiersSnapshot = await creatorDocRef.collection('tiers').orderBy('price').get();
                 const tiersListDiv = document.getElementById('tiers-list');
                 const tierNames = {};
@@ -127,15 +120,14 @@
                             <ul>${tier.description.split('\\n').map(b => `<li>${b}</li>`).join('')}</ul>
                             <button class="btn btn-primary subscribe-btn">Subscribe</button>
                         `;
-                        // Add the event listener to the button inside this card
                         tierCard.querySelector('.subscribe-btn').addEventListener('click', () => {
-                            handleSubscription(tier.name, tier.price);
+                            handleSubscription(doc.id, tier.name, tier.price);
                         });
                         tiersListDiv.appendChild(tierCard);
                     });
                 }
 
-                // Fetch creator's posts (code remains the same)
+                // Fetch creator's posts (UPDATED WITH ACCESS CONTROL LOGIC)
                 const postsSnapshot = await creatorDocRef.collection('posts').orderBy('createdAt', 'desc').get();
                 const postsFeedDiv = document.getElementById('posts-feed');
                 if (postsSnapshot.empty) {
@@ -144,12 +136,24 @@
                     postsSnapshot.forEach(doc => {
                         const post = doc.data();
                         const accessibleTierNames = post.accessibleTiers.map(tierId => tierNames[tierId] || 'A tier').join(', ');
+                        
+                        // *** ACCESS CONTROL LOGIC STARTS HERE ***
+                        const userHasAccess = post.accessibleTiers.includes(subscribedTierId);
+                        
+                        let postContentHTML = '';
+                        if (userHasAccess) {
+                            postContentHTML = `<div class="post-content"><p>${post.content}</p></div>`;
+                        } else {
+                            postContentHTML = `<div class="post-locked"><p>This post is locked. Subscribe to the correct tier to view.</p></div>`;
+                        }
+                        // *** ACCESS CONTROL LOGIC ENDS HERE ***
+
                         const postCard = document.createElement('div');
                         postCard.className = 'post-card';
                         postCard.innerHTML = `
                             <h3>${post.title}</h3>
                             <p class="post-meta">Published on ${new Date(post.createdAt.seconds * 1000).toLocaleDateString()}</p>
-                            <div class="post-content"><p>${post.content.substring(0, 200)}...</p></div>
+                            ${postContentHTML}
                             <div class="post-lock-info">🔒 Unlocks for: ${accessibleTierNames}</div>
                         `;
                         postsFeedDiv.appendChild(postCard);
