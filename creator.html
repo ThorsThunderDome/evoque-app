@@ -54,7 +54,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // --- 1. Standard login check and Firebase init ---
+            // All of the previous code for checking login, getting the creator ID, and initializing Firebase stays the same.
             const piUserString = sessionStorage.getItem('piUser');
             if (!piUserString) { window.location.href = 'index.html'; return; }
             const piUser = JSON.parse(piUserString);
@@ -73,7 +73,6 @@
             if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
             const db = firebase.firestore();
 
-            // --- 2. Get Creator ID from session ---
             const creatorId = sessionStorage.getItem('selectedCreatorId');
             if (!creatorId) {
                 document.getElementById('main-content').innerHTML = "<h1>Error: Creator ID not found.</h1>";
@@ -81,8 +80,24 @@
             }
 
             const creatorDocRef = db.collection("creators").doc(creatorId);
+            
+            // --- NEW FUNCTION: SIMULATED PAYMENT ---
+            function handleSubscription(tierName, tierPrice) {
+                const memo = `1-month subscription to ${tierName} on Evoque.`;
+                const confirmationMessage = `Do you want to subscribe to ${tierName} for ${tierPrice} π?\n\nMemo: ${memo}`;
+                
+                if (window.confirm(confirmationMessage)) {
+                    // This is where the real Pi.createPayment() call would go.
+                    // For now, we just simulate a successful payment.
+                    alert("Subscription successful! (This is a simulation). You have not been charged.");
+                    
+                    // In a real app, we would now save the subscription record to our database.
+                } else {
+                    alert("Subscription cancelled.");
+                }
+            }
 
-            // --- 3. Fetch and Display Creator Profile, Tiers, and Posts ---
+            // --- Fetch and Display Creator Page Content ---
             try {
                 // Fetch creator's main profile
                 const docSnap = await creatorDocRef.get();
@@ -93,30 +108,34 @@
                     document.getElementById('creator-avatar').src = creator.profileImage;
                 } else {
                     document.getElementById('main-content').innerHTML = "<h1>Creator not found.</h1>";
-                    return; // Stop if creator doesn't exist
+                    return;
                 }
 
                 // Fetch creator's tiers
                 const tiersSnapshot = await creatorDocRef.collection('tiers').orderBy('price').get();
                 const tiersListDiv = document.getElementById('tiers-list');
-                const tierNames = {}; // To store tier names for easy lookup
+                const tierNames = {};
                 if (!tiersSnapshot.empty) {
                     tiersSnapshot.forEach(doc => {
                         const tier = doc.data();
-                        tierNames[doc.id] = tier.name; // Store name against ID
+                        tierNames[doc.id] = tier.name;
                         const tierCard = document.createElement('div');
-                        tierCard.className = 'tier-card'; // We'll style this
+                        tierCard.className = 'tier-card';
                         tierCard.innerHTML = `
                             <h3>${tier.name}</h3>
                             <p class="price">${tier.price} π/month</p>
                             <ul>${tier.description.split('\\n').map(b => `<li>${b}</li>`).join('')}</ul>
-                            <button class="btn btn-primary">Subscribe</button>
+                            <button class="btn btn-primary subscribe-btn">Subscribe</button>
                         `;
+                        // Add the event listener to the button inside this card
+                        tierCard.querySelector('.subscribe-btn').addEventListener('click', () => {
+                            handleSubscription(tier.name, tier.price);
+                        });
                         tiersListDiv.appendChild(tierCard);
                     });
                 }
 
-                // Fetch creator's posts
+                // Fetch creator's posts (code remains the same)
                 const postsSnapshot = await creatorDocRef.collection('posts').orderBy('createdAt', 'desc').get();
                 const postsFeedDiv = document.getElementById('posts-feed');
                 if (postsSnapshot.empty) {
@@ -125,23 +144,17 @@
                     postsSnapshot.forEach(doc => {
                         const post = doc.data();
                         const accessibleTierNames = post.accessibleTiers.map(tierId => tierNames[tierId] || 'A tier').join(', ');
-                        
                         const postCard = document.createElement('div');
-                        postCard.className = 'post-card'; // We'll style this
+                        postCard.className = 'post-card';
                         postCard.innerHTML = `
                             <h3>${post.title}</h3>
                             <p class="post-meta">Published on ${new Date(post.createdAt.seconds * 1000).toLocaleDateString()}</p>
-                            <div class="post-content">
-                                <p>${post.content.substring(0, 200)}...</p>
-                            </div>
-                            <div class="post-lock-info">
-                                🔒 Unlocks for: ${accessibleTierNames}
-                            </div>
+                            <div class="post-content"><p>${post.content.substring(0, 200)}...</p></div>
+                            <div class="post-lock-info">🔒 Unlocks for: ${accessibleTierNames}</div>
                         `;
                         postsFeedDiv.appendChild(postCard);
                     });
                 }
-
             } catch (error) {
                 console.error("Error fetching creator page content: ", error);
                 document.getElementById('main-content').innerHTML = "<h1>Error loading page content.</h1>";
