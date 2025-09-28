@@ -196,3 +196,64 @@ body {
     font-size: 14px;
     margin-bottom: 20px;
 }
+/* --- Creator Profile Tiers & Posts --- */
+.profile-content {
+    margin-top: 40px;
+}
+
+.tier-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--accent-color);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+}
+
+.tier-card h3 {
+    color: var(--accent-color);
+    margin-top: 0;
+}
+
+.tier-card .price {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.tier-card ul {
+    list-style: '✓ ';
+    padding-left: 20px;
+    flex-grow: 1;
+}
+
+.tier-card .btn {
+    margin-top: 20px;
+}
+
+.post-card {
+    background-color: var(--surface-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.post-card h3 {
+    margin-top: 0;
+}
+
+.post-card .post-meta {
+    font-size: 0.9em;
+    color: var(--text-secondary-color);
+    margin-bottom: 15px;
+}
+
+.post-card .post-lock-info {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: rgba(0,0,0,0.2);
+    border-radius: var(--border-radius);
+    font-size: 0.9em;
+    font-weight: bold;
+    color: var(--accent-color);
+}
