@@ -27,7 +27,7 @@
         </aside>
 
         <main id="main-content">
-            <button id="sidebar-toggler">☰</button>
+            <button id="sidebar-toggler"><span></span></button>
             <h1>Manage Your Tiers</h1>
             
             <div class="content-section">
@@ -63,7 +63,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-    document.addEventListener('DOMContentLoaded', async () => {
+    async function initManageTiers(db, piUser) {
         const piUser = JSON.parse(sessionStorage.getItem('piUser'));
             const creatorDocRef = db.collection('creators').doc(piUser.uid);
             const tiersCollectionRef = creatorDocRef.collection('tiers');
@@ -117,7 +117,7 @@
 
             // Initial load of tiers when page opens
             loadTiers();
-       });
+       }
 </script>
      <script src="main.js"></script>
 </body>
