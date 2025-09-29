@@ -257,3 +257,94 @@ body {
     font-weight: bold;
     color: var(--accent-color);
 }
+
+/* --- UI POLISHING STYLES --- */
+
+/* General Card Hover Effect */
+.management-card {
+    background-color: var(--surface-color);
+    padding: 25px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.management-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(81, 45, 168, 0.3);
+}
+
+.management-card h3 {
+    margin-top: 0;
+}
+
+/* Form Improvements */
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: var(--text-secondary-color);
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--background-color);
+    border: 1px solid var(--surface-color);
+    border-radius: var(--border-radius);
+    color: var(--text-color);
+    font-size: 16px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* Table Styling for Supporters Page */
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--surface-color);
+}
+
+thead th {
+    background-color: var(--surface-color);
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+tbody tr:hover {
+    background-color: var(--surface-color);
+}
+
+/* Larger Avatar on Profile Page */
+.creator-avatar-large {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 4px solid var(--primary-color);
+    margin-right: 30px;
+}
+
+#creator-profile-header {
+    display: flex;
+    align-items: center;
+}
