@@ -353,26 +353,69 @@ tbody tr:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 20px rgba(81, 45, 168, 0.3);
 }
-/* --- Collapsible Sidebar Styles --- */
-#sidebar-toggler {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    z-index: 1001;
-    background: var(--surface-color);
-    color: var(--text-color);
-    border: 1px solid var(--accent-color);
-    border-radius: var(--border-radius);
-    width: 40px;
-    height: 40px;
-    cursor: pointer;
-    font-size: 20px;
+/* --- DYNAMIC SIDEBAR CSS FIXES --- */
+
+/* This makes the main content area expand and shrink */
+#app-content {
+    transition: margin-left 0.3s ease-in-out;
 }
 
-#sidebar {
-    transition: transform 0.3s ease-in-out;
+#main-content {
+    width: 100%;
 }
 
-#sidebar.collapsed {
+#app-content.sidebar-collapsed #sidebar {
     transform: translateX(-100%);
+}
+
+#app-content.sidebar-collapsed {
+    margin-left: 0;
+}
+
+#app-content {
+    margin-left: 250px; /* Same as sidebar width */
+}
+
+#sidebar-toggler {
+    z-index: 1001;
+    position: relative;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    margin-bottom: 20px;
+}
+
+#sidebar-toggler span,
+#sidebar-toggler span:before,
+#sidebar-toggler span:after {
+    content: '';
+    position: absolute;
+    width: 30px;
+    height: 3px;
+    background: var(--text-color);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+#sidebar-toggler span:before {
+    top: -8px;
+}
+
+#sidebar-toggler span:after {
+    top: 8px;
+}
+
+#app-content.sidebar-collapsed #sidebar-toggler span {
+    background: transparent;
+}
+
+#app-content.sidebar-collapsed #sidebar-toggler span:before {
+    transform: rotate(45deg) translate(5px, 6px);
+}
+
+#app-content.sidebar-collapsed #sidebar-toggler span:after {
+    transform: rotate(-45deg) translate(5px, -6px);
 }
