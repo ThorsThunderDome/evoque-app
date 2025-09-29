@@ -27,7 +27,7 @@
         </aside>
 
         <main id="main-content">
-            <button id="sidebar-toggler">☰</button>
+            <button id="sidebar-toggler"><span></span></button>
             <h1>My Supporters</h1>
             <p>A list of amazing people supporting your work.</p>
             
@@ -51,7 +51,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-    document.addEventListener('DOMContentLoaded', async () => {
+    async function initMySupporters(db, piUser) {
         const piUser = JSON.parse(sessionStorage.getItem('piUser'));
             const creatorDocRef = db.collection('creators').doc(piUser.uid);
             const docSnap = await creatorDocRef.get();
@@ -84,7 +84,7 @@
                     tableBody.appendChild(row);
                 });
             }
-        });
+        }
      </script>
      <script src="main.js"></script>
 </body>
