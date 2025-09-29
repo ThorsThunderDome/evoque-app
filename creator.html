@@ -29,7 +29,7 @@
         </aside>
 
         <main id="main-content">
-            <button id="sidebar-toggler">☰</button>
+            <button id="sidebar-toggler"><span></span></button>
             <div id="creator-profile-header">
                 <img id="creator-avatar" src="" alt="Creator avatar" class="creator-avatar-large">
                 <div>
@@ -54,7 +54,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-    document.addEventListener('DOMContentLoaded', async () => {
+    async function initCreatorPage(db, piUser) {
         const creatorId = sessionStorage.getItem('selectedCreatorId');
         // The rest of the page-specific logic for the creator profile page
             if (!creatorId) {
@@ -162,7 +162,7 @@
                 console.error("Error fetching creator page content: ", error);
                 document.getElementById('main-content').innerHTML = "<h1>Error loading page content.</h1>";
             }
-        });
+        }
 </script>
      <script src="main.js"></script>
 </body>
