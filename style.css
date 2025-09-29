@@ -348,3 +348,8 @@ tbody tr:hover {
     display: flex;
     align-items: center;
 }
+/* --- Hover effect for supporter dashboard cards --- */
+#my-memberships-section .creator-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(81, 45, 168, 0.3);
+}
