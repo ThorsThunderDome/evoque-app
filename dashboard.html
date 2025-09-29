@@ -45,83 +45,14 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            // --- 1. Standard login check and Firebase init ---
-            const userDisplay = document.getElementById('username-display');
-            const piUserString = sessionStorage.getItem('piUser');
-            if (!piUserString) { window.location.href = 'index.html'; return; }
-            const piUser = JSON.parse(piUserString);
-            userDisplay.textContent = piUser.username;
-
-            const firebaseConfig = {
-            apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
-            authDomain: "evoque-app.firebaseapp.com",
-            projectId: "evoque-app",
-            storageBucket: "evoque-app.firebasestorage.app",
-            messagingSenderId: "790735748571",
-            appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
-            measurementId: "G-DG6WWPYQ3Z"
-        };
-
-            if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-            const db = firebase.firestore();
-
-            // --- 2. Find and Display Subscriptions ---
-            const membershipsGrid = document.getElementById('memberships-grid');
-            membershipsGrid.innerHTML = '<p>Loading your memberships...</p>';
-            let subscriptionsFound = 0;
-
-            for (let i = 0; i < sessionStorage.length; i++) {
-                const key = sessionStorage.key(i);
-
-                // Find all session keys that match our subscription format
-                if (key.startsWith('membership_')) {
-                    subscriptionsFound++;
-                    const creatorId = key.split('_')[1];
-                    const tierId = sessionStorage.getItem(key);
-
-                    // Fetch the details for this subscription from Firebase
-                    const creatorDoc = await db.collection('creators').doc(creatorId).get();
-                    const tierDoc = await db.collection('creators').doc(creatorId).collection('tiers').doc(tierId).get();
-
-                    if (creatorDoc.exists && tierDoc.exists) {
-                        const creator = creatorDoc.data();
-                        const tier = tierDoc.data();
-
-                        const card = document.createElement('div');
-                        card.className = 'creator-card'; // Reuse the creator card style
-                        card.innerHTML = `
-                            <img src="${creator.profileImage}" alt="${creator.name} profile picture" class="creator-avatar">
-                            <h3>${creator.name}</h3>
-                            <p><strong>Your Tier:</strong> ${tier.name}</p>
-                            <a href="#" class="btn btn-primary view-creator-btn" data-id="${creatorId}">Visit Page</a>
-                        `;
-                        // Clear the 'Loading...' message on the first result
-                        if (subscriptionsFound === 1) {
-                            membershipsGrid.innerHTML = '';
-                        }
-                        membershipsGrid.appendChild(card);
-                    }
-                }
-            }
-            
-            if (subscriptionsFound === 0) {
-                membershipsGrid.innerHTML = '<p>You are not subscribed to any creators yet. Go to the Explore page to find creators to support!</p>';
-            }
-
-            // Add event listeners for the "Visit Page" buttons
-            document.querySelectorAll('.view-creator-btn').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const creatorId = event.target.dataset.id;
-                    sessionStorage.setItem('selectedCreatorId', creatorId);
-                    window.location.href = 'creator.html';
-                });
-            });
-        });
-    ...
-    <script src="ui.js"></script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const membershipsGrid = document.getElementById('memberships-grid');
+        // The rest of the page-specific logic for the dashboard
+    });
+    <script src="main.js"></script>
 </body>
 </html>
+
 
 
 
