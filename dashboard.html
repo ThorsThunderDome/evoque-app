@@ -30,7 +30,7 @@
         </aside>
 
         <main id="main-content">
-            <button id="sidebar-toggler">☰</button>
+            <button id="sidebar-toggler"><span></span></button>
             <h1>My Supporter Dashboard</h1>
 
             <section id="my-memberships-section">
@@ -45,7 +45,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-    document.addEventListener('DOMContentLoaded', async () => {
+    async function initDashboard(db, piUser) {
         const membershipsGrid = document.getElementById('memberships-grid');
         membershipsGrid.innerHTML = '<p>Loading your memberships...</p>';
         let subscriptionsFound = 0;
@@ -71,7 +71,9 @@
                         <p><strong>Your Tier:</strong> ${tier.name}</p>
                         <a href="#" class="btn btn-primary view-creator-btn" data-id="${creatorId}">Visit Page</a>
                     `;
-                    if (subscriptionsFound === 1) membershipsGrid.innerHTML = '';
+                    if (subscriptionsFound === 1) {
+                        membershipsGrid.innerHTML = '';
+                    }
                     membershipsGrid.appendChild(card);
                 }
             }
@@ -88,11 +90,12 @@
                 window.location.href = 'creator.html';
             });
         });
-    });
+    }
 </script>
     <script src="main.js"></script>
 </body>
 </html>
+
 
 
 
