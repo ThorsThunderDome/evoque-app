@@ -56,7 +56,7 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
-        // The page-specific logic for creating a post
+        const piUser = JSON.parse(sessionStorage.getItem('piUser'));
             const creatorDocRef = db.collection('creators').doc(piUser.uid);
             const tiersCollectionRef = creatorDocRef.collection('tiers');
             const postsCollectionRef = creatorDocRef.collection('posts');
