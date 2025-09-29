@@ -64,7 +64,7 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
-        // The page-specific logic for managing tiers
+        const piUser = JSON.parse(sessionStorage.getItem('piUser'));
             const creatorDocRef = db.collection('creators').doc(piUser.uid);
             const tiersCollectionRef = creatorDocRef.collection('tiers');
 
