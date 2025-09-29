@@ -64,7 +64,8 @@
             const creatorNameMain = document.getElementById('creator-name-main');
             const creatorNameSidebar = document.getElementById('creator-name-sidebar');
             const creatorAvatarSidebar = document.getElementById('creator-avatar-sidebar');
-
+            const piUser = JSON.parse(sessionStorage.getItem('piUser'));
+        
             try {
                 // The creator's profile is stored with their unique Pi UID as the document ID
                 const creatorDocRef = db.collection('creators').doc(piUser.uid);
