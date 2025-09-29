@@ -47,11 +47,51 @@
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
         const membershipsGrid = document.getElementById('memberships-grid');
-        // The rest of the page-specific logic for the dashboard
-    });
+        membershipsGrid.innerHTML = '<p>Loading your memberships...</p>';
+        let subscriptionsFound = 0;
+
+        for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            if (key.startsWith('membership_')) {
+                subscriptionsFound++;
+                const creatorId = key.split('_')[1];
+                const tierId = sessionStorage.getItem(key);
+
+                const creatorDoc = await db.collection('creators').doc(creatorId).get();
+                const tierDoc = await db.collection('creators').doc(creatorId).collection('tiers').doc(tierId).get();
+
+                if (creatorDoc.exists && tierDoc.exists) {
+                    const creator = creatorDoc.data();
+                    const tier = tierDoc.data();
+                    const card = document.createElement('div');
+                    card.className = 'creator-card';
+                    card.innerHTML = `
+                        <img src="${creator.profileImage}" alt="${creator.name} profile picture" class="creator-avatar">
+                        <h3>${creator.name}</h3>
+                        <p><strong>Your Tier:</strong> ${tier.name}</p>
+                        <a href="#" class="btn btn-primary view-creator-btn" data-id="${creatorId}">Visit Page</a>
+                    `;
+                    if (subscriptionsFound === 1) membershipsGrid.innerHTML = '';
+                    membershipsGrid.appendChild(card);
+                }
+            }
+        }
+        
+        if (subscriptionsFound === 0) {
+            membershipsGrid.innerHTML = '<p>You are not subscribed to any creators yet. Go to the Explore page to find creators to support!</p>';
+        }
+
+        document.querySelectorAll('.view-creator-btn').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const creatorId = event.target.dataset.id;
+                sessionStorage.setItem('selectedCreatorId', creatorId);
+                window.location.href = 'creator.html';
+            });
+        });
     <script src="main.js"></script>
 </body>
 </html>
+
 
 
 
