@@ -58,52 +58,50 @@
 
     <script>
     async function initCreatorHub(db, piUser) {
-            // --- 3. CHECK IF USER IS ALREADY A CREATOR ---
-            const loader = document.getElementById('loader');
-            const registrationFormDiv = document.getElementById('creator-registration-form');
-            const piUser = JSON.parse(sessionStorage.getItem('piUser'));
+        const loader = document.getElementById('loader');
+        const registrationFormDiv = document.getElementById('creator-registration-form');
         
-            const creatorDocRef = db.collection('creators').doc(piUser.uid);
-            const creatorDoc = await creatorDocRef.get();
+        const creatorDocRef = db.collection('creators').doc(piUser.uid);
+        const creatorDoc = await creatorDocRef.get();
 
-            if (creatorDoc.exists) {
-                // If they are a creator, send them to their dashboard (we'll build this page next)
-                window.location.href = 'creator_dashboard.html';
-            } else {
-                // If not, show the registration form
-                loader.classList.add('hidden');
-                registrationFormDiv.classList.remove('hidden');
-            }
-
-            // --- 4. HANDLE FORM SUBMISSION ---
-            const registrationForm = document.getElementById('registration-form');
-            const formStatus = document.getElementById('form-status');
-            registrationForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                formStatus.textContent = "Creating profile...";
-
-                const newCreatorData = {
-                    name: document.getElementById('creator-name').value,
-                    bio: document.getElementById('creator-bio').value,
-                    profileImage: document.getElementById('profile-image').value,
-                    ownerUid: piUser.uid // Link this profile to the logged-in user's ID
-                };
-
-                try {
-                    // Create a new document in the 'creators' collection using the user's Pi UID as the document ID
-                    await db.collection('creators').doc(piUser.uid).set(newCreatorData);
-                    formStatus.textContent = "Profile created successfully! Redirecting...";
-                    // Redirect to the creator dashboard after creation
-                    setTimeout(() => {
-                        window.location.href = 'creator_dashboard.html';
-                    }, 2000);
-                } catch (error) {
-                    console.error("Error creating creator profile: ", error);
-                    formStatus.textContent = "Error: Could not create profile. Please try again.";
-                }
-            });
+        if (creatorDoc.exists) {
+            // If they are a creator, send them to their dashboard
+            window.location.href = 'creator_dashboard.html';
+        } else {
+            // If not, show the registration form
+            loader.classList.add('hidden');
+            registrationFormDiv.classList.remove('hidden');
         }
-     </script>
+
+        // --- Handle Form Submission ---
+        const registrationForm = document.getElementById('registration-form');
+        const formStatus = document.getElementById('form-status');
+        registrationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            formStatus.textContent = "Creating profile...";
+
+            const newCreatorData = {
+                name: document.getElementById('creator-name').value,
+                bio: document.getElementById('creator-bio').value,
+                profileImage: document.getElementById('profile-image').value,
+                ownerUid: piUser.uid // Link this profile to the logged-in user's ID
+            };
+
+            try {
+                // Create a new document in the 'creators' collection using the user's Pi UID as the document ID
+                await db.collection('creators').doc(piUser.uid).set(newCreatorData);
+                formStatus.textContent = "Profile created successfully! Redirecting...";
+                // Redirect to the creator dashboard after creation
+                setTimeout(() => {
+                    window.location.href = 'creator_dashboard.html';
+                }, 2000);
+            } catch (error) {
+                console.error("Error creating creator profile: ", error);
+                formStatus.textContent = "Error: Could not create profile. Please try again.";
+            }
+        });
+    }
+</script>
      <script src="main.js"></script>
 </body>
 </html>
