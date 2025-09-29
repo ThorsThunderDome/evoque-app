@@ -41,7 +41,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-    document.addEventListener('DOMContentLoaded', async () => {
+    async function initExplorePage(db, piUser) { 
         const creatorsGrid = document.getElementById('creators-grid');
         try {
             const snapshot = await db.collection("creators").get();
@@ -72,7 +72,7 @@
             console.error("Error fetching creators: ", error);
             creatorsGrid.innerHTML = "<p>Error loading creators. Please try again later.</p>";
         }
-    });
+    }
 </script>
     <script src="main.js"></script>
 </body>
