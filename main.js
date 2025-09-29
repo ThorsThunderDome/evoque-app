@@ -1,28 +1,16 @@
-// This is main.js - our new shared script for all pages
-
-// --- Global variables for Firebase ---
-let db;
-
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("main.js loaded.");
-
-    // --- 1. HANDLE USER AUTHENTICATION (Runs on every page) ---
-    const userDisplay = document.getElementById('username-display');
+    // --- 1. SETUP AND AUTHENTICATION ---
     const piUserString = sessionStorage.getItem('piUser');
-
     if (!piUserString && window.location.pathname !== '/index.html' && window.location.pathname !== '/') {
-        // If not logged in AND not on the login page, redirect to login
         window.location.href = 'index.html';
         return;
     }
-    
     const piUser = JSON.parse(piUserString);
-    if (userDisplay && piUser) {
-        userDisplay.textContent = piUser.username;
+    if (document.getElementById('username-display') && piUser) {
+        document.getElementById('username-display').textContent = piUser.username;
     }
 
-    // --- 2. INITIALIZE FIREBASE (Runs on every page) ---
-    // Remember to fill this in!
+    // --- 2. FIREBASE INITIALIZATION ---
     const firebaseConfig = {
             apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
             authDomain: "evoque-app.firebaseapp.com",
@@ -33,21 +21,36 @@ document.addEventListener('DOMContentLoaded', () => {
             measurementId: "G-DG6WWPYQ3Z"
         };
 
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    db = firebase.firestore();
-    console.log("Firebase initialized in main.js.");
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    const db = firebase.firestore();
 
-
-    // --- 3. HANDLE SIDEBAR TOGGLE (Runs on every page) ---
+    // --- 3. SIDEBAR TOGGLE ---
     const sidebarToggler = document.getElementById('sidebar-toggler');
-    const sidebar = document.getElementById('sidebar');
-
-    if (sidebarToggler && sidebar) {
+    const appContent = document.getElementById('app-content');
+    if (sidebarToggler && appContent) {
         sidebarToggler.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
+            appContent.classList.toggle('sidebar-collapsed');
         });
-        console.log("Sidebar toggler is active.");
+    }
+
+    // --- 4. PAGE-SPECIFIC LOGIC ROUTER ---
+    // This block checks which page we're on and calls the correct function.
+    const path = window.location.pathname;
+    if (path.includes('dashboard.html')) {
+        initDashboard(db, piUser);
+    } else if (path.includes('explore.html')) {
+        initExplorePage(db, piUser);
+    } else if (path.includes('creator.html')) {
+        initCreatorPage(db, piUser);
+    } else if (path.includes('creator_hub.html')) {
+        initCreatorHub(db, piUser);
+    } else if (path.includes('creator_dashboard.html')) {
+        initCreatorDashboard(db, piUser);
+    } else if (path.includes('manage_tiers.html')) {
+        initManageTiers(db, piUser);
+    } else if (path.includes('create_post.html')) {
+        initCreatePost(db, piUser);
+    } else if (path.includes('my_supporters.html')) {
+        initMySupporters(db, piUser);
     }
 });
