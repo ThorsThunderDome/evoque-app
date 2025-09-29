@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evoque - My Supporters</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app-content">
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <img id="creator-avatar-sidebar" src="" alt="Creator Avatar" class="logo">
+                <h2 id="creator-name-sidebar">My Hub</h2>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li><a href="creator_dashboard.html">Dashboard</a></li>
+                    <li><a href="my_supporters.html">My Supporters</a></li>
+                    <li><a href="manage_tiers.html">My Tiers</a></li>
+                    <li><a href="create_post.html">Create Post</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="dashboard.html" class="btn btn-secondary">Switch to Supporter Space</a>
+            </div>
+        </aside>
+
+        <main id="main-content">
+            <h1>My Supporters</h1>
+            <p>A list of amazing people supporting your work.</p>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Subscribed Tier</th>
+                            <th>Member Since</th>
+                        </tr>
+                    </thead>
+                    <tbody id="supporters-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Standard login check and Firebase init
+            const piUserString = sessionStorage.getItem('piUser');
+            if (!piUserString) { window.location.href = 'index.html'; return; }
+            const piUser = JSON.parse(piUserString);
+            const firebaseConfig = {
+            apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
+            authDomain: "evoque-app.firebaseapp.com",
+            projectId: "evoque-app",
+            storageBucket: "evoque-app.firebasestorage.app",
+            messagingSenderId: "790735748571",
+            appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
+            measurementId: "G-DG6WWPYQ3Z"
+        };
+
+            if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+            const db = firebase.firestore();
+
+            // Fetch creator's own profile data for the sidebar
+            const creatorDocRef = db.collection('creators').doc(piUser.uid);
+            const docSnap = await creatorDocRef.get();
+            if (docSnap.exists) {
+                const creatorData = docSnap.data();
+                document.getElementById('creator-name-sidebar').textContent = creatorData.name;
+                document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
+            }
+
+            // --- RENDER MOCK SUPPORTER DATA ---
+            const mockSupporters = [
+                { username: 'Ronnie200', tierName: 'Gold Tier', since: 'Sep 2025' },
+                { username: 'JaneDoe', tierName: 'Silver Tier', since: 'Aug 2025' },
+                { username: 'Pioneer123', tierName: 'Silver Tier', since: 'Sep 2025' }
+            ];
+
+            const tableBody = document.getElementById('supporters-table-body');
+            tableBody.innerHTML = ''; // Clear any loading message
+
+            if (mockSupporters.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="3">You have no supporters yet.</td></tr>';
+            } else {
+                mockSupporters.forEach(supporter => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${supporter.username}</td>
+                        <td>${supporter.tierName}</td>
+                        <td>${supporter.since}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
