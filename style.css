@@ -96,27 +96,6 @@ body {
     margin-bottom: 30px;
 }
 
-/* --- Main App Styling (for future pages) --- */
-/* You will see these styles come to life on the other pages */
-#app-content {
-    display: flex;
-}
-
-#sidebar {
-    width: 250px;
-    background-color: var(--surface-color);
-    padding: 20px;
-    height: 100vh;
-    position: sticky;
-    top: 0;
-}
-
-#main-content {
-    flex-grow: 1;
-    padding: 20px;
-    overflow-y: auto;
-}
-
 .sidebar-header .logo {
     width: 50px;
     height: 50px;
@@ -353,39 +332,61 @@ tbody tr:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 20px rgba(81, 45, 168, 0.3);
 }
-/* --- DYNAMIC SIDEBAR CSS FIXES --- */
 
-/* This makes the main content area expand and shrink */
+/* --- FINAL APP LAYOUT STYLES --- */
+
+/* Main container for the whole app view */
 #app-content {
-    transition: margin-left 0.3s ease-in-out;
+    display: flex;
+    position: relative;
+    transition: margin-left 0.35s ease-in-out;
 }
 
+/* Sidebar Styling */
+#sidebar {
+    width: 250px;
+    background-color: var(--surface-color);
+    padding: 20px;
+    height: 100vh;
+    position: fixed; /* Fixes sidebar to the side */
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    transition: transform 0.35s ease-in-out;
+}
+
+/* Main content area that holds the pages */
 #main-content {
-    width: 100%;
+    flex-grow: 1;
+    padding: 20px;
+    margin-left: 250px; /* Pushes content to the right of the sidebar */
+    width: calc(100% - 250px); /* Ensures it doesn't overflow */
+    transition: margin-left 0.35s ease-in-out;
 }
 
+/* --- Collapsed State --- */
 #app-content.sidebar-collapsed #sidebar {
     transform: translateX(-100%);
 }
 
-#app-content.sidebar-collapsed {
+#app-content.sidebar-collapsed #main-content {
     margin-left: 0;
+    width: 100%;
 }
-
-#app-content {
-    margin-left: 250px; /* Same as sidebar width */
-}
-
+/* Animated Hamburger Icon */
 #sidebar-toggler {
+    position: absolute;
+    top: 20px;
+    left: 20px;
     z-index: 1001;
-    position: relative;
     border: none;
     background: transparent;
     cursor: pointer;
     padding: 0;
     width: 30px;
-    height: 30px;
-    margin-bottom: 20px;
+    height: 25px;
 }
 
 #sidebar-toggler span,
@@ -398,6 +399,11 @@ tbody tr:hover {
     background: var(--text-color);
     border-radius: 2px;
     transition: all 0.3s ease;
+    left: 0;
+}
+
+#sidebar-toggler span {
+    top: 11px;
 }
 
 #sidebar-toggler span:before {
