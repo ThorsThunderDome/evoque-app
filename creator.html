@@ -61,7 +61,7 @@
                 document.getElementById('main-content').innerHTML = "<h1>Error: Creator ID not found.</h1>";
                 return;
             }
-
+            const piUser = JSON.parse(sessionStorage.getItem('piUser'));
             const creatorDocRef = db.collection("creators").doc(creatorId);
 
             // --- 2. Simulated Membership Check ---
