@@ -63,7 +63,6 @@
             }
             const piUser = JSON.parse(sessionStorage.getItem('piUser'));
             const creatorDocRef = db.collection("creators").doc(creatorId);
-
             // --- 2. Simulated Membership Check ---
             const membershipKey = `membership_${creatorId}`;
             const subscribedTierId = sessionStorage.getItem(membershipKey);
