@@ -58,32 +58,23 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-    async function initCreatorDashboard(db, piUser) {
-            // --- 3. FETCH CREATOR'S OWN PROFILE DATA ---
-            const creatorNameMain = document.getElementById('creator-name-main');
-            const creatorNameSidebar = document.getElementById('creator-name-sidebar');
-            const creatorAvatarSidebar = document.getElementById('creator-avatar-sidebar');
-            const piUser = JSON.parse(sessionStorage.getItem('piUser'));
-        
-            try {
-                // The creator's profile is stored with their unique Pi UID as the document ID
-                const creatorDocRef = db.collection('creators').doc(piUser.uid);
-                const docSnap = await creatorDocRef.get();
-
-                if (docSnap.exists) {
-                    const creatorData = docSnap.data();
-                    creatorNameMain.textContent = creatorData.name;
-                    creatorNameSidebar.textContent = creatorData.name;
-                    creatorAvatarSidebar.src = creatorData.profileImage;
-                } else {
-                    // This user isn't a creator, send them to the registration page
-                    window.location.href = 'creator_hub.html';
-                }
-            } catch (error) {
-                console.error("Error fetching creator data: ", error);
-                document.getElementById('main-content').innerHTML = "<h1>Error loading your creator profile. Please try again.</h1>";
+    async function initCreatorDashboard() {
+        if (!piUser || !piUser.uid) { window.location.href = 'index.html'; return; }
+        try {
+            const creatorDocRef = db.collection('creators').doc(piUser.uid);
+            const docSnap = await creatorDocRef.get();
+            if (docSnap.exists) {
+                const creatorData = docSnap.data();
+                document.getElementById('creator-name-main').textContent = creatorData.name;
+                document.getElementById('creator-name-sidebar').textContent = creatorData.name;
+                document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
+            } else {
+                window.location.href = 'creator_hub.html';
             }
-         }
+        } catch (error) {
+            document.getElementById('main-content').innerHTML = "<h1>Error loading your creator profile.</h1>";
+        }
+    }
 </script>
      <script src="main.js"></script>
 </body>
