@@ -60,6 +60,12 @@
     async function initCreatorHub(db, piUser) {
         const loader = document.getElementById('loader');
         const registrationFormDiv = document.getElementById('creator-registration-form');
+
+        // Defensive check: Make sure we have a valid user and UID before proceeding
+        if (!piUser || !piUser.uid) {
+            loader.innerHTML = "<h1>Error: Could not verify user ID. Please try logging in again.</h1>";
+            return;
+        }
         
         const creatorDocRef = db.collection('creators').doc(piUser.uid);
         const creatorDoc = await creatorDocRef.get();
