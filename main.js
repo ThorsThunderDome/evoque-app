@@ -12,15 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 2. FIREBASE INITIALIZATION ---
     const firebaseConfig = {
-            apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
-            authDomain: "evoque-app.firebaseapp.com",
-            projectId: "evoque-app",
-            storageBucket: "evoque-app.firebasestorage.app",
-            messagingSenderId: "790735748571",
-            appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
-            measurementId: "G-DG6WWPYQ3Z"
-        };
-
+  apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
+  authDomain: "evoque-app.firebaseapp.com",
+  projectId: "evoque-app",
+  storageBucket: "evoque-app.firebasestorage.app",
+  messagingSenderId: "790735748571",
+  appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
+  measurementId: "G-DG6WWPYQ3Z"
+};
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.firestore();
 
