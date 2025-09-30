@@ -375,18 +375,17 @@ tbody tr:hover {
     margin-left: 0;
     width: 100%;
 }
-/* Animated Hamburger Icon */
+/* --- CORRECTED Animated Hamburger Icon --- */
 #sidebar-toggler {
-    position: absolute;
-    top: 20px;
-    left: 20px;
     z-index: 1001;
+    position: relative;
     border: none;
     background: transparent;
     cursor: pointer;
     padding: 0;
     width: 30px;
     height: 25px;
+    margin-bottom: 20px;
 }
 
 #sidebar-toggler span,
@@ -404,24 +403,31 @@ tbody tr:hover {
 
 #sidebar-toggler span {
     top: 11px;
-}
-
-#sidebar-toggler span:before {
-    top: -8px;
-}
-
-#sidebar-toggler span:after {
-    top: 8px;
-}
-
-#app-content.sidebar-collapsed #sidebar-toggler span {
+    /* When menu is OPEN (default state), turn to an X */
     background: transparent;
 }
 
+#sidebar-toggler span:before {
+    top: 11px;
+    transform: rotate(45deg);
+}
+
+#sidebar-toggler span:after {
+    top: 11px;
+    transform: rotate(-45deg);
+}
+
+/* When menu is COLLAPSED, turn back to a hamburger */
+#app-content.sidebar-collapsed #sidebar-toggler span {
+    background: var(--text-color);
+}
+
 #app-content.sidebar-collapsed #sidebar-toggler span:before {
-    transform: rotate(45deg) translate(5px, 6px);
+    top: -8px;
+    transform: rotate(0deg);
 }
 
 #app-content.sidebar-collapsed #sidebar-toggler span:after {
-    transform: rotate(-45deg) translate(5px, -6px);
+    top: 8px;
+    transform: rotate(0deg);
 }
