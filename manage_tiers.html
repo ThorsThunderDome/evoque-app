@@ -63,61 +63,50 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-    async function initManageTiers(db, piUser) {
-        const piUser = JSON.parse(sessionStorage.getItem('piUser'));
-            const creatorDocRef = db.collection('creators').doc(piUser.uid);
-            const tiersCollectionRef = creatorDocRef.collection('tiers');
+    async function initManageTiers() {
+        if (!piUser || !piUser.uid) { window.location.href = 'index.html'; return; }
+        const creatorDocRef = db.collection('creators').doc(piUser.uid);
+        const tiersCollectionRef = creatorDocRef.collection('tiers');
 
-            // Function to fetch and display existing tiers
-            async function loadTiers() {
-                const tierListDiv = document.getElementById('existing-tiers-list');
-                tierListDiv.innerHTML = ''; // Clear list
-                const snapshot = await tiersCollectionRef.orderBy('price').get();
-
-                if (snapshot.empty) {
-                    tierListDiv.innerHTML = '<p>You have not created any tiers yet.</p>';
-                    return;
-                }
-                snapshot.forEach(doc => {
-                    const tier = doc.data();
-                    const tierElement = document.createElement('div');
-                    tierElement.className = 'tier-item'; // We will need to style this
-                    tierElement.innerHTML = `
-                        <h3>${tier.name} - ${tier.price} π/month</h3>
-                        <ul>${tier.description.split('\\n').map(b => `<li>${b}</li>`).join('')}</ul>
-                    `;
-                    tierListDiv.appendChild(tierElement);
-                });
+        async function loadTiers() {
+            const tierListDiv = document.getElementById('existing-tiers-list');
+            tierListDiv.innerHTML = '';
+            const snapshot = await tiersCollectionRef.orderBy('price').get();
+            if (snapshot.empty) {
+                tierListDiv.innerHTML = '<p>You have not created any tiers yet.</p>';
+                return;
             }
-
-            // Handle new tier form submission
-            const createTierForm = document.getElementById('create-tier-form');
-            const formStatus = document.getElementById('form-status');
-            createTierForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                formStatus.textContent = 'Creating tier...';
-                
-                const newTier = {
-                    name: document.getElementById('tier-name').value,
-                    price: parseFloat(document.getElementById('tier-price').value),
-                    description: document.getElementById('tier-description').value.replace(/\\n/g, '\\\\n'),
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                try {
-                    await tiersCollectionRef.add(newTier);
-                    formStatus.textContent = 'Tier created successfully!';
-                    createTierForm.reset();
-                    loadTiers(); // Refresh the list of tiers
-                } catch (error) {
-                    console.error("Error creating tier: ", error);
-                    formStatus.textContent = 'Error creating tier. Please try again.';
-                }
+            snapshot.forEach(doc => {
+                const tier = doc.data();
+                const tierElement = document.createElement('div');
+                tierElement.className = 'tier-item'; // Style this class
+                tierElement.innerHTML = `<h3>${tier.name} - ${tier.price} π/month</h3><ul>${tier.description.split('\\n').map(b => `<li>${b}</li>`).join('')}</ul>`;
+                tierListDiv.appendChild(tierElement);
             });
+        }
 
-            // Initial load of tiers when page opens
-            loadTiers();
-       }
+        const createTierForm = document.getElementById('create-tier-form');
+        const formStatus = document.getElementById('form-status');
+        createTierForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            formStatus.textContent = 'Creating tier...';
+            const newTier = {
+                name: document.getElementById('tier-name').value,
+                price: parseFloat(document.getElementById('tier-price').value),
+                description: document.getElementById('tier-description').value,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            try {
+                await tiersCollectionRef.add(newTier);
+                formStatus.textContent = 'Tier created successfully!';
+                createTierForm.reset();
+                loadTiers();
+            } catch (error) {
+                formStatus.textContent = 'Error creating tier.';
+            }
+        });
+        loadTiers();
+    }
 </script>
      <script src="main.js"></script>
 </body>
