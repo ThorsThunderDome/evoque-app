@@ -49,7 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const path = window.location.pathname;
     if (path.includes('dashboard.html')) initDashboard();
-    else if (path.includes('explore.html')) initExplorePage();
+     else if (path.includes('explore.html')) {
+        alert("main.js is about to call initExplorePage()"); 
+        initExplorePage();
+     }
     else if (path.includes('creator.html')) initCreatorPage();
     else if (path.includes('creator_hub.html')) initCreatorHub();
     else if (path.includes('creator_dashboard.html')) initCreatorDashboard();
