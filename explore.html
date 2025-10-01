@@ -42,6 +42,9 @@
 
     <script>
     async function initExplorePage() {
+        // ADD THIS ALERT
+        alert("initExplorePage() has been called!");
+
         const creatorsGrid = document.getElementById('creators-grid');
         try {
             const snapshot = await db.collection("creators").get();
