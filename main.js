@@ -1,21 +1,25 @@
-// This is the final, corrected main.js file
 let db;
 let piUser;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // --- User session logic (no changes here) ---
     const piUserString = sessionStorage.getItem('piUser');
-    if (!piUserString && window.location.pathname !== '/index.html' && window.location.pathname !== '/') {
+    if (!piUserString && !window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
         window.location.href = 'index.html';
         return;
     }
-    piUser = JSON.parse(piUserString);
-
-    if (document.getElementById('username-display') && piUser) {
-        document.getElementById('username-display').textContent = piUser.username;
+    if (piUserString) {
+        piUser = JSON.parse(piUserString);
+    }
+    const userDisplay = document.getElementById('username-display');
+    if (userDisplay && piUser) {
+        userDisplay.textContent = piUser.username;
     }
 
-    // Make sure your firebaseConfig is correct here
-         const firebaseConfig = {
+    // --- UPDATED FIREBASE INITIALIZATION WITH ERROR CHECK ---
+    try {
+        // Double-check that this config is a perfect copy from your Firebase Console
+             const firebaseConfig = {
   apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
   authDomain: "evoque-app.firebaseapp.com",
   projectId: "evoque-app",
@@ -24,11 +28,17 @@ document.addEventListener('DOMContentLoaded', () => {
   appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
   measurementId: "G-DG6WWPYQ3Z"
 };
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.firestore();
+    } catch (error) {
+        // If this alert box appears, the firebaseConfig object is wrong.
+        alert("CRITICAL ERROR: Firebase initialization failed. Please double-check your firebaseConfig in main.js. Error: " + error.message);
+        return; // Stop all other code from running
     }
-    db = firebase.firestore();
-
+    
+    // --- Sidebar and Page Router logic (no changes here) ---
     const sidebarToggler = document.getElementById('sidebar-toggler');
     const appContent = document.getElementById('app-content');
     if (sidebarToggler && appContent) {
