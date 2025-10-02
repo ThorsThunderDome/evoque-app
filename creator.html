@@ -5,50 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evoque - Creator Profile</title>
     <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="app-content" class="sidebar-collapsed">
-        <aside id="sidebar">
-            <div class="sidebar-header">
-                <img src="images/evoque-logo.png" alt="Evoque Logo" class="logo">
-                <h2>Evoque</h2>
-            </div>
-            <nav class="nav-menu">
-                <ul>
-                    <li><a href="dashboard.html">Dashboard</a></li>
-                    <li><a href="explore.html" class="active">Explore</a></li>
-                    <li><a href="chat.html">Chat</a></li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer">
-                <a href="creator_hub.html" class="btn btn-secondary">Switch to Creator Space</a>
-                <div id="user-profile">
-                    <p>Connected as: <strong id="username-display"></strong></p>
-                </div>
-            </div>
-        </aside>
-
-        <main id="main-content">
-            <button id="sidebar-toggler"><span></span></button>
-            <div id="creator-profile-header">
-                <img id="creator-avatar" src="" alt="Creator avatar" class="creator-avatar-large">
-                <div>
-                    <h1 id="creator-name">Loading...</h1>
-                    <p id="creator-bio">Loading bio...</p>
-                </div>
-            </div>
-
-            <div class="profile-content">
-                <h2>Membership Tiers</h2>
-                <div id="tiers-list" class="grid-container"></div>
-            </div>
-
-            <div class="profile-content">
-                <h2>Recent Posts</h2>
-                <div id="posts-feed"></div>
-            </div>
-        </main>
-    </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -128,6 +84,50 @@
         }
     }
 </script>
-     <script src="main.js"></script>
+     <script src="main.js" defer></script>
+</head>
+<body>
+    <div id="app-content" class="sidebar-collapsed">
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <img src="images/evoque-logo.png" alt="Evoque Logo" class="logo">
+                <h2>Evoque</h2>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li><a href="dashboard.html">Dashboard</a></li>
+                    <li><a href="explore.html" class="active">Explore</a></li>
+                    <li><a href="chat.html">Chat</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="creator_hub.html" class="btn btn-secondary">Switch to Creator Space</a>
+                <div id="user-profile">
+                    <p>Connected as: <strong id="username-display"></strong></p>
+                </div>
+            </div>
+        </aside>
+
+        <main id="main-content">
+            <button id="sidebar-toggler"><span></span></button>
+            <div id="creator-profile-header">
+                <img id="creator-avatar" src="" alt="Creator avatar" class="creator-avatar-large">
+                <div>
+                    <h1 id="creator-name">Loading...</h1>
+                    <p id="creator-bio">Loading bio...</p>
+                </div>
+            </div>
+
+            <div class="profile-content">
+                <h2>Membership Tiers</h2>
+                <div id="tiers-list" class="grid-container"></div>
+            </div>
+
+            <div class="profile-content">
+                <h2>Recent Posts</h2>
+                <div id="posts-feed"></div>
+            </div>
+        </main>
+    </div>
 </body>
 </html>
