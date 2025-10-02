@@ -5,6 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evoque - My Supporters</title>
     <link rel="stylesheet" href="style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+    async function initMySupporters() {
+        if (!piUser || !piUser.uid) { window.location.href = 'index.html'; return; }
+        const creatorDocRef = db.collection('creators').doc(piUser.uid);
+        const docSnap = await creatorDocRef.get();
+        if (docSnap.exists) {
+            const creatorData = docSnap.data();
+            document.getElementById('creator-name-sidebar').textContent = creatorData.name;
+            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
+        }
+
+        const mockSupporters = [
+            { username: 'Ronnie200', tierName: 'Gold Tier', since: 'Sep 2025' },
+            { username: 'JaneDoe', tierName: 'Silver Tier', since: 'Aug 2025' },
+            { username: 'Pioneer123', tierName: 'Silver Tier', since: 'Sep 2025' }
+        ];
+        const tableBody = document.getElementById('supporters-table-body');
+        tableBody.innerHTML = '';
+        if (mockSupporters.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="3">You have no supporters yet.</td></tr>';
+        } else {
+            mockSupporters.forEach(supporter => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${supporter.username}</td><td>${supporter.tierName}</td><td>${supporter.since}</td>`;
+                tableBody.appendChild(row);
+            });
+        }
+    }
+</script>
+     <script src="main.js" defer></script>
 </head>
 <body>
     <div id="app-content" class="sidebar-collapsed">
@@ -46,39 +80,5 @@
             </div>
         </main>
     </div>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-    <script>
-    async function initMySupporters() {
-        if (!piUser || !piUser.uid) { window.location.href = 'index.html'; return; }
-        const creatorDocRef = db.collection('creators').doc(piUser.uid);
-        const docSnap = await creatorDocRef.get();
-        if (docSnap.exists) {
-            const creatorData = docSnap.data();
-            document.getElementById('creator-name-sidebar').textContent = creatorData.name;
-            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
-        }
-
-        const mockSupporters = [
-            { username: 'Ronnie200', tierName: 'Gold Tier', since: 'Sep 2025' },
-            { username: 'JaneDoe', tierName: 'Silver Tier', since: 'Aug 2025' },
-            { username: 'Pioneer123', tierName: 'Silver Tier', since: 'Sep 2025' }
-        ];
-        const tableBody = document.getElementById('supporters-table-body');
-        tableBody.innerHTML = '';
-        if (mockSupporters.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="3">You have no supporters yet.</td></tr>';
-        } else {
-            mockSupporters.forEach(supporter => {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td>${supporter.username}</td><td>${supporter.tierName}</td><td>${supporter.since}</td>`;
-                tableBody.appendChild(row);
-            });
-        }
-    }
-</script>
-     <script src="main.js"></script>
 </body>
 </html>
