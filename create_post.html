@@ -5,51 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evoque - Create Post</title>
     <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="app-content" class="sidebar-collapsed">
-        <aside id="sidebar">
-            <div class="sidebar-header">
-                <img id="creator-avatar-sidebar" src="images/evoque-logo.png" alt="Creator Avatar" class="logo">
-                <h2 id="creator-name-sidebar">My Hub</h2>
-            </div>
-            <nav class="nav-menu">
-                <ul>
-                    <li><a href="creator_dashboard.html">Dashboard</a></li>
-                    <li><a href="my_supporters.html">My Supporters</a></li>
-                    <li><a href="manage_tiers.html">My Tiers</a></li>
-                    <li><a href="create_post.html">Create Post</a></li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer">
-                <a href="dashboard.html" class="btn btn-secondary">Switch to Supporter Space</a>
-            </div>
-        </aside>
-
-        <main id="main-content">
-            <button id="sidebar-toggler"><span></span></button> 
-            <h1>Create a New Post</h1>
-            
-            <form id="create-post-form">
-                <div class="form-group">
-                    <label for="post-title">Post Title</label>
-                    <input type="text" id="post-title" required>
-                </div>
-                <div class="form-group">
-                    <label for="post-content">Content</label>
-                    <textarea id="post-content" rows="10" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Who can see this post?</label>
-                    <div id="tier-access-options">
-                        <p>Loading your tiers...</p>
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary">Publish Post</button>
-                <p id="form-status"></p>
-            </form>
-        </main>
-    </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -106,6 +61,51 @@
         });
     }
 </script>
-     <script src="main.js"></script>
+     <script src="main.js" defer></script>
+</head>
+<body>
+    <div id="app-content" class="sidebar-collapsed">
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <img id="creator-avatar-sidebar" src="images/evoque-logo.png" alt="Creator Avatar" class="logo">
+                <h2 id="creator-name-sidebar">My Hub</h2>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li><a href="creator_dashboard.html">Dashboard</a></li>
+                    <li><a href="my_supporters.html">My Supporters</a></li>
+                    <li><a href="manage_tiers.html">My Tiers</a></li>
+                    <li><a href="create_post.html">Create Post</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="dashboard.html" class="btn btn-secondary">Switch to Supporter Space</a>
+            </div>
+        </aside>
+
+        <main id="main-content">
+            <button id="sidebar-toggler"><span></span></button> 
+            <h1>Create a New Post</h1>
+            
+            <form id="create-post-form">
+                <div class="form-group">
+                    <label for="post-title">Post Title</label>
+                    <input type="text" id="post-title" required>
+                </div>
+                <div class="form-group">
+                    <label for="post-content">Content</label>
+                    <textarea id="post-content" rows="10" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Who can see this post?</label>
+                    <div id="tier-access-options">
+                        <p>Loading your tiers...</p>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Publish Post</button>
+                <p id="form-status"></p>
+            </form>
+        </main>
+    </div>
 </body>
 </html>
