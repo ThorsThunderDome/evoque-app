@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const connectButton = document.getElementById('pi-connect-btn');
     const authStatus = document.getElementById('auth-status');
 
-    // Make sure your firebaseConfig is correct here
+    // **IMPORTANT**: Fill in your Firebase config here
          const firebaseConfig = {
   apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
   authDomain: "evoque-app.firebaseapp.com",
@@ -12,14 +12,22 @@ document.addEventListener('DOMContentLoaded', () => {
   appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
   measurementId: "G-DG6WWPYQ3Z"
 };
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+    try {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+    } catch(e) {
+        console.error("Firebase init failed on index.html", e);
+        authStatus.textContent = "Error initializing. Please refresh.";
+        authStatus.classList.remove('hidden');
     }
     
     try {
         Pi.init({ version: "2.0", sandbox: true });
     } catch (err) {
         console.error("Pi SDK initialization failed:", err);
+        authStatus.textContent = "Pi SDK failed to load. Please refresh.";
+        authStatus.classList.remove('hidden');
     }
 
     async function authenticateWithPi() {
@@ -27,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         authStatus.classList.remove('hidden');
         try {
             const scopes = ['username', 'payments'];
-            const onIncompletePaymentFound = (payment) => {};
+            const onIncompletePaymentFound = (payment) => { console.log('Incomplete payment found:', payment); };
             const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
             
             sessionStorage.setItem('piUser', JSON.stringify(authResult.user));
