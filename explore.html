@@ -5,39 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evoque - Explore</title>
     <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-    <div id="app-content" class="sidebar-collapsed">
-        <aside id="sidebar">
-            <div class="sidebar-header">
-                <img src="images/evoque-logo.png" alt="Evoque Logo" class="logo"> <h2>Evoque</h2>
-            </div>
-            <nav class="nav-menu">
-                <ul>
-                    <li><a href="dashboard.html">Dashboard</a></li>
-                    <li><a href="explore.html" class="active">Explore</a></li>
-                    <li><a href="chat.html">Chat</a></li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer">
-                <a href="creator_hub.html" class="btn btn-secondary">Switch to Creator Space</a>
-                <div id="user-profile">
-                    <p>Connected as: <strong id="username-display"></strong></p>
-                </div>
-            </div>
-        </aside>
-
-        <main id="main-content">
-            <button id="sidebar-toggler"><span></span></button>
-            <h1>Explore Creators</h1>
-            <p>Discover talented creators on the Pi Network.</p>
-            <div id="creators-grid" class="grid-container">
-                </div>
-        </main>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
@@ -69,6 +37,37 @@
         }
     }
 </script>
-    <script src="main.js"></script>
+    <script src="main.js" defer></script>
+</head>
+<body>
+
+    <div id="app-content" class="sidebar-collapsed">
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <img src="images/evoque-logo.png" alt="Evoque Logo" class="logo"> <h2>Evoque</h2>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li><a href="dashboard.html">Dashboard</a></li>
+                    <li><a href="explore.html" class="active">Explore</a></li>
+                    <li><a href="chat.html">Chat</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="creator_hub.html" class="btn btn-secondary">Switch to Creator Space</a>
+                <div id="user-profile">
+                    <p>Connected as: <strong id="username-display"></strong></p>
+                </div>
+            </div>
+        </aside>
+
+        <main id="main-content">
+            <button id="sidebar-toggler"><span></span></button>
+            <h1>Explore Creators</h1>
+            <p>Discover talented creators on the Pi Network.</p>
+            <div id="creators-grid" class="grid-container">
+                </div>
+        </main>
+    </div>
 </body>
 </html>
