@@ -6,9 +6,11 @@
     <title>Evoque - Connect</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="app.js" defer></script>
 </head>
 <body>
-
     <div id="login-page">
         <img src="images/evoque-logo.png" alt="Evoque Logo" class="logo">
         <h1>Welcome to Evoque</h1>
@@ -16,14 +18,5 @@
         <button id="pi-connect-btn" class="btn btn-primary">Connect with Pi</button>
         <p id="auth-status" class="hidden"></p>
     </div>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-    <script src="app.js"></script>
-
 </body>
-
 </html>
-
