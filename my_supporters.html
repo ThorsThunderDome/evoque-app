@@ -5,66 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evoque - My Supporters</title>
     <link rel="stylesheet" href="style.css">
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-    <script>
-    async function initMySupporters() {
-        if (!piUser || !piUser.uid) { window.location.href = 'index.html'; return; }
-        const creatorDocRef = db.collection('creators').doc(piUser.uid);
-        const docSnap = await creatorDocRef.get();
-        if (docSnap.exists) {
-            const creatorData = docSnap.data();
-            document.getElementById('creator-name-sidebar').textContent = creatorData.name;
-            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
-        }
-
-        const mockSupporters = [
-            { username: 'Ronnie200', tierName: 'Gold Tier', since: 'Sep 2025' },
-            { username: 'JaneDoe', tierName: 'Silver Tier', since: 'Aug 2025' },
-            { username: 'Pioneer123', tierName: 'Silver Tier', since: 'Sep 2025' }
-        ];
-        const tableBody = document.getElementById('supporters-table-body');
-        tableBody.innerHTML = '';
-        if (mockSupporters.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="3">You have no supporters yet.</td></tr>';
-        } else {
-            mockSupporters.forEach(supporter => {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td>${supporter.username}</td><td>${supporter.tierName}</td><td>${supporter.since}</td>`;
-                tableBody.appendChild(row);
-            });
-        }
-    }
-</script>
-     <script src="main.js" defer></script>
 </head>
 <body>
     <div id="app-content" class="sidebar-collapsed">
         <aside id="sidebar">
             <div class="sidebar-header">
-                <img id="creator-avatar-sidebar" src="images/evoque-logo.png" alt="Creator Avatar" class="logo">
+                <img id="creator-avatar-sidebar" src="" alt="Creator Avatar" class="logo">
                 <h2 id="creator-name-sidebar">My Hub</h2>
             </div>
             <nav class="nav-menu">
                 <ul>
                     <li><a href="creator_dashboard.html">Dashboard</a></li>
-                    <li><a href="my_supporters.html">My Supporters</a></li>
+                    <li><a href="my_supporters.html" class="active">My Supporters</a></li>
                     <li><a href="manage_tiers.html">My Tiers</a></li>
                     <li><a href="create_post.html">Create Post</a></li>
                 </ul>
             </nav>
             <div class="sidebar-footer">
                 <a href="dashboard.html" class="btn btn-secondary">Switch to Supporter Space</a>
+                <div id="user-profile">
+                    <p>Connected as: <strong id="username-display"></strong></p>
+                </div>
             </div>
         </aside>
-
         <main id="main-content">
             <button id="sidebar-toggler"><span></span></button>
             <h1>My Supporters</h1>
             <p>A list of amazing people supporting your work.</p>
-            
             <div class="table-container">
                 <table>
                     <thead>
@@ -80,5 +47,41 @@
             </div>
         </main>
     </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+        async function initMySupporters() {
+            if (!piUser || !piUser.uid) { window.location.href = 'index.html'; return; }
+            const creatorDocRef = db.collection('creators').doc(piUser.uid);
+            
+            try {
+                const docSnap = await creatorDocRef.get();
+                if (docSnap.exists) {
+                    const creatorData = docSnap.data();
+                    document.getElementById('creator-name-sidebar').textContent = creatorData.name;
+                    document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
+                }
+            } catch (error) { console.error("Could not load creator data for sidebar", error); }
+
+            const mockSupporters = [
+                { username: 'Pioneer1', tierName: 'Gold Tier', since: 'Oct 2025' },
+                { username: 'JaneDoe', tierName: 'Silver Tier', since: 'Sep 2025' },
+                { username: 'TestUser', tierName: 'Silver Tier', since: 'Sep 2025' }
+            ];
+            const tableBody = document.getElementById('supporters-table-body');
+            tableBody.innerHTML = '';
+            if (mockSupporters.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="3">You have no supporters yet.</td></tr>';
+            } else {
+                mockSupporters.forEach(supporter => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${supporter.username}</td><td>${supporter.tierName}</td><td>${supporter.since}</td>`;
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+    </script>
+    <script src="main.js"></script>
 </body>
 </html>

@@ -5,72 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evoque - Creator Hub</title>
     <link rel="stylesheet" href="style.css">
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-    <script>
-    async function initCreatorHub() {
-        const loader = document.getElementById('loader');
-        const registrationFormDiv = document.getElementById('creator-registration-form');
-        if (!piUser || !piUser.uid) {
-            loader.innerHTML = "<h1>Error: Could not verify user ID. Please try logging in again.</h1>";
-            return;
-        }
-        const creatorDocRef = db.collection('creators').doc(piUser.uid);
-        const creatorDoc = await creatorDocRef.get();
-        if (creatorDoc.exists) {
-            window.location.href = 'creator_dashboard.html';
-        } else {
-            loader.classList.add('hidden');
-            registrationFormDiv.classList.remove('hidden');
-        }
-        const registrationForm = document.getElementById('registration-form');
-        const formStatus = document.getElementById('form-status');
-        registrationForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            formStatus.textContent = "Creating profile...";
-            const newCreatorData = {
-                name: document.getElementById('creator-name').value,
-                bio: document.getElementById('creator-bio').value,
-                profileImage: document.getElementById('profile-image').value,
-                ownerUid: piUser.uid
-            };
-            try {
-                await db.collection('creators').doc(piUser.uid).set(newCreatorData);
-                formStatus.textContent = "Profile created successfully! Redirecting...";
-                setTimeout(() => { window.location.href = 'creator_dashboard.html'; }, 2000);
-            } catch (error) {
-                formStatus.textContent = "Error: Could not create profile.";
-            }
-        });
-    }
-</script>
-     <script src="main.js" defer></script>
 </head>
 <body>
     <div id="app-content" class="sidebar-collapsed">
         <aside id="sidebar">
             <div class="sidebar-header">
-                <img src="https://i.imgur.com/your-new-logo.png" alt="Evoque Logo" class="logo">
+                <img src="images/evoque-logo.png" alt="Evoque Logo" class="logo">
                 <h2>Evoque</h2>
             </div>
             <nav class="nav-menu">
                 <ul>
                     <li><a href="dashboard.html">Dashboard</a></li>
                     <li><a href="explore.html">Explore</a></li>
-                    <li><a href="chat.html">Chat</a></li>
+                    <li><a href="#">Chat</a></li>
                 </ul>
             </nav>
             <div class="sidebar-footer">
-                <a href="creator_hub.html" class="btn btn-primary">Creator Space</a> <div id="user-profile">
+                <a href="creator_hub.html" class="btn btn-primary">Creator Space</a>
+                <div id="user-profile">
                     <p>Connected as: <strong id="username-display"></strong></p>
                 </div>
             </div>
         </aside>
-
         <main id="main-content">
-            <button id="sidebar-toggler"><span></span></button> 
+            <button id="sidebar-toggler"><span></span></button>
             <div id="loader"><h1>Checking your creator status...</h1></div>
             <div id="creator-registration-form" class="hidden">
                 <h1>Become a Creator</h1>
@@ -81,12 +39,12 @@
                         <input type="text" id="creator-name" required>
                     </div>
                     <div class="form-group">
-                        <label for="creator-bio">Your Bio (A short description of what you do)</label>
+                        <label for="creator-bio">Your Bio (A short description)</label>
                         <textarea id="creator-bio" rows="4" required></textarea>
                     </div>
                     <div class="form-group">
                         <label for="profile-image">Profile Image URL</label>
-                        <input type="url" id="profile-image" placeholder="https://imgur.com/your-image.png" required>
+                        <input type="url" id="profile-image" placeholder="images/your-image.png" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Create Profile</button>
                     <p id="form-status"></p>
@@ -94,5 +52,46 @@
             </div>
         </main>
     </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+        async function initCreatorHub() {
+            const loader = document.getElementById('loader');
+            const registrationFormDiv = document.getElementById('creator-registration-form');
+            if (!piUser || !piUser.uid) {
+                loader.innerHTML = "<h1>Error: Could not verify user ID. Please try logging in again.</h1>";
+                return;
+            }
+            const creatorDocRef = db.collection('creators').doc(piUser.uid);
+            const creatorDoc = await creatorDocRef.get();
+            if (creatorDoc.exists) {
+                window.location.href = 'creator_dashboard.html';
+            } else {
+                loader.classList.add('hidden');
+                registrationFormDiv.classList.remove('hidden');
+            }
+            const registrationForm = document.getElementById('registration-form');
+            const formStatus = document.getElementById('form-status');
+            registrationForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                formStatus.textContent = "Creating profile...";
+                const newCreatorData = {
+                    name: document.getElementById('creator-name').value,
+                    bio: document.getElementById('creator-bio').value,
+                    profileImage: document.getElementById('profile-image').value,
+                    ownerUid: piUser.uid
+                };
+                try {
+                    await db.collection('creators').doc(piUser.uid).set(newCreatorData);
+                    formStatus.textContent = "Profile created successfully! Redirecting...";
+                    setTimeout(() => { window.location.href = 'creator_dashboard.html'; }, 2000);
+                } catch (error) {
+                    formStatus.textContent = "Error: Could not create profile.";
+                }
+            });
+        }
+    </script>
+    <script src="main.js"></script>
 </body>
 </html>

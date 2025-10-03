@@ -5,51 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evoque - Explore</title>
     <link rel="stylesheet" href="style.css">
-    
-     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    
-    <script>
-    async function initExplorePage() {
-        
-        const creatorsGrid = document.getElementById('creators-grid');
-        try {
-            const snapshot = await db.collection("creators").get();
-            creatorsGrid.innerHTML = ''; // Clear loading message
-            if (snapshot.empty) { creatorsGrid.innerHTML = "<p>No creators found.</p>"; return; }
-            snapshot.forEach(doc => {
-                const creator = doc.data();
-                const card = document.createElement('div');
-                card.className = 'creator-card';
-                card.innerHTML = `<img src="${creator.profileImage}" alt="${creator.name}" class="creator-avatar"><h3>${creator.name}</h3><p>${creator.bio}</p><button class="btn btn-primary view-profile-btn" data-id="${doc.id}">View Profile</button>`;
-                creatorsGrid.appendChild(card);
-            });
-            document.querySelectorAll('.view-profile-btn').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    sessionStorage.setItem('selectedCreatorId', event.target.dataset.id);
-                    window.location.href = 'creator.html';
-                });
-            });
-        } catch (error) {
-            console.error("Error fetching creators:", error);
-            creatorsGrid.innerHTML = "<p>Error loading creators. Please try again later.</p>";
-        }
-    }
-</script>
-    <script src="main.js" defer></script>
 </head>
 <body>
-
     <div id="app-content" class="sidebar-collapsed">
         <aside id="sidebar">
             <div class="sidebar-header">
-                <img src="images/evoque-logo.png" alt="Evoque Logo" class="logo"> <h2>Evoque</h2>
+                <img src="images/evoque-logo.png" alt="Evoque Logo" class="logo">
+                <h2>Evoque</h2>
             </div>
             <nav class="nav-menu">
                 <ul>
                     <li><a href="dashboard.html">Dashboard</a></li>
                     <li><a href="explore.html" class="active">Explore</a></li>
-                    <li><a href="chat.html">Chat</a></li>
+                    <li><a href="#">Chat</a></li>
                 </ul>
             </nav>
             <div class="sidebar-footer">
@@ -59,14 +27,44 @@
                 </div>
             </div>
         </aside>
-
         <main id="main-content">
             <button id="sidebar-toggler"><span></span></button>
             <h1>Explore Creators</h1>
             <p>Discover talented creators on the Pi Network.</p>
             <div id="creators-grid" class="grid-container">
-                </div>
+                <p>Loading creators...</p>
+            </div>
         </main>
     </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+        async function initExplorePage() {
+            const creatorsGrid = document.getElementById('creators-grid');
+            try {
+                const snapshot = await db.collection("creators").get();
+                creatorsGrid.innerHTML = '';
+                if (snapshot.empty) { creatorsGrid.innerHTML = "<p>No creators found.</p>"; return; }
+                snapshot.forEach(doc => {
+                    const creator = doc.data();
+                    const card = document.createElement('div');
+                    card.className = 'creator-card';
+                    card.innerHTML = `<img src="${creator.profileImage}" alt="${creator.name}" class="creator-avatar"><h3>${creator.name}</h3><p>${creator.bio}</p><button class="btn btn-primary view-profile-btn" data-id="${doc.id}">View Profile</button>`;
+                    creatorsGrid.appendChild(card);
+                });
+                document.querySelectorAll('.view-profile-btn').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        sessionStorage.setItem('selectedCreatorId', event.target.dataset.id);
+                        window.location.href = 'creator.html';
+                    });
+                });
+            } catch (error) {
+                console.error("Error fetching creators:", error);
+                creatorsGrid.innerHTML = "<p>Error loading creators. Please try again later.</p>";
+            }
+        }
+    </script>
+    <script src="main.js"></script>
 </body>
 </html>

@@ -5,69 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evoque - Create Post</title>
     <link rel="stylesheet" href="style.css">
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-    <script>
-    async function initCreatePost() {
-        if (!piUser || !piUser.uid) { window.location.href = 'index.html'; return; }
-        const creatorDocRef = db.collection('creators').doc(piUser.uid);
-        const tiersCollectionRef = creatorDocRef.collection('tiers');
-        const postsCollectionRef = creatorDocRef.collection('posts');
-        const tierOptionsDiv = document.getElementById('tier-access-options');
-        try {
-            const snapshot = await tiersCollectionRef.orderBy('price').get();
-            tierOptionsDiv.innerHTML = '';
-            if (snapshot.empty) {
-                tierOptionsDiv.innerHTML = '<p>You must create at least one tier first.</p>';
-            } else {
-                snapshot.forEach(doc => {
-                    const tier = doc.data();
-                    const option = document.createElement('div');
-                    option.className = 'checkbox-group';
-                    option.innerHTML = `<input type="checkbox" id="${doc.id}" name="tiers" value="${doc.id}"><label for="${doc.id}">${tier.name}</label>`;
-                    tierOptionsDiv.appendChild(option);
-                });
-            }
-        } catch (error) {
-            tierOptionsDiv.innerHTML = '<p>Could not load your tiers.</p>';
-        }
-
-        const createPostForm = document.getElementById('create-post-form');
-        const formStatus = document.getElementById('form-status');
-        createPostForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            formStatus.textContent = 'Publishing...';
-            const selectedTiers = Array.from(document.querySelectorAll('input[name="tiers"]:checked')).map(cb => cb.value);
-            if (selectedTiers.length === 0) {
-                formStatus.textContent = 'Please select at least one tier.';
-                return;
-            }
-            const newPost = {
-                title: document.getElementById('post-title').value,
-                content: document.getElementById('post-content').value,
-                accessibleTiers: selectedTiers,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            try {
-                await postsCollectionRef.add(newPost);
-                formStatus.textContent = 'Post published!';
-                createPostForm.reset();
-                setTimeout(() => formStatus.textContent = '', 3000);
-            } catch (error) {
-                formStatus.textContent = 'Error publishing post.';
-            }
-        });
-    }
-</script>
-     <script src="main.js" defer></script>
 </head>
 <body>
     <div id="app-content" class="sidebar-collapsed">
         <aside id="sidebar">
             <div class="sidebar-header">
-                <img id="creator-avatar-sidebar" src="images/evoque-logo.png" alt="Creator Avatar" class="logo">
+                <img id="creator-avatar-sidebar" src="" alt="Creator Avatar" class="logo">
                 <h2 id="creator-name-sidebar">My Hub</h2>
             </div>
             <nav class="nav-menu">
@@ -75,18 +18,19 @@
                     <li><a href="creator_dashboard.html">Dashboard</a></li>
                     <li><a href="my_supporters.html">My Supporters</a></li>
                     <li><a href="manage_tiers.html">My Tiers</a></li>
-                    <li><a href="create_post.html">Create Post</a></li>
+                    <li><a href="create_post.html" class="active">Create Post</a></li>
                 </ul>
             </nav>
             <div class="sidebar-footer">
                 <a href="dashboard.html" class="btn btn-secondary">Switch to Supporter Space</a>
+                <div id="user-profile">
+                    <p>Connected as: <strong id="username-display"></strong></p>
+                </div>
             </div>
         </aside>
-
         <main id="main-content">
-            <button id="sidebar-toggler"><span></span></button> 
+            <button id="sidebar-toggler"><span></span></button>
             <h1>Create a New Post</h1>
-            
             <form id="create-post-form">
                 <div class="form-group">
                     <label for="post-title">Post Title</label>
@@ -107,5 +51,70 @@
             </form>
         </main>
     </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+        async function initCreatePost() {
+            if (!piUser || !piUser.uid) { window.location.href = 'index.html'; return; }
+            const creatorDocRef = db.collection('creators').doc(piUser.uid);
+            const tiersCollectionRef = creatorDocRef.collection('tiers');
+            const postsCollectionRef = creatorDocRef.collection('posts');
+
+            // Fetch creator's own profile for sidebar
+            const docSnap = await creatorDocRef.get();
+            if (docSnap.exists) {
+                const creatorData = docSnap.data();
+                document.getElementById('creator-name-sidebar').textContent = creatorData.name;
+                document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
+            }
+            
+            const tierOptionsDiv = document.getElementById('tier-access-options');
+            try {
+                const snapshot = await tiersCollectionRef.orderBy('price').get();
+                tierOptionsDiv.innerHTML = '';
+                if (snapshot.empty) {
+                    tierOptionsDiv.innerHTML = '<p>You must create at least one tier first.</p>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const tier = doc.data();
+                        const option = document.createElement('div');
+                        option.className = 'checkbox-group';
+                        option.innerHTML = `<input type="checkbox" id="${doc.id}" name="tiers" value="${doc.id}"><label for="${doc.id}">${tier.name}</label>`;
+                        tierOptionsDiv.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                tierOptionsDiv.innerHTML = '<p>Could not load your tiers.</p>';
+            }
+
+            const createPostForm = document.getElementById('create-post-form');
+            const formStatus = document.getElementById('form-status');
+            createPostForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                formStatus.textContent = 'Publishing...';
+                const selectedTiers = Array.from(document.querySelectorAll('input[name="tiers"]:checked')).map(cb => cb.value);
+                if (selectedTiers.length === 0) {
+                    formStatus.textContent = 'Please select at least one tier.';
+                    return;
+                }
+                const newPost = {
+                    title: document.getElementById('post-title').value,
+                    content: document.getElementById('post-content').value,
+                    accessibleTiers: selectedTiers,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                try {
+                    await postsCollectionRef.add(newPost);
+                    formStatus.textContent = 'Post published!';
+                    createPostForm.reset();
+                    setTimeout(() => formStatus.textContent = '', 3000);
+                } catch (error) {
+                    formStatus.textContent = 'Error publishing post.';
+                }
+            });
+        }
+    </script>
+    <script src="main.js"></script>
 </body>
 </html>

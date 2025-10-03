@@ -1,7 +1,7 @@
 let db;
 let piUser;
 
-function initializeApp() {
+document.addEventListener('DOMContentLoaded', () => {
     const piUserString = sessionStorage.getItem('piUser');
     if (!piUserString && !window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
         window.location.href = 'index.html';
@@ -33,7 +33,7 @@ function initializeApp() {
         db = firebase.firestore();
     } catch(e) {
         console.error("CRITICAL ERROR: Firebase init failed.", e);
-        alert("CRITICAL ERROR: Could not connect to the database. The app cannot continue. Please check firebaseConfig in main.js.");
+        alert("CRITICAL ERROR: Could not connect to the database. Check firebaseConfig in main.js.");
         return;
     }
 
@@ -54,6 +54,4 @@ function initializeApp() {
     else if (path.includes('manage_tiers.html')) initManageTiers();
     else if (path.includes('create_post.html')) initCreatePost();
     else if (path.includes('my_supporters.html')) initMySupporters();
-}
-
-initializeApp();
+});
