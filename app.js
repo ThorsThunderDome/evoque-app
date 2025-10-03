@@ -31,21 +31,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function authenticateWithPi() {
-        authStatus.textContent = 'Authenticating...';
-        authStatus.classList.remove('hidden');
-        try {
-            const scopes = ['username', 'payments'];
-            const onIncompletePaymentFound = (payment) => { console.log('Incomplete payment found:', payment); };
-            const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
-            
-            sessionStorage.setItem('piUser', JSON.stringify(authResult.user));
+    authStatus.textContent = 'Authenticating...';
+    authStatus.classList.remove('hidden');
+    try {
+        const scopes = ['username', 'payments'];
+        const onIncompletePaymentFound = (payment) => { console.log('Incomplete payment found:', payment); };
+        const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
 
-            authStatus.textContent = `Welcome, ${authResult.user.username}! Redirecting...`;
-            window.location.href = 'dashboard.html';
-        } catch (err) {
-            authStatus.textContent = `Authentication failed: ${err.message || err}. Please try again.`;
-        }
+        sessionStorage.setItem('piUser', JSON.stringify(authResult.user));
+
+        authStatus.textContent = `Welcome, ${authResult.user.username}! Redirecting...`;
+        window.location.href = 'dashboard.html';
+    } catch (err) {
+        authStatus.textContent = `Authentication failed: ${err.message || err}. Please try again.`;
     }
+}
 
     if (connectButton) {
         connectButton.addEventListener('click', authenticateWithPi);
