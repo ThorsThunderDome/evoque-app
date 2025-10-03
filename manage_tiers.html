@@ -6,57 +6,6 @@
     <title>Evoque - Manage Tiers</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script>
-        async function initManageTiers() {
-            if (!piUser || !piUser.uid) { window.location.href = 'index.html'; return; }
-            const creatorDocRef = db.collection('creators').doc(piUser.uid);
-            const tiersCollectionRef = creatorDocRef.collection('tiers');
-
-            async function loadTiers() {
-                const tierListDiv = document.getElementById('existing-tiers-list');
-                tierListDiv.innerHTML = '';
-                const snapshot = await tiersCollectionRef.orderBy('price').get();
-                if (snapshot.empty) {
-                    tierListDiv.innerHTML = '<p>You have not created any tiers yet.</p>';
-                    return;
-                }
-                snapshot.forEach(doc => {
-                    const tier = doc.data();
-                    const tierElement = document.createElement('div');
-                    tierElement.className = 'tier-item';
-                    tierElement.innerHTML = `<h3>${tier.name} - ${tier.price} π/month</h3><ul>${tier.description.split('\\n').map(b => `<li>${b}</li>`).join('')}</ul>`;
-                    tierListDiv.appendChild(tierElement);
-                });
-            }
-
-            const createTierForm = document.getElementById('create-tier-form');
-            const formStatus = document.getElementById('form-status');
-            createTierForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                formStatus.textContent = 'Creating tier...';
-                const newTier = {
-                    name: document.getElementById('tier-name').value,
-                    price: parseFloat(document.getElementById('tier-price').value),
-                    description: document.getElementById('tier-description').value,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                try {
-                    await tiersCollectionRef.add(newTier);
-                    formStatus.textContent = 'Tier created successfully!';
-                    createTierForm.reset();
-                    loadTiers();
-                } catch (error) {
-                    formStatus.textContent = 'Error creating tier.';
-                }
-            });
-            loadTiers();
-        }
-    </script>
-    <script src="main.js"></script>
-    
 <body>
     <div id="app-content" class="sidebar-collapsed">
         <aside id="sidebar">
