@@ -5,31 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evoque - Creator Dashboard</title>
     <link rel="stylesheet" href="style.css">
+</head>
 
     <script src="firebase-app.js"></script>
     <script src="firebase-firestore.js"></script>
-
     <script>
-    async function initCreatorDashboard() {
-        if (!piUser || !piUser.uid) { window.location.href = 'index.html'; return; }
-        try {
-            const creatorDocRef = db.collection('creators').doc(piUser.uid);
-            const docSnap = await creatorDocRef.get();
-            if (docSnap.exists) {
-                const creatorData = docSnap.data();
-                document.getElementById('creator-name-main').textContent = creatorData.name;
-                document.getElementById('creator-name-sidebar').textContent = creatorData.name;
-                document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
-            } else {
-                window.location.href = 'creator_hub.html';
+        async function initCreatorDashboard() {
+            if (!piUser || !piUser.uid) { window.location.href = 'index.html'; return; }
+            try {
+                const creatorDocRef = db.collection('creators').doc(piUser.uid);
+                const docSnap = await creatorDocRef.get();
+                if (docSnap.exists) {
+                    const creatorData = docSnap.data();
+                    document.getElementById('creator-name-main').textContent = creatorData.name;
+                    document.getElementById('creator-name-sidebar').textContent = creatorData.name;
+                    document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
+                } else {
+                    window.location.href = 'creator_hub.html';
+                }
+            } catch (error) {
+                document.getElementById('main-content').innerHTML = "<h1>Error loading your creator profile.</h1>";
             }
-        } catch (error) {
-            document.getElementById('main-content').innerHTML = "<h1>Error loading your creator profile.</h1>";
         }
-    }
-</script>
-     <script src="main.js" defer></script>
-</head>
+    </script>
+    <script src="main.js"></script>
+    
 <body>
     <div id="app-content" class="sidebar-collapsed">
         <aside id="sidebar">
