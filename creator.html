@@ -59,7 +59,24 @@
             const creatorDocRef = db.collection("creators").doc(creatorId);
             const membershipKey = `membership_${creatorId}`;
             const subscribedTierId = sessionStorage.getItem(membershipKey);
+        async function initCreatorPage() {
+            const creatorId = sessionStorage.getItem('selectedCreatorId');
+            if (!creatorId) {
+                document.getElementById('main-content').innerHTML = "<h1>Error: Creator ID not found.</h1>";
+                return;
+            }
+            const creatorDocRef = db.collection("creators").doc(creatorId);
+            const membershipKey = `membership_${creatorId}`;
+            const subscribedTierId = sessionStorage.getItem(membershipKey);
 
+            function handleSubscription(tierId, tierName, tierPrice) {
+                if (window.confirm(`Do you want to subscribe to ${tierName} for ${tierPrice} π?`)) {
+                    alert("Subscription successful! (This is a simulation). Refresh the page to see your new access.");
+                    sessionStorage.setItem(membershipKey, tierId);
+                } else {
+                    alert("Subscription cancelled.");
+                }
+            }
             function handleSubscription(tierId, tierName, tierPrice) {
                 if (window.confirm(`Do you want to subscribe to ${tierName} for ${tierPrice} π?`)) {
                     alert("Subscription successful! (This is a simulation). Refresh the page to see your new access.");
