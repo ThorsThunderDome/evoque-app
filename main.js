@@ -1,9 +1,12 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+import { getFirestore, collection, doc, getDoc, getDocs, orderBy, query, setDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+
 let db;
 let piUser;
 
 document.addEventListener('DOMContentLoaded', () => {
     const piUserString = sessionStorage.getItem('piUser');
-    if (!piUserString && !window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
+    if (!piUserString && !window.location.pathname.endsWith('index.html') && !window.location.pathname.endsWith('/')) {
         window.location.href = 'index.html';
         return;
     }
@@ -25,15 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
   messagingSenderId: "790735748571",
   appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
   measurementId: "G-DG6WWPYQ3Z"
-};
+ };
+    
     try {
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        db = firebase.firestore();
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
     } catch(e) {
-        console.error("CRITICAL ERROR: Firebase init failed.", e);
-        alert("CRITICAL ERROR: Could not connect to the database. Check firebaseConfig in main.js.");
+        alert("CRITICAL ERROR: Could not connect to the database.");
         return;
     }
 
@@ -46,12 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const path = window.location.pathname;
-    if (path.includes('dashboard.html')) initDashboard();
-    else if (path.includes('explore.html')) initExplorePage();
-    else if (path.includes('creator.html')) initCreatorPage();
-    else if (path.includes('creator_hub.html')) initCreatorHub();
-    else if (path.includes('creator_dashboard.html')) initCreatorDashboard();
-    else if (path.includes('manage_tiers.html')) initManageTiers();
-    else if (path.includes('create_post.html')) initCreatePost();
-    else if (path.includes('my_supporters.html')) initMySupporters();
+    if (path.includes('dashboard.html')) initDashboard({ db, piUser, collection, doc, getDoc });
+    else if (path.includes('explore.html')) initExplorePage({ db, piUser, collection, getDocs, query });
+    else if (path.includes('creator.html')) initCreatorPage({ db, piUser, collection, doc, getDoc, getDocs, query, orderBy });
+    else if (path.includes('creator_hub.html')) initCreatorHub({ db, piUser, collection, doc, getDoc, setDoc });
+    else if (path.includes('creator_dashboard.html')) initCreatorDashboard({ db, piUser, collection, doc, getDoc });
+    else if (path.includes('manage_tiers.html')) initManageTiers({ db, piUser, collection, doc, addDoc, getDocs, query, orderBy, serverTimestamp });
+    else if (path.includes('create_post.html')) initCreatePost({ db, piUser, collection, doc, addDoc, getDocs, query, orderBy, serverTimestamp });
+    else if (path.includes('my_supporters.html')) initMySupporters({ db, piUser, collection, doc, getDoc });
 });

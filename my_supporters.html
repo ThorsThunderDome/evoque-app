@@ -48,40 +48,43 @@
         </main>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script>
-        async function initMySupporters() {
-            if (!piUser || !piUser.uid) { window.location.href = 'index.html'; return; }
-            const creatorDocRef = db.collection('creators').doc(piUser.uid);
-            
-            try {
-                const docSnap = await creatorDocRef.get();
-                if (docSnap.exists) {
-                    const creatorData = docSnap.data();
-                    document.getElementById('creator-name-sidebar').textContent = creatorData.name;
-                    document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
-                }
-            } catch (error) { console.error("Could not load creator data for sidebar", error); }
-
-            const mockSupporters = [
-                { username: 'Pioneer1', tierName: 'Gold Tier', since: 'Oct 2025' },
-                { username: 'JaneDoe', tierName: 'Silver Tier', since: 'Sep 2025' },
-                { username: 'TestUser', tierName: 'Silver Tier', since: 'Sep 2025' }
-            ];
-            const tableBody = document.getElementById('supporters-table-body');
-            tableBody.innerHTML = '';
-            if (mockSupporters.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="3">You have no supporters yet.</td></tr>';
-            } else {
-                mockSupporters.forEach(supporter => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `<td>${supporter.username}</td><td>${supporter.tierName}</td><td>${supporter.since}</td>`;
-                    tableBody.appendChild(row);
-                });
+    <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+</script>
+    <script type="module">
+    async function initMySupporters({ db, piUser, doc, getDoc }) {
+        if (!piUser || !piUser.uid) { window.location.href = 'index.html'; return; }
+        const creatorDocRef = doc(db, 'creators', piUser.uid);
+        
+        try {
+            const docSnap = await getDoc(creatorDocRef);
+            if (docSnap.exists()) {
+                const creatorData = docSnap.data();
+                document.getElementById('creator-name-sidebar').textContent = creatorData.name;
+                document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
             }
+        } catch (error) { console.error("Could not load creator data for sidebar", error); }
+
+        const mockSupporters = [
+            { username: 'Pioneer1', tierName: 'Gold Tier', since: 'Oct 2025' },
+            { username: 'JaneDoe', tierName: 'Silver Tier', since: 'Sep 2025' },
+        ];
+        const tableBody = document.getElementById('supporters-table-body');
+        tableBody.innerHTML = '';
+        if (mockSupporters.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="3">You have no supporters yet.</td></tr>';
+        } else {
+            mockSupporters.forEach(supporter => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${supporter.username}</td><td>${supporter.tierName}</td><td>${supporter.since}</td>`;
+                tableBody.appendChild(row);
+            });
         }
-    </script>
+    }
+</script>
     <script src="main.js"></script>
 </body>
 </html>

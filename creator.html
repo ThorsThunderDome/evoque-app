@@ -47,103 +47,89 @@
         </main>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script>
-        async function initCreatorPage() {
-            const creatorId = sessionStorage.getItem('selectedCreatorId');
-            if (!creatorId) {
-                document.getElementById('main-content').innerHTML = "<h1>Error: Creator ID not found.</h1>";
-                return;
-            }
-            const creatorDocRef = db.collection("creators").doc(creatorId);
-            const membershipKey = `membership_${creatorId}`;
-            const subscribedTierId = sessionStorage.getItem(membershipKey);
-        async function initCreatorPage() {
-            const creatorId = sessionStorage.getItem('selectedCreatorId');
-            if (!creatorId) {
-                document.getElementById('main-content').innerHTML = "<h1>Error: Creator ID not found.</h1>";
-                return;
-            }
-            const creatorDocRef = db.collection("creators").doc(creatorId);
-            const membershipKey = `membership_${creatorId}`;
-            const subscribedTierId = sessionStorage.getItem(membershipKey);
+    <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+</script>
+    <script type="module">
+    async function initCreatorPage({ db, piUser, collection, doc, getDoc, getDocs, query, orderBy }) {
+        const creatorId = sessionStorage.getItem('selectedCreatorId');
+        if (!creatorId) { document.getElementById('main-content').innerHTML = "<h1>Error: Creator ID not found.</h1>"; return; }
+        
+        const creatorDocRef = doc(db, "creators", creatorId);
+        const membershipKey = `membership_${creatorId}`;
+        const subscribedTierId = sessionStorage.getItem(membershipKey);
 
-            function handleSubscription(tierId, tierName, tierPrice) {
-                if (window.confirm(`Do you want to subscribe to ${tierName} for ${tierPrice} π?`)) {
-                    alert("Subscription successful! (This is a simulation). Refresh the page to see your new access.");
-                    sessionStorage.setItem(membershipKey, tierId);
-                } else {
-                    alert("Subscription cancelled.");
-                }
+        function handleSubscription(tierId, tierName, tierPrice) {
+            if (window.confirm(`Do you want to subscribe to ${tierName} for ${tierPrice} π?`)) {
+                alert("Subscription successful! (This is a simulation). Refresh the page to see your new access.");
+                sessionStorage.setItem(membershipKey, tierId);
+            } else { alert("Subscription cancelled."); }
+        }
+
+        try {
+            const docSnap = await getDoc(creatorDocRef);
+            if (!docSnap.exists()) { document.getElementById('main-content').innerHTML = "<h1>Creator not found.</h1>"; return; }
+            
+            const creator = docSnap.data();
+            document.getElementById('creator-name').textContent = creator.name;
+            document.getElementById('creator-bio').textContent = creator.bio;
+            document.getElementById('creator-avatar').src = creator.profileImage;
+
+            const tiersQuery = query(collection(db, "creators", creatorId, 'tiers'), orderBy('price'));
+            const tiersSnapshot = await getDocs(tiersQuery);
+            const tiersListDiv = document.getElementById('tiers-list');
+            tiersListDiv.innerHTML = '';
+            const allTiers = [];
+
+            if (!tiersSnapshot.empty) {
+                tiersSnapshot.forEach(doc => {
+                    const tier = doc.data();
+                    allTiers.push({ id: doc.id, name: tier.name, price: tier.price, description: tier.description });
+                    const tierCard = document.createElement('div');
+                    tierCard.className = 'tier-card';
+                    tierCard.innerHTML = `<h3>${tier.name}</h3><p class="price">${tier.price} π/month</p><ul>${tier.description.split('\\n').map(b => `<li>${b}</li>`).join('')}</ul><button class="btn btn-primary subscribe-btn">Subscribe</button>`;
+                    tierCard.querySelector('.subscribe-btn').addEventListener('click', () => handleSubscription(doc.id, tier.name, tier.price));
+                    tiersListDiv.appendChild(tierCard);
+                });
             }
-            function handleSubscription(tierId, tierName, tierPrice) {
-                if (window.confirm(`Do you want to subscribe to ${tierName} for ${tierPrice} π?`)) {
-                    alert("Subscription successful! (This is a simulation). Refresh the page to see your new access.");
-                    sessionStorage.setItem(membershipKey, tierId);
-                } else {
-                    alert("Subscription cancelled.");
+
+            let userAccessibleTierIds = [];
+            if (subscribedTierId) {
+                const subscribedTier = allTiers.find(t => t.id === subscribedTierId);
+                if (subscribedTier) {
+                    userAccessibleTierIds = allTiers.filter(t => t.price <= subscribedTier.price).map(t => t.id);
                 }
             }
 
-            try {
-                const docSnap = await creatorDocRef.get();
-                if (docSnap.exists) {
-                    const creator = docSnap.data();
-                    document.getElementById('creator-name').textContent = creator.name;
-                    document.getElementById('creator-bio').textContent = creator.bio;
-                    document.getElementById('creator-avatar').src = creator.profileImage;
-                } else {
-                    document.getElementById('main-content').innerHTML = "<h1>Creator not found.</h1>";
-                    return;
-                }
-                const tiersSnapshot = await creatorDocRef.collection('tiers').orderBy('price').get();
-                const tiersListDiv = document.getElementById('tiers-list');
-                tiersListDiv.innerHTML = '';
-                const allTiers = [];
-                if (!tiersSnapshot.empty) {
-                    tiersSnapshot.forEach(doc => {
-                        const tier = doc.data();
-                        allTiers.push({ id: doc.id, name: tier.name, price: tier.price, description: tier.description });
-                        const tierCard = document.createElement('div');
-                        tierCard.className = 'tier-card';
-                        tierCard.innerHTML = `<h3>${tier.name}</h3><p class="price">${tier.price} π/month</p><ul>${tier.description.split('\\n').map(b => `<li>${b}</li>`).join('')}</ul><button class="btn btn-primary subscribe-btn">Subscribe</button>`;
-                        tierCard.querySelector('.subscribe-btn').addEventListener('click', () => handleSubscription(doc.id, tier.name, tier.price));
-                        tiersListDiv.appendChild(tierCard);
-                    });
-                }
-                let userAccessibleTierIds = [];
-                if (subscribedTierId) {
-                    const subscribedTier = allTiers.find(t => t.id === subscribedTierId);
-                    if (subscribedTier) {
-                        userAccessibleTierIds = allTiers.filter(t => t.price <= subscribedTier.price).map(t => t.id);
-                    }
-                }
-                const postsSnapshot = await creatorDocRef.collection('posts').orderBy('createdAt', 'desc').get();
-                const postsFeedDiv = document.getElementById('posts-feed');
-                postsFeedDiv.innerHTML = '';
-                if (postsSnapshot.empty) {
-                    postsFeedDiv.innerHTML = "<p>This creator hasn't made any posts yet.</p>";
-                } else {
-                    postsSnapshot.forEach(doc => {
-                        const post = doc.data();
-                        const tierNames = allTiers.reduce((acc, tier) => ({...acc, [tier.id]: tier.name }), {});
-                        const accessibleTierNames = post.accessibleTiers.map(tierId => tierNames[tierId] || 'A tier').join(', ');
-                        const userHasAccess = post.accessibleTiers.some(id => userAccessibleTierIds.includes(id));
-                        let contentHTML = userHasAccess ? `<div class="post-content"><p>${post.content}</p></div>` : `<div class="post-locked"><p>This post is locked. Subscribe to the correct tier to view.</p></div>`;
-                        const postCard = document.createElement('div');
-                        postCard.className = 'post-card';
-                        postCard.innerHTML = `<h3>${post.title}</h3><p class="post-meta">Published on ${new Date(post.createdAt.seconds * 1000).toLocaleDateString()}</p>${contentHTML}<div class="post-lock-info">🔒 Unlocks for: ${accessibleTierNames}</div>`;
-                        postsFeedDiv.appendChild(postCard);
-                    });
-                }
-            } catch (error) {
-                console.error("Error fetching creator page content:", error);
-                document.getElementById('main-content').innerHTML = "<h1>Error loading page content.</h1>";
+            const postsQuery = query(collection(db, "creators", creatorId, 'posts'), orderBy('createdAt', 'desc'));
+            const postsSnapshot = await getDocs(postsQuery);
+            const postsFeedDiv = document.getElementById('posts-feed');
+            postsFeedDiv.innerHTML = '';
+
+            if (postsSnapshot.empty) {
+                postsFeedDiv.innerHTML = "<p>This creator hasn't made any posts yet.</p>";
+            } else {
+                postsSnapshot.forEach(doc => {
+                    const post = doc.data();
+                    const tierNames = allTiers.reduce((acc, tier) => ({...acc, [tier.id]: tier.name }), {});
+                    const accessibleTierNames = post.accessibleTiers.map(tierId => tierNames[tierId] || 'A tier').join(', ');
+                    const userHasAccess = post.accessibleTiers.some(id => userAccessibleTierIds.includes(id));
+                    let contentHTML = userHasAccess ? `<div class="post-content"><p>${post.content}</p></div>` : `<div class="post-locked"><p>This post is locked. Subscribe to view.</p></div>`;
+                    const postCard = document.createElement('div');
+                    postCard.className = 'post-card';
+                    postCard.innerHTML = `<h3>${post.title}</h3><p class="post-meta">Published on ${new Date(doc.data().createdAt.seconds * 1000).toLocaleDateString()}</p>${contentHTML}<div class="post-lock-info">🔒 Unlocks for: ${accessibleTierNames}</div>`;
+                    postsFeedDiv.appendChild(postCard);
+                });
             }
+        } catch (error) {
+            console.error("Error fetching creator page:", error);
+            document.getElementById('main-content').innerHTML = "<h1>Error loading page.</h1>";
         }
     }
-    </script>
+</script>
     <script src="main.js"></script>
 </body>
 </html>
