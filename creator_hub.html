@@ -53,43 +53,62 @@
         </main>
     </div>
 
-    <script type="module">
-    async function initCreatorHub({ db, piUser, doc, getDoc, setDoc }) {
-        const loader = document.getElementById('loader');
-        const registrationFormDiv = document.getElementById('creator-registration-form');
-        if (!piUser || !piUser.uid) { loader.innerHTML = "<h1>Error: Could not verify user ID.</h1>"; return; }
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="ui.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const piUserString = sessionStorage.getItem('piUser');
+            if (!piUserString) { window.location.href = 'index.html'; return; }
+            const piUser = JSON.parse(piUserString);
+            document.getElementById('username-display').textContent = piUser.username;
 
-        const creatorDocRef = doc(db, 'creators', piUser.uid);
-        const creatorDoc = await getDoc(creatorDocRef);
-        
-        if (creatorDoc.exists()) {
-            window.location.href = 'creator_dashboard.html';
-        } else {
-            loader.classList.add('hidden');
-            registrationFormDiv.classList.remove('hidden');
-        }
-        
-        const registrationForm = document.getElementById('registration-form');
-        registrationForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formStatus = document.getElementById('form-status');
-            formStatus.textContent = "Creating profile...";
-            const newCreatorData = {
-                name: document.getElementById('creator-name').value,
-                bio: document.getElementById('creator-bio').value,
-                profileImage: document.getElementById('profile-image').value,
-                ownerUid: piUser.uid
-            };
-            try {
-                await setDoc(doc(db, 'creators', piUser.uid), newCreatorData);
-                formStatus.textContent = "Profile created! Redirecting...";
-                setTimeout(() => { window.location.href = 'creator_dashboard.html'; }, 2000);
-            } catch (error) {
-                formStatus.textContent = "Error: Could not create profile.";
+     const firebaseConfig = {
+  apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
+  authDomain: "evoque-app.firebaseapp.com",
+  projectId: "evoque-app",
+  storageBucket: "evoque-app.firebasestorage.app",
+  messagingSenderId: "790735748571",
+  appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
+  measurementId: "G-DG6WWPYQ3Z"
+};
+            if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+            const db = firebase.firestore();
+
+            const loader = document.getElementById('loader');
+            const registrationFormDiv = document.getElementById('creator-registration-form');
+            if (!piUser || !piUser.uid) {
+                loader.innerHTML = "<h1>Error: Could not verify user ID. Please try logging in again.</h1>";
+                return;
             }
+            const creatorDocRef = db.collection('creators').doc(piUser.uid);
+            const creatorDoc = await creatorDocRef.get();
+            if (creatorDoc.exists) {
+                window.location.href = 'creator_dashboard.html';
+            } else {
+                loader.classList.add('hidden');
+                registrationFormDiv.classList.remove('hidden');
+            }
+            const registrationForm = document.getElementById('registration-form');
+            const formStatus = document.getElementById('form-status');
+            registrationForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                formStatus.textContent = "Creating profile...";
+                const newCreatorData = {
+                    name: document.getElementById('creator-name').value,
+                    bio: document.getElementById('creator-bio').value,
+                    profileImage: document.getElementById('profile-image').value,
+                    ownerUid: piUser.uid
+                };
+                try {
+                    await db.collection('creators').doc(piUser.uid).set(newCreatorData);
+                    formStatus.textContent = "Profile created successfully! Redirecting...";
+                    setTimeout(() => { window.location.href = 'creator_dashboard.html'; }, 2000);
+                } catch (error) {
+                    formStatus.textContent = "Error: Could not create profile.";
+                }
+            });
         });
-    }
-</script>
-  <script src="main.js" type="module"></script>
+    </script>
 </body>
 </html>

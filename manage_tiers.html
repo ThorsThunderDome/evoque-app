@@ -59,57 +59,78 @@
         </main>
     </div>
 
-    <script type="module">
-    async function initManageTiers({ db, piUser, collection, doc, addDoc, getDocs, query, orderBy, serverTimestamp }) {
-        if (!piUser || !piUser.uid) { window.location.href = 'index.html'; return; }
-        const creatorDocRef = doc(db, 'creators', piUser.uid);
-        const tiersCollectionRef = collection(creatorDocRef, 'tiers');
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="ui.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const piUserString = sessionStorage.getItem('piUser');
+            if (!piUserString) { window.location.href = 'index.html'; return; }
+            const piUser = JSON.parse(piUserString);
+            document.getElementById('username-display').textContent = piUser.username;
 
-        const docSnap = await getDoc(creatorDocRef);
-        if (docSnap.exists()) {
-            const creatorData = docSnap.data();
-            document.getElementById('creator-name-sidebar').textContent = creatorData.name;
-            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
-        }
+        const firebaseConfig = {
+  apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
+  authDomain: "evoque-app.firebaseapp.com",
+  projectId: "evoque-app",
+  storageBucket: "evoque-app.firebasestorage.app",
+  messagingSenderId: "790735748571",
+  appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
+  measurementId: "G-DG6WWPYQ3Z"
+};
 
-        async function loadTiers() {
-            const tierListDiv = document.getElementById('existing-tiers-list');
-            tierListDiv.innerHTML = '';
-            const q = query(tiersCollectionRef, orderBy('price'));
-            const snapshot = await getDocs(q);
-            if (snapshot.empty) { tierListDiv.innerHTML = '<p>You have no tiers yet.</p>'; return; }
-            snapshot.forEach(doc => {
-                const tier = doc.data();
-                const tierElement = document.createElement('div');
-                tierElement.className = 'tier-item management-card';
-                tierElement.innerHTML = `<h3>${tier.name} - ${tier.price} π/month</h3><ul>${tier.description.split(/[\r\n]+/).map(b => `<li>${b}</li>`).join('')}</ul>`;
-                tierListDiv.appendChild(tierElement);
-            });
-        }
+            if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+            const db = firebase.firestore();
 
-        const createTierForm = document.getElementById('create-tier-form');
-        createTierForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formStatus = document.getElementById('form-status');
-            formStatus.textContent = 'Creating tier...';
-            const newTier = {
-                name: document.getElementById('tier-name').value,
-                price: parseFloat(document.getElementById('tier-price').value),
-                description: document.getElementById('tier-description').value,
-                createdAt: serverTimestamp()
-            };
-            try {
-                await addDoc(tiersCollectionRef, newTier);
-                formStatus.textContent = 'Tier created successfully!';
-                createTierForm.reset();
-                loadTiers();
-            } catch (error) {
-                formStatus.textContent = 'Error creating tier.';
+            const creatorDocRef = db.collection('creators').doc(piUser.uid);
+            const tiersCollectionRef = creatorDocRef.collection('tiers');
+
+            const docSnap = await creatorDocRef.get();
+            if (docSnap.exists) {
+                const creatorData = docSnap.data();
+                document.getElementById('creator-name-sidebar').textContent = creatorData.name;
+                document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
             }
+
+            async function loadTiers() {
+                const tierListDiv = document.getElementById('existing-tiers-list');
+                tierListDiv.innerHTML = '';
+                const snapshot = await tiersCollectionRef.orderBy('price').get();
+                if (snapshot.empty) {
+                    tierListDiv.innerHTML = '<p>You have not created any tiers yet.</p>';
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const tier = doc.data();
+                    const tierElement = document.createElement('div');
+                    tierElement.className = 'tier-item management-card';
+                    tierElement.innerHTML = `<h3>${tier.name} - ${tier.price} π/month</h3><ul>${tier.description.split(/[\r\n]+/).map(b => `<li>${b}</li>`).join('')}</ul>`;
+                    tierListDiv.appendChild(tierElement);
+                });
+            }
+
+            const createTierForm = document.getElementById('create-tier-form');
+            const formStatus = document.getElementById('form-status');
+            createTierForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                formStatus.textContent = 'Creating tier...';
+                const newTier = {
+                    name: document.getElementById('tier-name').value,
+                    price: parseFloat(document.getElementById('tier-price').value),
+                    description: document.getElementById('tier-description').value,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                try {
+                    await tiersCollectionRef.add(newTier);
+                    formStatus.textContent = 'Tier created successfully!';
+                    createTierForm.reset();
+                    loadTiers();
+                } catch (error) {
+                    formStatus.textContent = 'Error creating tier.';
+                }
+            });
+            loadTiers();
         });
-        loadTiers();
-    }
-</script>
-   <script src="main.js" type="module"></script>
+    </script>
 </body>
 </html>

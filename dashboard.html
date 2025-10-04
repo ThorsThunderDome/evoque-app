@@ -39,53 +39,57 @@
         </main>
     </div>
 
-    <script type="module">
-    async function initDashboard({ db, piUser, collection, doc, getDoc }) {
-        const membershipsGrid = document.getElementById('memberships-grid');
-        membershipsGrid.innerHTML = '<p>Loading your memberships...</p>';
-        let subsFound = 0;
-        const promises = [];
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="ui.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const piUserString = sessionStorage.getItem('piUser');
+            if (!piUserString) { window.location.href = 'index.html'; return; }
+            const piUser = JSON.parse(piUserString);
+            document.getElementById('username-display').textContent = piUser.username;
 
-        for (let i = 0; i < sessionStorage.length; i++) {
-            const key = sessionStorage.key(i);
-            if (key.startsWith('membership_')) {
-                subsFound++;
-                const creatorId = key.split('_')[1];
-                const tierId = sessionStorage.getItem(key);
-                
-                const creatorRef = doc(db, 'creators', creatorId);
-                const tierRef = doc(db, 'creators', creatorId, 'tiers', tierId);
+         const firebaseConfig = {
+  apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
+  authDomain: "evoque-app.firebaseapp.com",
+  projectId: "evoque-app",
+  storageBucket: "evoque-app.firebasestorage.app",
+  messagingSenderId: "790735748571",
+  appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
+  measurementId: "G-DG6WWPYQ3Z"
+};
+            if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+            const db = firebase.firestore();
 
-                promises.push(Promise.all([getDoc(creatorRef), getDoc(tierRef)]));
+            const membershipsGrid = document.getElementById('memberships-grid');
+            let subsFound = 0;
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                if (key.startsWith('membership_')) {
+                    subsFound++;
+                    if (subsFound === 1) membershipsGrid.innerHTML = '';
+                    const creatorId = key.split('_')[1];
+                    const tierId = sessionStorage.getItem(key);
+                    const creatorDoc = await db.collection('creators').doc(creatorId).get();
+                    const tierDoc = await db.collection('creators').doc(creatorId).collection('tiers').doc(tierId).get();
+                    if (creatorDoc.exists && tierDoc.exists) {
+                        const creator = creatorDoc.data();
+                        const tier = tierDoc.data();
+                        const card = document.createElement('div');
+                        card.className = 'creator-card';
+                        card.innerHTML = `<img src="${creator.profileImage}" alt="${creator.name}" class="creator-avatar"><h3>${creator.name}</h3><p><strong>Your Tier:</strong> ${tier.name}</p><button class="btn btn-primary view-creator-btn" data-id="${creatorId}">Visit Page</button>`;
+                        membershipsGrid.appendChild(card);
+                    }
+                }
             }
-        }
-
-        if (subsFound === 0) {
-            membershipsGrid.innerHTML = '<p>You have not subscribed to any creators yet.</p>';
-            return;
-        }
-
-        membershipsGrid.innerHTML = '';
-        const results = await Promise.all(promises);
-        results.forEach(([creatorDoc, tierDoc]) => {
-            if (creatorDoc.exists() && tierDoc.exists()) {
-                const creator = creatorDoc.data();
-                const tier = tierDoc.data();
-                const card = document.createElement('div');
-                card.className = 'creator-card';
-                card.innerHTML = `<img src="${creator.profileImage}" alt="${creator.name}" class="creator-avatar"><h3>${creator.name}</h3><p><strong>Your Tier:</strong> ${tier.name}</p><button class="btn btn-primary view-creator-btn" data-id="${creatorDoc.id}">Visit Page</button>`;
-                membershipsGrid.appendChild(card);
-            }
-        });
-
-        document.querySelectorAll('.view-creator-btn').forEach(btn => {
-            btn.addEventListener('click', e => {
-                sessionStorage.setItem('selectedCreatorId', e.target.dataset.id);
-                window.location.href = 'creator.html';
+            if (subsFound === 0) { membershipsGrid.innerHTML = '<p>You are not subscribed to any creators yet.</p>'; }
+            document.querySelectorAll('.view-creator-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    sessionStorage.setItem('selectedCreatorId', e.target.dataset.id);
+                    window.location.href = 'creator.html';
+                });
             });
         });
-    }
-</script>
-   <script src="main.js" type="module"></script>
+    </script>
 </body>
 </html>

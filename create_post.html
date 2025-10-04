@@ -52,59 +52,84 @@
         </main>
     </div>
 
-    <script type="module">
-    async function initCreatePost({ db, piUser, collection, doc, addDoc, getDocs, query, orderBy, serverTimestamp }) {
-        if (!piUser || !piUser.uid) { window.location.href = 'index.html'; return; }
-        const creatorDocRef = doc(db, 'creators', piUser.uid);
-        const tiersCollectionRef = collection(creatorDocRef, 'tiers');
-        const postsCollectionRef = collection(creatorDocRef, 'posts');
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="ui.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const piUserString = sessionStorage.getItem('piUser');
+            if (!piUserString) { window.location.href = 'index.html'; return; }
+            const piUser = JSON.parse(piUserString);
+            document.getElementById('username-display').textContent = piUser.username;
 
-        const docSnap = await getDoc(creatorDocRef);
-        if (docSnap.exists()) {
-            const creatorData = docSnap.data();
-            document.getElementById('creator-name-sidebar').textContent = creatorData.name;
-            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
-        }
-        
-        const tierOptionsDiv = document.getElementById('tier-access-options');
-        try {
-            const q = query(tiersCollectionRef, orderBy('price'));
-            const snapshot = await getDocs(q);
-            tierOptionsDiv.innerHTML = '';
-            if (snapshot.empty) { tierOptionsDiv.innerHTML = '<p>Create a tier first.</p>'; } 
-            else {
-                snapshot.forEach(doc => {
-                    const tier = doc.data();
-                    const option = document.createElement('div');
-                    option.className = 'checkbox-group';
-                    option.innerHTML = `<input type="checkbox" id="${doc.id}" name="tiers" value="${doc.id}"><label for="${doc.id}">${tier.name}</label>`;
-                    tierOptionsDiv.appendChild(option);
-                });
+        const firebaseConfig = {
+  apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
+  authDomain: "evoque-app.firebaseapp.com",
+  projectId: "evoque-app",
+  storageBucket: "evoque-app.firebasestorage.app",
+  messagingSenderId: "790735748571",
+  appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
+  measurementId: "G-DG6WWPYQ3Z"
+};
+            if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+            const db = firebase.firestore();
+
+            const creatorDocRef = db.collection('creators').doc(piUser.uid);
+            const tiersCollectionRef = creatorDocRef.collection('tiers');
+            const postsCollectionRef = creatorDocRef.collection('posts');
+
+            const docSnap = await creatorDocRef.get();
+            if (docSnap.exists) {
+                const creatorData = docSnap.data();
+                document.getElementById('creator-name-sidebar').textContent = creatorData.name;
+                document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
             }
-        } catch (error) { tierOptionsDiv.innerHTML = '<p>Could not load tiers.</p>'; }
-
-        const createPostForm = document.getElementById('create-post-form');
-        createPostForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formStatus = document.getElementById('form-status');
-            formStatus.textContent = 'Publishing...';
-            const selectedTiers = Array.from(document.querySelectorAll('input[name="tiers"]:checked')).map(cb => cb.value);
-            if (selectedTiers.length === 0) { formStatus.textContent = 'Select at least one tier.'; return; }
-            const newPost = {
-                title: document.getElementById('post-title').value,
-                content: document.getElementById('post-content').value,
-                accessibleTiers: selectedTiers,
-                createdAt: serverTimestamp()
-            };
+            
+            const tierOptionsDiv = document.getElementById('tier-access-options');
             try {
-                await addDoc(postsCollectionRef, newPost);
-                formStatus.textContent = 'Post published!';
-                createPostForm.reset();
-                setTimeout(() => formStatus.textContent = '', 3000);
-            } catch (error) { formStatus.textContent = 'Error publishing post.'; }
+                const snapshot = await tiersCollectionRef.orderBy('price').get();
+                tierOptionsDiv.innerHTML = '';
+                if (snapshot.empty) {
+                    tierOptionsDiv.innerHTML = '<p>You must create at least one tier first.</p>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const tier = doc.data();
+                        const option = document.createElement('div');
+                        option.className = 'checkbox-group';
+                        option.innerHTML = `<input type="checkbox" id="${doc.id}" name="tiers" value="${doc.id}"><label for="${doc.id}">${tier.name}</label>`;
+                        tierOptionsDiv.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                tierOptionsDiv.innerHTML = '<p>Could not load your tiers.</p>';
+            }
+
+            const createPostForm = document.getElementById('create-post-form');
+            const formStatus = document.getElementById('form-status');
+            createPostForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                formStatus.textContent = 'Publishing...';
+                const selectedTiers = Array.from(document.querySelectorAll('input[name="tiers"]:checked')).map(cb => cb.value);
+                if (selectedTiers.length === 0) {
+                    formStatus.textContent = 'Please select at least one tier.';
+                    return;
+                }
+                const newPost = {
+                    title: document.getElementById('post-title').value,
+                    content: document.getElementById('post-content').value,
+                    accessibleTiers: selectedTiers,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                try {
+                    await postsCollectionRef.add(newPost);
+                    formStatus.textContent = 'Post published!';
+                    createPostForm.reset();
+                    setTimeout(() => formStatus.textContent = '', 3000);
+                } catch (error) {
+                    formStatus.textContent = 'Error publishing post.';
+                }
+            });
         });
-    }
-</script>
-  <script src="main.js" type="module"></script>
+    </script>
 </body>
 </html>
