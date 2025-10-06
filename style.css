@@ -1,13 +1,31 @@
-/* General Body Styles */
+/* Light & Dark Mode Color Palettes */
 :root {
-    --primary-color: #512DA8; /* Deep Purple */
-    --secondary-color: #7E57C2; /* Lighter Purple */
-    --accent-color: #9575CD; /* Soft Purple */
-    --background-color: #121212; /* Dark Background */
-    --surface-color: #1E1E1E; /* Slightly Lighter Surface */
+    /* Light Mode (Default) */
+    --primary-color: #673AB7;
+    --secondary-color: #9575CD;
+    --accent-color: #D1C4E9;
+    --background-color: #F5F5F5;
+    --surface-color: #FFFFFF;
+    --text-color: #212121;
+    --text-secondary-color: #757575;
+    --logo-filter: invert(0);
+}
+
+body[data-theme='dark'] {
+    /* Dark Mode */
+    --primary-color: #512DA8;
+    --secondary-color: #7E57C2;
+    --accent-color: #9575CD;
+    --background-color: #121212;
+    --surface-color: #1E1E1E;
     --text-color: #FFFFFF;
     --text-secondary-color: #BDBDBD;
-    --border-radius: 8px;
+    --logo-filter: invert(1) hue-rotate(180deg);
+}
+
+/* Apply the logo filter to make it switch colors */
+.sidebar-header .logo {
+    filter: var(--logo-filter);
 }
 
 body {
@@ -282,4 +300,5 @@ thead th {
 }
 tbody tr:hover {
     background-color: #2a2a2a;
+
 }
