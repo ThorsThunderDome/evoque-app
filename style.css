@@ -372,3 +372,34 @@ input:checked + .slider:before {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+/* --- Dashboard Card & NFT Dropdown Styles --- */
+.creator-card .card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.nft-dropdown-content {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--surface-color);
+    text-align: left;
+}
+
+.nft-dropdown-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nft-dropdown-content li {
+    padding: 10px;
+    border-radius: var(--border-radius);
+    background-color: var(--background-color);
+    margin-bottom: 8px;
+}
+
+.nft-dropdown-content li small {
+    color: var(--text-secondary-color);
+}
