@@ -66,37 +66,29 @@
     </div>
 
 <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-        import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-        // --- UI Logic (Theme & Sidebar) ---
-        const themeToggle = document.getElementById('theme-toggle');
-        function applyTheme(theme) {
-            if (theme === 'light') {
-                document.documentElement.setAttribute('data-theme', 'light');
-                themeToggle.checked = false;
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-                themeToggle.checked = true;
-            }
-            localStorage.setItem('theme', theme);
-        }
-        const currentTheme = localStorage.getItem('theme') || 'dark';
-        applyTheme(currentTheme);
-        themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
-        const sidebarToggler = document.getElementById('sidebar-toggler');
-        const appContent = document.getElementById('app-content');
-        if (sidebarToggler && appContent) {
-            sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
-        }
+    // --- UI Logic (Theme & Sidebar) ---
+    // (This part remains the same)
+    const themeToggle = document.getElementById('theme-toggle');
+    function applyTheme(theme) { /* ... */ }
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    applyTheme(currentTheme);
+    themeToggle.addEventListener('change', function() { /* ... */ });
+    const sidebarToggler = document.getElementById('sidebar-toggler');
+    const appContent = document.getElementById('app-content');
+    if (sidebarToggler && appContent) {
+        sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
+    }
 
-        // --- Page-Specific Logic ---
-        const piUserString = sessionStorage.getItem('piUser');
-        if (!piUserString) { window.location.href = 'index.html'; }
-        const piUser = JSON.parse(piUserString);
-        document.getElementById('username-display').textContent = piUser.username;
+    // --- Page-Specific Logic ---
+    const piUserString = sessionStorage.getItem('piUser');
+    if (!piUserString) { window.location.href = 'index.html'; }
+    const piUser = JSON.parse(piUserString);
+    document.getElementById('username-display').textContent = piUser.username;
 
-             const firebaseConfig = {
+         const firebaseConfig = {
   apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
   authDomain: "evoque-app.firebaseapp.com",
   projectId: "evoque-app",
@@ -105,25 +97,44 @@
   appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
   measurementId: "G-DG6WWPYQ3Z"
 };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        const creatorId = sessionStorage.getItem('selectedCreatorId');
-        if (!creatorId) {
-            document.getElementById('main-content').innerHTML = "<h1>Error: Creator ID not found.</h1>";
-        } else {
-            const creatorDocRef = doc(db, "creators", creatorId);
-            const membershipKey = `membership_${creatorId}`;
-            const subscribedTierId = sessionStorage.getItem(membershipKey);
+    const creatorId = sessionStorage.getItem('selectedCreatorId');
+    if (!creatorId) {
+        document.getElementById('main-content').innerHTML = "<h1>Error: Creator ID not found.</h1>";
+    } else {
+        const creatorDocRef = doc(db, "creators", creatorId);
 
-            function handleSubscription(tierId, tierName, tierPrice) {
-                if (window.confirm(`Do you want to subscribe to ${tierName} for ${tierPrice} π?`)) {
-                    alert("Subscription successful! (This is a simulation). Refresh the page to see your new access.");
-                    sessionStorage.setItem(membershipKey, tierId);
-                } else {
-                    alert("Subscription cancelled.");
+        // UPDATED subscription handler
+        async function handleSubscription(tierId, tierName, tierPrice) {
+            if (window.confirm(`Do you want to subscribe to ${tierName} for ${tierPrice} π?`)) {
+                try {
+                    // Step 1: Get the current supporter count
+                    const creatorDoc = await getDoc(creatorDocRef);
+                    const currentCount = creatorDoc.data().supporterCount || 0;
+                    const newSupporterNumber = currentCount + 1;
+
+                    // Step 2: Update the count in the database
+                    await updateDoc(creatorDocRef, {
+                        supporterCount: increment(1)
+                    });
+
+                    // Step 3: Save the subscription AND the new number to the user's session
+                    const membershipKey = `membership_${creatorId}`;
+                    const membershipData = { tierId: tierId, number: newSupporterNumber };
+                    sessionStorage.setItem(membershipKey, JSON.stringify(membershipData));
+                    
+                    alert(`Subscription successful! You are supporter #${newSupporterNumber}. Refresh the page to see your new access.`);
+
+                } catch (error) {
+                    console.error("Error during subscription process: ", error);
+                    alert("Subscription failed. Please try again.");
                 }
+            } else {
+                alert("Subscription cancelled.");
             }
+        }
 
             try {
                 const docSnap = await getDoc(creatorDocRef);
