@@ -66,12 +66,20 @@
     import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
     // --- UI Logic (Theme & Sidebar) ---
-    // (This remains the same)
     const themeToggle = document.getElementById('theme-toggle');
-    function applyTheme(theme) { /* ... */ }
+    function applyTheme(theme) {
+        if (theme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+            themeToggle.checked = false;
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            themeToggle.checked = true;
+        }
+        localStorage.setItem('theme', theme);
+    }
     const currentTheme = localStorage.getItem('theme') || 'dark';
     applyTheme(currentTheme);
-    themeToggle.addEventListener('change', function() { /* ... */ });
+    themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
     const sidebarToggler = document.getElementById('sidebar-toggler');
     const appContent = document.getElementById('app-content');
     if (sidebarToggler && appContent) {
@@ -114,6 +122,7 @@
                 }
             }
 
+console.log("DEBUG: Subscribed to these creator IDs:", subscribedCreatorIds);
             // 2. Fetch all posts and creators simultaneously
             const postsQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(30));
             const creatorsQuery = query(collection(db, "creators"), limit(10));
@@ -124,6 +133,8 @@
             const discoverPosts = [];
             postsSnapshot.forEach(doc => {
                 const post = { id: doc.id, ...doc.data() };
+
+                console.log(`DEBUG: Checking post from creator: ${post.creatorId}. Is it in the subscribed list?`, subscribedCreatorIds.includes(post.creatorId));
                 if (subscribedCreatorIds.includes(post.creatorId)) {
                     subscribedPosts.push(post);
                 } else {
