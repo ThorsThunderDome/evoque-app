@@ -42,42 +42,49 @@
         </aside>
 
         <main id="main-content">
-            <button id="sidebar-toggler"><span></span></button>
-            <h1>Explore Feed</h1>
-            <p>See the latest posts from creators across the platform.</p>
-            <div id="posts-feed-container">
-                <div class="loader"></div>
-            </div>
-        </main>
+    <button id="sidebar-toggler"><span></span></button>
+    <h1>Explore Feed</h1>
+    <p>See the latest posts from creators across the platform.</p>
+    
+    <div id="subscribed-feed" class="feed-section">
+        <h2>From Your Subscriptions</h2>
+        <div id="subscribed-posts-container"></div>
+    </div>
+
+    <div id="creator-showcase-container" class="feed-section">
+        </div>
+
+    <div id="discover-feed" class="feed-section">
+        <h2>Discover More Posts</h2>
+        <div id="discover-posts-container"></div>
+    </div>
+</main>
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-        // --- UI Logic (Theme & Sidebar) ---
-        const themeToggle = document.getElementById('theme-toggle');
-        function applyTheme(theme) {
-            if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = false; } 
-            else { document.documentElement.removeAttribute('data-theme'); themeToggle.checked = true; }
-            localStorage.setItem('theme', theme);
-        }
-        const currentTheme = localStorage.getItem('theme') || 'dark';
-        applyTheme(currentTheme);
-        themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
-        const sidebarToggler = document.getElementById('sidebar-toggler');
-        const appContent = document.getElementById('app-content');
-        if (sidebarToggler && appContent) {
-            sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
-        }
+    // --- UI Logic (Theme & Sidebar) ---
+    // (This remains the same)
+    const themeToggle = document.getElementById('theme-toggle');
+    function applyTheme(theme) { /* ... */ }
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    applyTheme(currentTheme);
+    themeToggle.addEventListener('change', function() { /* ... */ });
+    const sidebarToggler = document.getElementById('sidebar-toggler');
+    const appContent = document.getElementById('app-content');
+    if (sidebarToggler && appContent) {
+        sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
+    }
 
-        // --- Page-Specific Logic ---
-        const piUserString = sessionStorage.getItem('piUser');
-        if (!piUserString) { window.location.href = 'index.html'; }
-        const piUser = JSON.parse(piUserString);
-        document.getElementById('username-display').textContent = piUser.username;
+    // --- Page-Specific Logic ---
+    const piUserString = sessionStorage.getItem('piUser');
+    if (!piUserString) { window.location.href = 'index.html'; }
+    const piUser = JSON.parse(piUserString);
+    document.getElementById('username-display').textContent = piUser.username;
 
-             const firebaseConfig = {
+         const firebaseConfig = {
   apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
   authDomain: "evoque-app.firebaseapp.com",
   projectId: "evoque-app",
@@ -86,72 +93,82 @@
   appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
   measurementId: "G-DG6WWPYQ3Z"
 };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        const feedContainer = document.getElementById('posts-feed-container');
+    async function buildExploreFeed() {
+        const subscribedContainer = document.getElementById('subscribed-posts-container');
+        const showcaseContainer = document.getElementById('creator-showcase-container');
+        const discoverContainer = document.getElementById('discover-posts-container');
+
+        subscribedContainer.innerHTML = '<div class="loader"></div>';
+        discoverContainer.innerHTML = '<div class="loader"></div>';
+
         try {
-            const postsQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(20));
+            // 1. Find out who the user is subscribed to from sessionStorage
+            const subscribedCreatorIds = [];
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                if (key.startsWith('membership_')) {
+                    subscribedCreatorIds.push(key.split('_')[1]);
+                }
+            }
+
+            // 2. Fetch all posts and creators simultaneously
+            const postsQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(30));
             const creatorsQuery = query(collection(db, "creators"), limit(10));
+            const [postsSnapshot, creatorsSnapshot] = await Promise.all([getDocs(postsQuery), getDocs(creatorsQuery)]);
 
-            const [postsSnapshot, creatorsSnapshot] = await Promise.all([
-                getDocs(postsQuery),
-                getDocs(creatorsQuery)
-            ]);
+            // 3. Separate posts into two lists
+            const subscribedPosts = [];
+            const discoverPosts = [];
+            postsSnapshot.forEach(doc => {
+                const post = { id: doc.id, ...doc.data() };
+                if (subscribedCreatorIds.includes(post.creatorId)) {
+                    subscribedPosts.push(post);
+                } else {
+                    discoverPosts.push(post);
+                }
+            });
 
-            feedContainer.innerHTML = '';
-            if (postsSnapshot.empty) {
-                feedContainer.innerHTML = "<p>No posts found yet. Be the first to create one!</p>";
+            // 4. Render the "Subscribed" feed
+            subscribedContainer.innerHTML = '';
+            if (subscribedPosts.length === 0) {
+                subscribedContainer.innerHTML = "<p>Posts from your subscribed creators will appear here.</p>";
             } else {
-                const creators = [];
-                creatorsSnapshot.forEach(doc => creators.push({ id: doc.id, ...doc.data() }));
-
-                let postCount = 0;
-                postsSnapshot.forEach(doc => {
-                    const post = doc.data();
-                    const postCard = document.createElement('div');
-                    postCard.className = 'feed-post-card';
-                    const postDate = post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleDateString() : 'Just now';
-
-                    postCard.innerHTML = `
-                        <div class="post-header">
-                            <img src="${post.creatorImage}" alt="${post.creatorName}" class="post-creator-avatar">
-                            <div>
-                                <a href="#" class="post-creator-name" data-id="${post.creatorId}">${post.creatorName}</a>
-                                <p class="post-meta">${postDate}</p>
-                            </div>
-                        </div>
-                        <div class="post-body">
-                            <h3>${post.title}</h3>
-                            <p>${post.content.substring(0, 250)}...</p>
-                        </div>
-                        <div class="post-footer">
-                            <a href="#" class="btn btn-secondary view-creator-btn" data-id="${post.creatorId}">View Full Profile</a>
-                        </div>
-                    `;
-                    feedContainer.appendChild(postCard);
-                    postCount++;
-
-                    if (postCount % 3 === 0 && creators.length > 0) {
-                        const showcase = document.createElement('div');
-                        showcase.className = 'creator-showcase';
-                        let showcaseHTML = '<h2>Discover Creators</h2><div class="horizontal-scroll">';
-                        creators.sort(() => 0.5 - Math.random()).slice(0, 5).forEach(creator => {
-                            showcaseHTML += `
-                                <div class="creator-card showcase-card" data-id="${creator.id}">
-                                    <img src="${creator.profileImage}" alt="${creator.name}" class="creator-avatar">
-                                    <h3>${creator.name}</h3>
-                                    <p>${creator.bio.substring(0, 50)}...</p>
-                                </div>
-                            `;
-                        });
-                        showcaseHTML += '</div>';
-                        showcase.innerHTML = showcaseHTML;
-                        feedContainer.appendChild(showcase);
-                    }
+                subscribedPosts.forEach(post => {
+                    const postCard = createPostCard(post, true); // true = unlocked
+                    subscribedContainer.appendChild(postCard);
                 });
             }
 
+            // 5. Render the "Creator Showcase"
+            const creators = [];
+            creatorsSnapshot.forEach(doc => creators.push({ id: doc.id, ...doc.data() }));
+            if (creators.length > 0) {
+                const showcase = document.createElement('div');
+                showcase.className = 'creator-showcase';
+                let showcaseHTML = '<h2>Discover Creators</h2><div class="horizontal-scroll">';
+                creators.sort(() => 0.5 - Math.random()).slice(0, 5).forEach(creator => {
+                    showcaseHTML += `<div class="creator-card showcase-card" data-id="${creator.id}"><img src="${creator.profileImage}" alt="${creator.name}" class="creator-avatar"><h3>${creator.name}</h3><p>${creator.bio.substring(0, 50)}...</p></div>`;
+                });
+                showcaseHTML += '</div>';
+                showcase.innerHTML = showcaseHTML;
+                showcaseContainer.appendChild(showcase);
+            }
+
+            // 6. Render the "Discover" feed
+            discoverContainer.innerHTML = '';
+            if (discoverPosts.length === 0) {
+                discoverContainer.innerHTML = "<p>No other posts to discover right now.</p>";
+            } else {
+                discoverPosts.forEach(post => {
+                    const postCard = createPostCard(post, false); // false = locked
+                    discoverContainer.appendChild(postCard);
+                });
+            }
+            
+            // 7. Add event listeners to all newly created links/buttons
             document.querySelectorAll('.view-creator-btn, .post-creator-name, .showcase-card').forEach(button => {
                 button.addEventListener('click', (event) => {
                     event.preventDefault();
@@ -162,9 +179,51 @@
             });
 
         } catch (error) {
-            console.error("Error fetching posts for feed: ", error);
-            feedContainer.innerHTML = "<p>Error loading the feed. Please try again later.</p>";
+            console.error("Error building explore feed: ", error);
+            subscribedContainer.innerHTML = "<p>Error loading feed.</p>";
+            discoverContainer.innerHTML = "";
         }
-    </script>
+    }
+
+    function createPostCard(post, isUnlocked) {
+        const postCard = document.createElement('div');
+        postCard.className = 'feed-post-card';
+        const postDate = post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleDateString() : 'Just now';
+
+        let contentHTML = '';
+        if (isUnlocked) {
+            contentHTML = `<p>${post.content.substring(0, 250)}...</p>`;
+        } else {
+            contentHTML = `
+                <div class="post-preview-locked">
+                    <p>${post.content.substring(0, 150)}</p>
+                    <div class="lock-overlay">
+                        🔒 Subscribe to view this post
+                    </div>
+                </div>
+            `;
+        }
+
+        postCard.innerHTML = `
+            <div class="post-header">
+                <img src="${post.creatorImage}" alt="${post.creatorName}" class="post-creator-avatar">
+                <div>
+                    <a href="#" class="post-creator-name" data-id="${post.creatorId}">${post.creatorName}</a>
+                    <p class="post-meta">${postDate}</p>
+                </div>
+            </div>
+            <div class="post-body">
+                <h3>${post.title}</h3>
+                ${contentHTML}
+            </div>
+            <div class="post-footer">
+                <a href="#" class="btn btn-secondary view-creator-btn" data-id="${post.creatorId}">View Profile & Subscribe</a>
+            </div>
+        `;
+        return postCard;
+    }
+
+    buildExploreFeed();
+</script>
 </body>
 </html>
