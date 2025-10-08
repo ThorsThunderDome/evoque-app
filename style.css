@@ -159,3 +159,87 @@ input:checked + .slider:before { transform: translateX(22px); }
 .showcase-card { flex: 0 0 220px; margin-right: 15px; cursor: pointer; }
 .checkbox-group { display: block; margin-bottom: 10px; }
 .checkbox-group label { margin-left: 8px; }
+/* --- Explore Feed & Showcase Styles --- */
+#posts-feed-container {
+    max-width: 700px;
+    margin: 0 auto; /* Center the feed column */
+}
+
+.feed-post-card {
+    background-color: var(--surface-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 25px;
+    border: 1px solid #333; /* Use a variable later if needed */
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #333;
+}
+
+.post-creator-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 15px;
+}
+
+.post-creator-name {
+    font-weight: bold;
+    color: var(--text-color);
+    text-decoration: none;
+}
+.post-creator-name:hover {
+    text-decoration: underline;
+}
+
+.post-body {
+    padding: 20px;
+}
+
+.post-body h3 {
+    margin-top: 0;
+}
+
+.post-footer {
+    padding: 0 20px 20px 20px;
+}
+
+.post-footer .btn {
+    width: auto;
+    padding: 8px 16px;
+}
+
+.creator-showcase {
+    background-color: var(--background-color);
+    padding: 20px 0;
+    margin: 15px 0 25px 0;
+    border-top: 1px solid #333;
+    border-bottom: 1px solid #333;
+}
+
+.creator-showcase h2 {
+    padding: 0 20px;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.horizontal-scroll {
+    display: flex;
+    overflow-x: auto;
+    padding: 10px 20px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.horizontal-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.showcase-card {
+    flex: 0 0 220px; /* Do not grow, do not shrink, base width of 220px */
+    margin-right: 15px;
+    cursor: pointer;
+}

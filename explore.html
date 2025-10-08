@@ -40,11 +40,12 @@
                 </div>
             </div>
         </aside>
+
         <main id="main-content">
             <button id="sidebar-toggler"><span></span></button>
-            <h1>Explore Creators</h1>
-            <p>Discover talented creators on the Pi Network.</p>
-            <div id="creators-grid" class="grid-container">
+            <h1>Explore Feed</h1>
+            <p>See the latest posts from creators across the platform.</p>
+            <div id="posts-feed-container">
                 <div class="loader"></div>
             </div>
         </main>
@@ -52,18 +53,13 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-        import { getFirestore, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
         // --- UI Logic (Theme & Sidebar) ---
         const themeToggle = document.getElementById('theme-toggle');
         function applyTheme(theme) {
-            if (theme === 'light') {
-                document.documentElement.setAttribute('data-theme', 'light');
-                themeToggle.checked = false;
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-                themeToggle.checked = true;
-            }
+            if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = false; } 
+            else { document.documentElement.removeAttribute('data-theme'); themeToggle.checked = true; }
             localStorage.setItem('theme', theme);
         }
         const currentTheme = localStorage.getItem('theme') || 'dark';
@@ -93,30 +89,81 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const creatorsGrid = document.getElementById('creators-grid');
+        const feedContainer = document.getElementById('posts-feed-container');
         try {
-            const q = query(collection(db, "creators"));
-            const snapshot = await getDocs(q);
-            creatorsGrid.innerHTML = '';
-            if (snapshot.empty) { creatorsGrid.innerHTML = "<p>No creators found.</p>"; }
-            else {
-                snapshot.forEach(doc => {
-                    const creator = doc.data();
-                    const card = document.createElement('div');
-                    card.className = 'creator-card';
-                    card.innerHTML = `<img src="${creator.profileImage}" alt="${creator.name}" class="creator-avatar"><h3>${creator.name}</h3><p>${creator.bio}</p><button class="btn btn-primary view-profile-btn" data-id="${doc.id}">View Profile</button>`;
-                    creatorsGrid.appendChild(card);
-                });
-                document.querySelectorAll('.view-profile-btn').forEach(button => {
-                    button.addEventListener('click', (event) => {
-                        sessionStorage.setItem('selectedCreatorId', event.target.dataset.id);
-                        window.location.href = 'creator.html';
-                    });
+            const postsQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(20));
+            const creatorsQuery = query(collection(db, "creators"), limit(10));
+
+            const [postsSnapshot, creatorsSnapshot] = await Promise.all([
+                getDocs(postsQuery),
+                getDocs(creatorsQuery)
+            ]);
+
+            feedContainer.innerHTML = '';
+            if (postsSnapshot.empty) {
+                feedContainer.innerHTML = "<p>No posts found yet. Be the first to create one!</p>";
+            } else {
+                const creators = [];
+                creatorsSnapshot.forEach(doc => creators.push({ id: doc.id, ...doc.data() }));
+
+                let postCount = 0;
+                postsSnapshot.forEach(doc => {
+                    const post = doc.data();
+                    const postCard = document.createElement('div');
+                    postCard.className = 'feed-post-card';
+                    const postDate = post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleDateString() : 'Just now';
+
+                    postCard.innerHTML = `
+                        <div class="post-header">
+                            <img src="${post.creatorImage}" alt="${post.creatorName}" class="post-creator-avatar">
+                            <div>
+                                <a href="#" class="post-creator-name" data-id="${post.creatorId}">${post.creatorName}</a>
+                                <p class="post-meta">${postDate}</p>
+                            </div>
+                        </div>
+                        <div class="post-body">
+                            <h3>${post.title}</h3>
+                            <p>${post.content.substring(0, 250)}...</p>
+                        </div>
+                        <div class="post-footer">
+                            <a href="#" class="btn btn-secondary view-creator-btn" data-id="${post.creatorId}">View Full Profile</a>
+                        </div>
+                    `;
+                    feedContainer.appendChild(postCard);
+                    postCount++;
+
+                    if (postCount % 3 === 0 && creators.length > 0) {
+                        const showcase = document.createElement('div');
+                        showcase.className = 'creator-showcase';
+                        let showcaseHTML = '<h2>Discover Creators</h2><div class="horizontal-scroll">';
+                        creators.sort(() => 0.5 - Math.random()).slice(0, 5).forEach(creator => {
+                            showcaseHTML += `
+                                <div class="creator-card showcase-card" data-id="${creator.id}">
+                                    <img src="${creator.profileImage}" alt="${creator.name}" class="creator-avatar">
+                                    <h3>${creator.name}</h3>
+                                    <p>${creator.bio.substring(0, 50)}...</p>
+                                </div>
+                            `;
+                        });
+                        showcaseHTML += '</div>';
+                        showcase.innerHTML = showcaseHTML;
+                        feedContainer.appendChild(showcase);
+                    }
                 });
             }
+
+            document.querySelectorAll('.view-creator-btn, .post-creator-name, .showcase-card').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const creatorId = event.target.closest('[data-id]').dataset.id;
+                    sessionStorage.setItem('selectedCreatorId', creatorId);
+                    window.location.href = 'creator.html';
+                });
+            });
+
         } catch (error) {
-            console.error("Error fetching creators:", error);
-            creatorsGrid.innerHTML = "<p>Error loading creators. Please try again later.</p>";
+            console.error("Error fetching posts for feed: ", error);
+            feedContainer.innerHTML = "<p>Error loading the feed. Please try again later.</p>";
         }
     </script>
 </body>
