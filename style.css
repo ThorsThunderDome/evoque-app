@@ -1,18 +1,6 @@
 /* Light & Dark Mode Color Palettes */
 :root {
-    /* Light Mode (Default) */
-    --primary-color: #673AB7;
-    --secondary-color: #9575CD;
-    --accent-color: #D1C4E9;
-    --background-color: #F5F5F5;
-    --surface-color: #FFFFFF;
-    --text-color: #212121;
-    --text-secondary-color: #757575;
-    --logo-filter: invert(0);
-}
-
-body[data-theme='dark'] {
-    /* Dark Mode */
+    /* Dark Mode (Default) */
     --primary-color: #512DA8;
     --secondary-color: #7E57C2;
     --accent-color: #9575CD;
@@ -23,7 +11,19 @@ body[data-theme='dark'] {
     --logo-filter: invert(1) hue-rotate(180deg);
 }
 
-/* Apply the logo filter to make it switch colors */
+html[data-theme='light'] {
+    /* Light Mode */
+    --primary-color: #673AB7;
+    --secondary-color: #9575CD;
+    --accent-color: #D1C4E9;
+    --background-color: #F5F5F5;
+    --surface-color: #FFFFFF;
+    --text-color: #212121;
+    --text-secondary-color: #757575;
+    --logo-filter: invert(0);
+}
+
+/* Apply the logo filter */
 .sidebar-header .logo {
     filter: var(--logo-filter);
 }

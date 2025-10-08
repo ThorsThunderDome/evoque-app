@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evoque - Creator Hub</title>
     <script>
-        (function() {
-            const theme = localStorage.getItem('theme') || 'dark'; // Default to dark mode
-            document.documentElement.setAttribute('data-theme', theme);
-        })();
-    </script>
+    (function() {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+    })();
+</script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>

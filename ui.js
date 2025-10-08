@@ -9,32 +9,27 @@ document.addEventListener('DOMContentLoaded', () => {
       // --- THEME SWITCHER LOGIC ---
 const themeToggle = document.getElementById('theme-toggle');
 
-// Function to set the theme
-function setTheme(theme) {
-    document.body.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-    if (theme === 'dark') {
-        themeToggle.checked = true;
-    } else {
+function applyTheme(theme) {
+    if (theme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
         themeToggle.checked = false;
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        themeToggle.checked = true;
     }
+    localStorage.setItem('theme', theme);
 }
 
-// Apply the saved theme on page load
-const currentTheme = localStorage.getItem('theme');
-if (currentTheme) {
-    setTheme(currentTheme);
-} else {
-    // Default to dark mode if no theme is saved
-    setTheme('dark');
-}
+// Apply saved theme on page load, defaulting to dark
+const currentTheme = localStorage.getItem('theme') || 'dark';
+applyTheme(currentTheme);
 
 // Handle toggle click
 themeToggle.addEventListener('change', function() {
     if (this.checked) {
-        setTheme('dark');
+        applyTheme('dark');
     } else {
-        setTheme('light');
+        applyTheme('light');
     }
      });
   });
