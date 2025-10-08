@@ -30,28 +30,24 @@
             </nav>
             <div class="sidebar-footer">
                 <a href="creator_hub.html" class="btn btn-secondary">Switch to Creator Space</a>
-                
-                <div class="theme-switcher">
-                    <span>Light</span>
-                    <label class="switch">
-                        <input type="checkbox" id="theme-toggle">
-                        <span class="slider round"></span>
-                    </label>
-                    <span>Dark</span>
-                </div>
-
                 <div id="user-profile">
                     <p>Connected as: <strong id="username-display"></strong></p>
                 </div>
+                <div class="theme-switcher">
+                    <span>Light</span>
+                    <label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider round"></span></label>
+                    <span>Dark</span>
+                </div>
             </div>
         </aside>
+
         <main id="main-content">
             <button id="sidebar-toggler"><span></span></button>
-            <h1>Explore Creators</h1>
-            <p>Discover talented creators on the Pi Network.</p>
-            <div id="creators-grid" class="grid-container">
-    <div class="loader"></div>
-    </div>
+            <h1>Explore Feed</h1>
+            <p>See the latest posts from creators across the platform.</p>
+            <div id="posts-feed-container">
+                <div class="loader"></div>
+            </div>
         </main>
     </div>
 
@@ -59,47 +55,95 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="ui.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            const piUserString = sessionStorage.getItem('piUser');
-            if (!piUserString) { window.location.href = 'index.html'; return; }
-            const piUser = JSON.parse(piUserString);
-            document.getElementById('username-display').textContent = piUser.username;
+    async function initExplorePage() {
+        const feedContainer = document.getElementById('posts-feed-container');
+        try {
+            // Step 1: Fetch both posts and creators at the same time
+            const postsQuery = db.collection("posts").orderBy("createdAt", "desc").limit(20);
+            const creatorsQuery = db.collection("creators").limit(10); // Get up to 10 creators to suggest
 
-        const firebaseConfig = {
-  apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
-  authDomain: "evoque-app.firebaseapp.com",
-  projectId: "evoque-app",
-  storageBucket: "evoque-app.firebasestorage.app",
-  messagingSenderId: "790735748571",
-  appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
-  measurementId: "G-DG6WWPYQ3Z"
-};
-            if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-            const db = firebase.firestore();
+            const [postsSnapshot, creatorsSnapshot] = await Promise.all([
+                postsQuery.get(),
+                creatorsQuery.get()
+            ]);
 
-            const creatorsGrid = document.getElementById('creators-grid');
-            try {
-                const snapshot = await db.collection("creators").get();
-                creatorsGrid.innerHTML = '';
-                if (snapshot.empty) { creatorsGrid.innerHTML = "<p>No creators found.</p>"; return; }
-                snapshot.forEach(doc => {
-                    const creator = doc.data();
-                    const card = document.createElement('div');
-                    card.className = 'creator-card';
-                    card.innerHTML = `<img src="${creator.profileImage}" alt="${creator.name}" class="creator-avatar"><h3>${creator.name}</h3><p>${creator.bio}</p><button class="btn btn-primary view-profile-btn" data-id="${doc.id}">View Profile</button>`;
-                    creatorsGrid.appendChild(card);
-                });
-                document.querySelectorAll('.view-profile-btn').forEach(button => {
-                    button.addEventListener('click', (event) => {
-                        sessionStorage.setItem('selectedCreatorId', event.target.dataset.id);
-                        window.location.href = 'creator.html';
-                    });
-                });
-            } catch (error) {
-                console.error("Error fetching creators:", error);
-                creatorsGrid.innerHTML = "<p>Error loading creators. Please try again later.</p>";
+            feedContainer.innerHTML = '';
+            if (postsSnapshot.empty) {
+                feedContainer.innerHTML = "<p>No posts found yet.</p>";
+                return;
             }
-        });
-    </script>
+
+            // Step 2: Prepare the creator data for injection
+            const creators = [];
+            creatorsSnapshot.forEach(doc => {
+                creators.push({ id: doc.id, ...doc.data() });
+            });
+
+            // Step 3: Build the feed, injecting the creator showcase periodically
+            let postCount = 0;
+            postsSnapshot.forEach(doc => {
+                const post = doc.data();
+                const postCard = document.createElement('div');
+                postCard.className = 'feed-post-card';
+                const postDate = post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleDateString() : 'Just now';
+
+                postCard.innerHTML = `
+                    <div class="post-header">
+                        <img src="${post.creatorImage}" alt="${post.creatorName}" class="post-creator-avatar">
+                        <div>
+                            <a href="#" class="post-creator-name" data-id="${post.creatorId}">${post.creatorName}</a>
+                            <p class="post-meta">${postDate}</p>
+                        </div>
+                    </div>
+                    <div class="post-body">
+                        <h3>${post.title}</h3>
+                        <p>${post.content.substring(0, 250)}...</p>
+                    </div>
+                    <div class="post-footer">
+                        <a href="#" class="btn btn-secondary view-creator-btn" data-id="${post.creatorId}">View Full Profile</a>
+                    </div>
+                `;
+                feedContainer.appendChild(postCard);
+                postCount++;
+
+                // After every 3 posts, inject the creator showcase
+                if (postCount % 3 === 0 && creators.length > 0) {
+                    const showcase = document.createElement('div');
+                    showcase.className = 'creator-showcase';
+                    
+                    let showcaseHTML = '<h2>Discover Creators</h2><div class="horizontal-scroll">';
+                    // Shuffle creators for randomness and pick a few
+                    creators.sort(() => 0.5 - Math.random()).slice(0, 5).forEach(creator => {
+                        showcaseHTML += `
+                            <div class="creator-card showcase-card" data-id="${creator.id}">
+                                <img src="${creator.profileImage}" alt="${creator.name}" class="creator-avatar">
+                                <h3>${creator.name}</h3>
+                                <p>${creator.bio.substring(0, 50)}...</p>
+                            </div>
+                        `;
+                    });
+                    showcaseHTML += '</div>';
+                    showcase.innerHTML = showcaseHTML;
+                    feedContainer.appendChild(showcase);
+                }
+            });
+
+            // Add event listeners to all profile links/buttons
+            document.querySelectorAll('.view-creator-btn, .post-creator-name, .showcase-card').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    // Use .closest() to find the data-id from the parent if needed
+                    const creatorId = event.target.closest('[data-id]').dataset.id;
+                    sessionStorage.setItem('selectedCreatorId', creatorId);
+                    window.location.href = 'creator.html';
+                });
+            });
+
+        } catch (error) {
+            console.error("Error fetching posts for feed: ", error);
+            feedContainer.innerHTML = "<p>Error loading the feed. Please try again later.</p>";
+        }
+    }
+</script>
 </body>
 </html>
