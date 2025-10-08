@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evoque - Creator Dashboard</title>
     <script>
-    (function() {
-        const theme = localStorage.getItem('theme');
-        if (theme === 'light') {
-            document.documentElement.setAttribute('data-theme', 'light');
-        }
-    })();
-</script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -69,17 +69,38 @@
         </main>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="ui.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            const piUserString = sessionStorage.getItem('piUser');
-            if (!piUserString) { window.location.href = 'index.html'; return; }
-            const piUser = JSON.parse(piUserString);
-            document.getElementById('username-display').textContent = piUser.username;
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-       const firebaseConfig = {
+        // --- UI Logic (Theme & Sidebar) ---
+        const themeToggle = document.getElementById('theme-toggle');
+        function applyTheme(theme) {
+            if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                themeToggle.checked = false;
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                themeToggle.checked = true;
+            }
+            localStorage.setItem('theme', theme);
+        }
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        applyTheme(currentTheme);
+        themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
+        const sidebarToggler = document.getElementById('sidebar-toggler');
+        const appContent = document.getElementById('app-content');
+        if (sidebarToggler && appContent) {
+            sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
+        }
+
+        // --- Page-Specific Logic ---
+        const piUserString = sessionStorage.getItem('piUser');
+        if (!piUserString) { window.location.href = 'index.html'; }
+        const piUser = JSON.parse(piUserString);
+        document.getElementById('username-display').textContent = piUser.username;
+        
+             const firebaseConfig = {
   apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
   authDomain: "evoque-app.firebaseapp.com",
   projectId: "evoque-app",
@@ -88,13 +109,16 @@
   appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
   measurementId: "G-DG6WWPYQ3Z"
 };
-            if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-            const db = firebase.firestore();
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
+        if (!piUser || !piUser.uid) {
+            window.location.href = 'index.html';
+        } else {
             try {
-                const creatorDocRef = db.collection('creators').doc(piUser.uid);
-                const docSnap = await creatorDocRef.get();
-                if (docSnap.exists) {
+                const creatorDocRef = doc(db, 'creators', piUser.uid);
+                const docSnap = await getDoc(creatorDocRef);
+                if (docSnap.exists()) {
                     const creatorData = docSnap.data();
                     document.getElementById('creator-name-main').textContent = creatorData.name;
                     document.getElementById('creator-name-sidebar').textContent = creatorData.name;
@@ -105,7 +129,7 @@
             } catch (error) {
                 document.getElementById('main-content').innerHTML = "<h1>Error loading your creator profile.</h1>";
             }
-        });
+        }
     </script>
 </body>
 </html>
