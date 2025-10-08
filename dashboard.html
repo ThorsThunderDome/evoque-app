@@ -110,7 +110,9 @@
             if (key.startsWith('membership_')) {
                 subsFound++;
                 const creatorId = key.split('_')[1];
-                const tierId = sessionStorage.getItem(key);
+                const membershipDataString = sessionStorage.getItem(key);
+                const membershipData = JSON.parse(membershipDataString);
+                const tierId = membershipData.tierId;
                 
                 const creatorRef = doc(db, 'creators', creatorId);
                 const tierRef = doc(db, 'creators', creatorId, 'tiers', tierId);
