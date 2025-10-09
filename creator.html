@@ -198,15 +198,34 @@
                     postsFeedDiv.innerHTML = "<p>This creator hasn't made any posts yet.</p>";
                 } else {
                     postsSnapshot.forEach(doc => {
-                        const post = doc.data();
+                        // Inside the 'forEach' loop that renders posts
+                    const post = doc.data();
+                    let mediaHTML = ''; // Start with empty media
+
+                    // Check the media type and create the correct HTML tag
+                    if (post.media && post.media.url) {
+                        if (post.media.type === 'image') {
+                            mediaHTML = `<img src="${post.media.url}" alt="Post image" class="post-media">`;
+                        } else if (post.media.type === 'audio') {
+                            mediaHTML = `<audio controls src="${post.media.url}" class="post-media"></audio>`;
+                        } else if (post.media.type === 'video') {
+                            mediaHTML = `<video controls src="${post.media.url}" class="post-media"></video>`;
+                        }
+                    }
                         const tierNames = allTiers.reduce((acc, tier) => ({...acc, [tier.id]: tier.name }), {});
                         const accessibleTierNames = post.accessibleTiers.map(tierId => tierNames[tierId] || 'A tier').join(', ');
                         const userHasAccess = post.accessibleTiers.some(id => userAccessibleTierIds.includes(id));
                         let contentHTML = userHasAccess ? `<div class="post-content"><p>${post.content}</p></div>` : `<div class="post-locked"><p>This post is locked. Subscribe to view.</p></div>`;
                         const postCard = document.createElement('div');
                         postCard.className = 'post-card';
-                        postCard.innerHTML = `<h3>${post.title}</h3><p class="post-meta">Published on ${new Date(doc.data().createdAt.seconds * 1000).toLocaleDateString()}</p>${contentHTML}<div class="post-lock-info">🔒 Unlocks for: ${accessibleTierNames}</div>`;
-                        postsFeedDiv.appendChild(postCard);
+                        postCard.innerHTML = `
+                            <h3>${post.title}</h3>
+                            <p class="post-meta">Published on ${new Date(doc.data().createdAt.seconds * 1000).toLocaleDateString()}</p>
+                            
+                            ${mediaHTML} 
+                        
+                            ${contentHTML}
+                            <div class="post-lock-info">🔒 Unlocks for: ${accessibleTierNames}</div> `;
                     });
                 }
             } else {
