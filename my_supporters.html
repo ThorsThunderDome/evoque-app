@@ -41,15 +41,26 @@
             <p>A list of amazing people supporting your work.</p>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>Username</th><th>Subscribed Tier</th><th>Member Since</th></tr></thead>
-                    <tbody id="supporters-table-body"></tbody>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Username</th>
+                            <th>Subscribed Tier</th>
+                            <th>Monthly (π)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="supporters-table-body">
+                        </tbody>
                 </table>
             </div>
         </main>
     </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+
+        // --- UI Logic ---
         const themeToggle = document.getElementById('theme-toggle');
         function applyTheme(theme) { if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = false; } else { document.documentElement.removeAttribute('data-theme'); themeToggle.checked = true; } localStorage.setItem('theme', theme); }
         const currentTheme = localStorage.getItem('theme') || 'dark';
@@ -58,10 +69,13 @@
         const sidebarToggler = document.getElementById('sidebar-toggler');
         const appContent = document.getElementById('app-content');
         if (sidebarToggler && appContent) { sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); }); }
+
+        // --- Page-Specific Logic ---
         const piUserString = sessionStorage.getItem('piUser');
         if (!piUserString) { window.location.href = 'index.html'; }
         const piUser = JSON.parse(piUserString);
         document.getElementById('username-display').textContent = piUser.username;
+        
 
              const firebaseConfig = {
   apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
@@ -84,15 +98,26 @@
                 document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
             }
         } catch (error) { console.error("Could not load creator data for sidebar", error); }
-        const mockSupporters = [ { username: 'Pioneer1', tierName: 'Gold Tier', since: 'Oct 2025' }, { username: 'JaneDoe', tierName: 'Silver Tier', since: 'Sep 2025' } ];
+
+        // Updated mock data to include number and contribution
+        const mockSupporters = [
+            { number: 1, username: 'Pioneer1', tierName: 'Gold Tier', contribution: 10 },
+            { number: 2, username: 'JaneDoe', tierName: 'Silver Tier', contribution: 5 },
+            { number: 3, username: 'TestUser', tierName: 'Silver Tier', contribution: 5 }
+        ];
         const tableBody = document.getElementById('supporters-table-body');
         tableBody.innerHTML = '';
         if (mockSupporters.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="3">You have no supporters yet.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="4">You have no supporters yet.</td></tr>';
         } else {
             mockSupporters.forEach(supporter => {
                 const row = document.createElement('tr');
-                row.innerHTML = `<td>${supporter.username}</td><td>${supporter.tierName}</td><td>${supporter.since}</td>`;
+                row.innerHTML = `
+                    <td>#${supporter.number}</td>
+                    <td>${supporter.username}</td>
+                    <td>${supporter.tierName}</td>
+                    <td>${supporter.contribution.toFixed(2)}</td>
+                `;
                 tableBody.appendChild(row);
             });
         }
