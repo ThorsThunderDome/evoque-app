@@ -65,7 +65,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
     import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-    // --- UI Logic (Theme & Sidebar) ---
+    // --- UI Logic ---
     const themeToggle = document.getElementById('theme-toggle');
     function applyTheme(theme) {
         if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = false; } 
@@ -77,11 +77,9 @@
     themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
     const sidebarToggler = document.getElementById('sidebar-toggler');
     const appContent = document.getElementById('app-content');
-    if (sidebarToggler && appContent) {
-        sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
-    }
+    if (sidebarToggler && appContent) { sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); }); }
 
-    // --- Page-Specific Logic with v9 Diagnostics ---
+    // --- Page-Specific Logic ---
     const piUserString = sessionStorage.getItem('piUser');
     if (!piUserString) { window.location.href = 'index.html'; }
     const piUser = JSON.parse(piUserString);
@@ -101,39 +99,33 @@
 
     async function buildExploreFeed() {
         const subscribedContainer = document.getElementById('subscribed-posts-container');
+        const showcaseContainer = document.getElementById('creator-showcase-container');
         const discoverContainer = document.getElementById('discover-posts-container');
+        subscribedContainer.innerHTML = '<div class="loader"></div>';
+        discoverContainer.innerHTML = '<div class="loader"></div>';
 
         try {
-            console.log("**EVOQUE_LOG**: Starting buildExploreFeed function (v9).");
-
             const subscribedCreatorIds = [];
             for (let i = 0; i < sessionStorage.length; i++) {
-                const key = sessionStorage.key(i);
-                if (key.startsWith('membership_')) {
-                    subscribedCreatorIds.push(key.split('_')[1]);
+                if (sessionStorage.key(i).startsWith('membership_')) {
+                    subscribedCreatorIds.push(sessionStorage.key(i).split('_')[1]);
                 }
             }
-            console.log("**EVOQUE_LOG**: Found subscriptions for these creator IDs:", subscribedCreatorIds);
-
-            console.log("**EVOQUE_LOG**: Fetching posts from database (v9)...");
-            const postsQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"));
-            const postsSnapshot = await getDocs(postsQuery);
-            console.log(`**EVOQUE_LOG**: Found ${postsSnapshot.size} posts.`);
+            const postsQuery = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(30));
+            const creatorsQuery = query(collection(db, "creators"), limit(10));
+            const [postsSnapshot, creatorsSnapshot] = await Promise.all([getDocs(postsQuery), getDocs(creatorsQuery)]);
 
             const subscribedPosts = [];
             const discoverPosts = [];
             postsSnapshot.forEach(doc => {
                 const post = { id: doc.id, ...doc.data() };
-                const isSubscribed = subscribedCreatorIds.includes(post.creatorId);
-                console.log(`**EVOQUE_LOG**: Checking post from creator ${post.creatorId}. Is user subscribed? ${isSubscribed}`);
-                if (isSubscribed) {
+                if (subscribedCreatorIds.includes(post.creatorId)) {
                     subscribedPosts.push(post);
                 } else {
                     discoverPosts.push(post);
                 }
             });
             
-            console.log("**EVOQUE_LOG**: Rendering feeds...");
             // 4. Render the "Subscribed" feed
             subscribedContainer.innerHTML = '';
             if (subscribedPosts.length === 0) {
@@ -181,10 +173,8 @@
                 });
             });
 
-        } catch (error) {
-            console.error("**EVOQUE_LOG**: A critical error occurred in the try block:", error);
-            subscribedContainer.innerHTML = "<p>Error loading feed.</p>";
-            discoverContainer.innerHTML = "";
+         } catch (error) {
+            console.error("Error building explore feed: ", error);
         }
     }
 

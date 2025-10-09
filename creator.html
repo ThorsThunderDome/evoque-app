@@ -67,9 +67,9 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-    import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-    // --- UI Logic (Theme & Sidebar) ---
+    // --- UI Logic ---
     const themeToggle = document.getElementById('theme-toggle');
     function applyTheme(theme) {
         if (theme === 'light') {
@@ -95,6 +95,7 @@
     if (!piUserString) { window.location.href = 'index.html'; }
     const piUser = JSON.parse(piUserString);
     document.getElementById('username-display').textContent = piUser.username;
+
 
          const firebaseConfig = {
   apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
@@ -181,14 +182,18 @@
                     }
                 }
 
-                const postsQuery = query(collection(db, "creators", creatorId, 'posts'), orderBy('createdAt', 'desc'));
-                const postsSnapshot = await getDocs(postsQuery);
-                const postsFeedDiv = document.getElementById('posts-feed');
-                postsFeedDiv.innerHTML = '';
+                const postsQuery = query(
+            collection(db, "posts"), 
+            where("creatorId", "==", creatorId), 
+            orderBy('createdAt', 'desc')
+        );
+        const postsSnapshot = await getDocs(postsQuery);
+        const postsFeedDiv = document.getElementById('posts-feed');
+        postsFeedDiv.innerHTML = '';
 
-                if (postsSnapshot.empty) {
-                    postsFeedDiv.innerHTML = "<p>This creator hasn't made any posts yet.</p>";
-                } else {
+        if (postsSnapshot.empty) {
+            postsFeedDiv.innerHTML = "<p>This creator hasn't made any posts yet.</p>";
+        } else {
                     postsSnapshot.forEach(doc => {
                         const post = doc.data();
                         const tierNames = allTiers.reduce((acc, tier) => ({...acc, [tier.id]: tier.name }), {});
@@ -203,9 +208,9 @@
                 }
             }
         } catch (error) {
-            console.error("Error fetching creator page:", error);
-            document.getElementById('main-content').innerHTML = "<h1>Error loading page.</h1>";
-        }
+        console.error("Error fetching creator page content:", error);
+        document.getElementById('main-content').innerHTML = "<h1>Error loading page content.</h1>";
+    }
     }
 </script>
 </body>
