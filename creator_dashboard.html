@@ -40,6 +40,18 @@
             <h1>Welcome to Your Creator Dashboard, <span id="creator-name-main"></span>!</h1>
             <p>This is your space to manage your community and content.</p>
             <div class="grid-container" style="margin-top: 30px;">
+                <div class="management-card">
+                    <h3>First 100 Supporters Program</h3>
+                    <p>Allow your first 100 supporters to earn royalties. This can only be turned off once.</p>
+                    <div class="settings-toggle">
+                        <span>Off</span>
+                        <label class="switch">
+                            <input type="checkbox" id="incentive-toggle">
+                            <span class="slider round"></span>
+                        </label>
+                        <span>On</span>
+                    </div>
+                </div>
                 <div class="management-card"><a href="manage_tiers.html"><h3>Membership Tiers</h3><p>Create and manage support levels.</p></a></div>
                 <div class="management-card"><a href="create_post.html"><h3>Create a Post</h3><p>Share content with supporters.</p></a></div>
                 <div class="management-card"><a href="my_supporters.html"><h3>My Supporters</h3><p>View your member list.</p></a></div>
@@ -48,9 +60,11 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-        const themeToggle = document.getElementById('theme-toggle');
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+
+    // --- UI Logic ---
+    const themeToggle = document.getElementById('theme-toggle');
         function applyTheme(theme) { if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = false; } else { document.documentElement.removeAttribute('data-theme'); themeToggle.checked = true; } localStorage.setItem('theme', theme); }
         const currentTheme = localStorage.getItem('theme') || 'dark';
         applyTheme(currentTheme);
@@ -59,9 +73,9 @@
         const appContent = document.getElementById('app-content');
         if (sidebarToggler && appContent) { sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); }); }
         const piUserString = sessionStorage.getItem('piUser');
-        if (!piUserString) { window.location.href = 'index.html'; }
-        const piUser = JSON.parse(piUserString);
-        document.getElementById('username-display').textContent = piUser.username;
+    if (!piUserString) { window.location.href = 'index.html'; }
+    const piUser = JSON.parse(piUserString);
+    document.getElementById('username-display').textContent = piUser.username;
 
              const firebaseConfig = {
   apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
@@ -75,19 +89,48 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        if (!piUser || !piUser.uid) { window.location.href = 'index.html'; } 
-        else {
-            try {
-                const creatorDocRef = doc(db, 'creators', piUser.uid);
-                const docSnap = await getDoc(creatorDocRef);
-                if (docSnap.exists()) {
-                    const creatorData = docSnap.data();
+        if (!piUser || !piUser.uid) {
+        window.location.href = 'index.html';
+    } else {
+        try {
+            const creatorDocRef = doc(db, 'creators', piUser.uid);
+            const docSnap = await getDoc(creatorDocRef);
+
+            if (docSnap.exists()) {
+                const creatorData = docSnap.data();
                     document.getElementById('creator-name-main').textContent = creatorData.name;
                     document.getElementById('creator-name-sidebar').textContent = creatorData.name;
                     document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
-                } else { window.location.href = 'creator_hub.html'; }
-            } catch (error) { document.getElementById('main-content').innerHTML = "<h1>Error loading your profile.</h1>"; }
+              
+                // --- NEW: Incentive Toggle Logic ---
+                const incentiveToggle = document.getElementById('incentive-toggle');
+                
+                // Set the initial state of the toggle
+                incentiveToggle.checked = creatorData.firstSupporterIncentiveActive;
+
+                // Add a listener to handle changes
+                incentiveToggle.addEventListener('change', async (e) => {
+                    const newValue = e.target.checked;
+                    // For now, we allow toggling. We'll add the "one-time-off" rule later.
+                    try {
+                        await updateDoc(creatorDocRef, {
+                            firstSupporterIncentiveActive: newValue
+                        });
+                        alert('Incentive program setting updated!');
+                    } catch (error) {
+                        alert('Error updating setting. Please try again.');
+                        // Revert the toggle if the database update fails
+                        e.target.checked = !newValue;
+                    }
+                });
+
+            } else {
+                window.location.href = 'creator_hub.html';
+            }
+        } catch (error) {
+            document.getElementById('main-content').innerHTML = "<h1>Error loading your creator profile.</h1>";
         }
-    </script>
+    }
+</script>
 </body>
 </html>

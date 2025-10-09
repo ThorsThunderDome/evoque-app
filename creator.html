@@ -74,18 +74,13 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-    import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-    // --- UI Logic ---
+    // --- UI Logic (Theme & Sidebar) ---
     const themeToggle = document.getElementById('theme-toggle');
     function applyTheme(theme) {
-        if (theme === 'light') {
-            document.documentElement.setAttribute('data-theme', 'light');
-            themeToggle.checked = false;
-        } else {
-            document.documentElement.removeAttribute('data-theme');
-            themeToggle.checked = true;
-        }
+        if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = false; } 
+        else { document.documentElement.removeAttribute('data-theme'); themeToggle.checked = true; }
         localStorage.setItem('theme', theme);
     }
     const currentTheme = localStorage.getItem('theme') || 'dark';
@@ -103,7 +98,6 @@
     const piUser = JSON.parse(piUserString);
     document.getElementById('username-display').textContent = piUser.username;
 
-
          const firebaseConfig = {
   apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
   authDomain: "evoque-app.firebaseapp.com",
@@ -113,6 +107,7 @@
   appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
   measurementId: "G-DG6WWPYQ3Z"
 };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
@@ -122,23 +117,28 @@
     } else {
         const creatorDocRef = doc(db, "creators", creatorId);
 
-        async function handleSubscription(tierId, tierName, tierPrice) {
+        async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
             if (window.confirm(`Do you want to subscribe to ${tierName} for ${tierPrice} π?`)) {
                 try {
-                    const creatorDoc = await getDoc(creatorDocRef);
-                    const currentCount = creatorDoc.data().supporterCount || 0;
-                    const newSupporterNumber = currentCount + 1;
+                    let newSupporterNumber = null;
+                    let successMessage = "Subscription successful! Refresh the page to see your new access.";
 
-                    await updateDoc(creatorDocRef, {
-                        supporterCount: increment(1)
-                    });
+                    // Check if the incentive is active and under the 100 supporter limit
+                    if (creatorData.firstSupporterIncentiveActive && (creatorData.supporterCount || 0) < 100) {
+                        const currentCount = creatorData.supporterCount || 0;
+                        newSupporterNumber = currentCount + 1;
+                        await updateDoc(creatorDocRef, {
+                            supporterCount: increment(1)
+                        });
+                        successMessage = `Subscription successful! You are supporter #${newSupporterNumber}. Refresh the page to see your new access.`;
+                    }
 
                     const membershipKey = `membership_${creatorId}`;
                     const membershipData = { tierId: tierId, number: newSupporterNumber };
                     sessionStorage.setItem(membershipKey, JSON.stringify(membershipData));
                     
-                    alert(`Subscription successful! You are supporter #${newSupporterNumber}. Refresh the page to see your new access.`);
-
+                    alert(successMessage);
+                    
                 } catch (error) {
                     console.error("Error during subscription process: ", error);
                     alert("Subscription failed. Please try again.");
@@ -147,34 +147,14 @@
                 alert("Subscription cancelled.");
             }
         }
-
+        
         try {
             const docSnap = await getDoc(creatorDocRef);
-            if (!docSnap.exists()) {
-                document.getElementById('main-content').innerHTML = "<h1>Creator not found.</h1>";
-            } else {
-                const creator = docSnap.data();
-                document.getElementById('creator-name').textContent = creator.name;
-                document.getElementById('creator-bio').textContent = creator.bio;
-                document.getElementById('creator-avatar').src = creator.profileImage;
-
-// --- PROGRESS BAR LOGIC ---
-                    const supporterCount = creator.supporterCount || 0;
-                    if (supporterCount < 100) {
-                        const progressBarFill = document.getElementById('progress-bar-fill');
-                        const progressBarText = document.getElementById('progress-bar-text');
-                        const progressPercentage = (supporterCount / 100) * 100;
-                        
-                        // Use a timeout to make the animation visible on load
-                        setTimeout(() => {
-                            progressBarFill.style.width = `${progressPercentage}%`;
-                        }, 100);
-                        
-                        progressBarText.textContent = `${supporterCount} / 100`;
-                    } else {
-                        // If goal is met or exceeded, hide the progress bar
-                        document.getElementById('progress-bar-section').classList.add('hidden');
-                    }
+            if (docSnap.exists()) {
+                const creatorData = docSnap.data(); // Get creator data once
+                document.getElementById('creator-name').textContent = creatorData.name;
+                document.getElementById('creator-bio').textContent = creatorData.bio;
+                document.getElementById('creator-avatar').src = creatorData.profileImage;
 
                 const tiersQuery = query(collection(db, "creators", creatorId, 'tiers'), orderBy('price'));
                 const tiersSnapshot = await getDocs(tiersQuery);
@@ -189,12 +169,14 @@
                         const tierCard = document.createElement('div');
                         tierCard.className = 'tier-card';
                         tierCard.innerHTML = `<h3>${tier.name}</h3><p class="price">${tier.price} π/month</p><ul>${tier.description.split(/[\r\n]+/).map(b => `<li>${b}</li>`).join('')}</ul><button class="btn btn-primary subscribe-btn">Subscribe</button>`;
-                        tierCard.querySelector('.subscribe-btn').addEventListener('click', () => handleSubscription(doc.id, tier.name, tier.price));
+                        tierCard.querySelector('.subscribe-btn').addEventListener('click', () => {
+                            // Pass the full creatorData object to the handler
+                            handleSubscription(creatorData, doc.id, tier.name, tier.price);
+                        });
                         tiersListDiv.appendChild(tierCard);
                     });
                 }
 
-                // This is the missing variable that was causing the crash
                 const membershipKey = `membership_${creatorId}`;
                 const membershipDataString = sessionStorage.getItem(membershipKey);
                 const subscribedTierId = membershipDataString ? JSON.parse(membershipDataString).tierId : null;
@@ -207,18 +189,14 @@
                     }
                 }
 
-                const postsQuery = query(
-            collection(db, "posts"), 
-            where("creatorId", "==", creatorId), 
-            orderBy('createdAt', 'desc')
-        );
-        const postsSnapshot = await getDocs(postsQuery);
-        const postsFeedDiv = document.getElementById('posts-feed');
-        postsFeedDiv.innerHTML = '';
+                const postsQuery = query(collection(db, "creators", creatorId, 'posts'), orderBy('createdAt', 'desc'));
+                const postsSnapshot = await getDocs(postsQuery);
+                const postsFeedDiv = document.getElementById('posts-feed');
+                postsFeedDiv.innerHTML = '';
 
-        if (postsSnapshot.empty) {
-            postsFeedDiv.innerHTML = "<p>This creator hasn't made any posts yet.</p>";
-        } else {
+                if (postsSnapshot.empty) {
+                    postsFeedDiv.innerHTML = "<p>This creator hasn't made any posts yet.</p>";
+                } else {
                     postsSnapshot.forEach(doc => {
                         const post = doc.data();
                         const tierNames = allTiers.reduce((acc, tier) => ({...acc, [tier.id]: tier.name }), {});
@@ -231,11 +209,13 @@
                         postsFeedDiv.appendChild(postCard);
                     });
                 }
+            } else {
+                document.getElementById('main-content').innerHTML = "<h1>Creator not found.</h1>";
             }
         } catch (error) {
-        console.error("Error fetching creator page content:", error);
-        document.getElementById('main-content').innerHTML = "<h1>Error loading page content.</h1>";
-    }
+            console.error("Error fetching creator page:", error);
+            document.getElementById('main-content').innerHTML = "<h1>Error loading page.</h1>";
+        }
     }
 </script>
 </body>
