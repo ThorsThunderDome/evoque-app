@@ -7,9 +7,7 @@
     <script>
         (function() {
             const theme = localStorage.getItem('theme') || 'dark';
-            if (theme === 'light') {
-                document.documentElement.setAttribute('data-theme', 'light');
-            }
+            if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); }
         })();
     </script>
     <link rel="stylesheet" href="style.css">
@@ -32,13 +30,9 @@
             <div class="sidebar-footer">
                 <a href="dashboard.html" class="btn btn-secondary">Switch to Supporter Space</a>
                 <div class="theme-switcher">
-                    <span>Light</span>
-                    <label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider round"></span></label>
-                    <span>Dark</span>
+                    <span>Light</span><label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider round"></span></label><span>Dark</span>
                 </div>
-                <div id="user-profile">
-                    <p>Connected as: <strong id="username-display"></strong></p>
-                </div>
+                <div id="user-profile"><p>Connected as: <strong id="username-display"></strong></p></div>
             </div>
         </aside>
         <main id="main-content">
@@ -47,50 +41,28 @@
             <p>A list of amazing people supporting your work.</p>
             <div class="table-container">
                 <table>
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Subscribed Tier</th>
-                            <th>Member Since</th>
-                        </tr>
-                    </thead>
-                    <tbody id="supporters-table-body">
-                        </tbody>
+                    <thead><tr><th>Username</th><th>Subscribed Tier</th><th>Member Since</th></tr></thead>
+                    <tbody id="supporters-table-body"></tbody>
                 </table>
             </div>
         </main>
     </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-
-        // --- UI Logic ---
         const themeToggle = document.getElementById('theme-toggle');
-        function applyTheme(theme) { 
-            if (theme === 'light') {
-            document.documentElement.setAttribute('data-theme', 'light');
-            themeToggle.checked = false;
-        } else {
-            document.documentElement.removeAttribute('data-theme');
-            themeToggle.checked = true;
-        }
-        localStorage.setItem('theme', theme);
-    }
+        function applyTheme(theme) { if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = false; } else { document.documentElement.removeAttribute('data-theme'); themeToggle.checked = true; } localStorage.setItem('theme', theme); }
         const currentTheme = localStorage.getItem('theme') || 'dark';
         applyTheme(currentTheme);
         themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
-            
         const sidebarToggler = document.getElementById('sidebar-toggler');
         const appContent = document.getElementById('app-content');
         if (sidebarToggler && appContent) { sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); }); }
-
-        // --- Page-Specific Logic ---
         const piUserString = sessionStorage.getItem('piUser');
         if (!piUserString) { window.location.href = 'index.html'; }
         const piUser = JSON.parse(piUserString);
         document.getElementById('username-display').textContent = piUser.username;
-        
+
              const firebaseConfig = {
   apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
   authDomain: "evoque-app.firebaseapp.com",
@@ -100,9 +72,9 @@
   appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
   measurementId: "G-DG6WWPYQ3Z"
 };
+        
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
         try {
             const creatorDocRef = doc(db, 'creators', piUser.uid);
             const docSnap = await getDoc(creatorDocRef);
@@ -112,11 +84,7 @@
                 document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
             }
         } catch (error) { console.error("Could not load creator data for sidebar", error); }
-
-        const mockSupporters = [
-            { username: 'Pioneer1', tierName: 'Gold Tier', since: 'Oct 2025' },
-            { username: 'JaneDoe', tierName: 'Silver Tier', since: 'Sep 2025' },
-        ];
+        const mockSupporters = [ { username: 'Pioneer1', tierName: 'Gold Tier', since: 'Oct 2025' }, { username: 'JaneDoe', tierName: 'Silver Tier', since: 'Sep 2025' } ];
         const tableBody = document.getElementById('supporters-table-body');
         tableBody.innerHTML = '';
         if (mockSupporters.length === 0) {

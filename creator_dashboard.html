@@ -7,9 +7,7 @@
     <script>
         (function() {
             const theme = localStorage.getItem('theme') || 'dark';
-            if (theme === 'light') {
-                document.documentElement.setAttribute('data-theme', 'light');
-            }
+            if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); }
         })();
     </script>
     <link rel="stylesheet" href="style.css">
@@ -32,13 +30,9 @@
             <div class="sidebar-footer">
                 <a href="dashboard.html" class="btn btn-secondary">Switch to Supporter Space</a>
                 <div class="theme-switcher">
-                    <span>Light</span>
-                    <label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider round"></span></label>
-                    <span>Dark</span>
+                    <span>Light</span><label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider round"></span></label><span>Dark</span>
                 </div>
-                <div id="user-profile">
-                    <p>Connected as: <strong id="username-display"></strong></p>
-                </div>
+                <div id="user-profile"><p>Connected as: <strong id="username-display"></strong></p></div>
             </div>
         </aside>
         <main id="main-content">
@@ -46,21 +40,9 @@
             <h1>Welcome to Your Creator Dashboard, <span id="creator-name-main"></span>!</h1>
             <p>This is your space to manage your community and content.</p>
             <div class="grid-container" style="margin-top: 30px;">
-                <div class="management-card">
-                    <h3>Membership Tiers</h3>
-                    <p>Create and manage the different levels of support for your members.</p>
-                    <a href="manage_tiers.html" class="btn btn-primary">Manage Tiers</a>
-                </div>
-                <div class="management-card">
-                    <h3>Create a Post</h3>
-                    <p>Share exclusive content with your supporters based on their tier.</p>
-                    <a href="create_post.html" class="btn btn-primary">New Post</a>
-                </div>
-                <div class="management-card">
-                    <h3>My Supporters</h3>
-                    <p>View a list of the members who are currently supporting you.</p>
-                    <a href="my_supporters.html" class="btn btn-primary">View Supporters</a>
-                </div>
+                <div class="management-card"><a href="manage_tiers.html"><h3>Membership Tiers</h3><p>Create and manage support levels.</p></a></div>
+                <div class="management-card"><a href="create_post.html"><h3>Create a Post</h3><p>Share content with supporters.</p></a></div>
+                <div class="management-card"><a href="my_supporters.html"><h3>My Supporters</h3><p>View your member list.</p></a></div>
             </div>
         </main>
     </div>
@@ -68,28 +50,19 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-
-        // --- UI Logic ---
         const themeToggle = document.getElementById('theme-toggle');
-        function applyTheme(theme) {
-            if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = false; } else { document.documentElement.removeAttribute('data-theme'); themeToggle.checked = true; }
-            localStorage.setItem('theme', theme);
-        }
+        function applyTheme(theme) { if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = false; } else { document.documentElement.removeAttribute('data-theme'); themeToggle.checked = true; } localStorage.setItem('theme', theme); }
         const currentTheme = localStorage.getItem('theme') || 'dark';
         applyTheme(currentTheme);
         themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
         const sidebarToggler = document.getElementById('sidebar-toggler');
         const appContent = document.getElementById('app-content');
-        if (sidebarToggler && appContent) {
-            sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
-        }
-
-        // --- Page-Specific Logic ---
+        if (sidebarToggler && appContent) { sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); }); }
         const piUserString = sessionStorage.getItem('piUser');
         if (!piUserString) { window.location.href = 'index.html'; }
         const piUser = JSON.parse(piUserString);
         document.getElementById('username-display').textContent = piUser.username;
-        
+
              const firebaseConfig = {
   apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
   authDomain: "evoque-app.firebaseapp.com",
@@ -99,12 +72,11 @@
   appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
   measurementId: "G-DG6WWPYQ3Z"
 };
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
-        if (!piUser || !piUser.uid) {
-            window.location.href = 'index.html';
-        } else {
+        if (!piUser || !piUser.uid) { window.location.href = 'index.html'; } 
+        else {
             try {
                 const creatorDocRef = doc(db, 'creators', piUser.uid);
                 const docSnap = await getDoc(creatorDocRef);
@@ -113,12 +85,8 @@
                     document.getElementById('creator-name-main').textContent = creatorData.name;
                     document.getElementById('creator-name-sidebar').textContent = creatorData.name;
                     document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
-                } else {
-                    window.location.href = 'creator_hub.html';
-                }
-            } catch (error) {
-                document.getElementById('main-content').innerHTML = "<h1>Error loading your creator profile.</h1>";
-            }
+                } else { window.location.href = 'creator_hub.html'; }
+            } catch (error) { document.getElementById('main-content').innerHTML = "<h1>Error loading your profile.</h1>"; }
         }
     </script>
 </body>

@@ -5,46 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evoque - Creator Hub</title>
     <script>
-    (function() {
-        const theme = localStorage.getItem('theme');
-        if (theme === 'light') {
-            document.documentElement.setAttribute('data-theme', 'light');
-        }
-    })();
-</script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); }
+        })();
+    </script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="app-content" class="sidebar-collapsed">
-<aside id="sidebar">
-    <div class="sidebar-header">
-        <img id="creator-avatar-sidebar" src="" alt="Creator Avatar" class="logo">
-        <h2 id="creator-name-sidebar">My Hub</h2>
-    </div>
-    <nav class="nav-menu">
-        <ul>
-            <li><a href="creator_dashboard.html" class="active">Dashboard</a></li>
-            <li><a href="my_supporters.html">My Supporters</a></li>
-            <li><a href="manage_tiers.html">My Tiers</a></li>
-            <li><a href="create_post.html">Create Post</a></li>
-        </ul>
-    </nav>
-    <div class="sidebar-footer">
-        <a href="dashboard.html" class="btn btn-secondary">Switch to Supporter Space</a>
-        
-        <div class="theme-switcher">
-            <span>Light</span>
-            <label class="switch">
-                <input type="checkbox" id="theme-toggle">
-                <span class="slider round"></span>
-            </label>
-            <span>Dark</span>
-        </div>
-        <div id="user-profile">
-            <p>Connected as: <strong id="username-display"></strong></p>
-        </div>
-    </div>
-    </aside>
+        <aside id="sidebar">
+            <div class="sidebar-header"><img src="images/evoque-logo.png" alt="Evoque Logo" class="logo"><h2>Evoque</h2></div>
+            <nav class="nav-menu">
+                <ul>
+                    <li><a href="dashboard.html">Dashboard</a></li>
+                    <li><a href="explore.html">Explore</a></li>
+                    <li><a href="#">Chat</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="creator_hub.html" class="btn btn-primary">Creator Space</a>
+                <div class="theme-switcher">
+                    <span>Light</span><label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider round"></span></label><span>Dark</span>
+                </div>
+                <div id="user-profile"><p>Connected as: <strong id="username-display"></strong></p></div>
+            </div>
+        </aside>
         <main id="main-content">
             <button id="sidebar-toggler"><span></span></button>
             <div id="loader"><h1>Checking your creator status...</h1></div>
@@ -52,18 +38,9 @@
                 <h1>Become a Creator</h1>
                 <p>Set up your public profile to start building your community.</p>
                 <form id="registration-form">
-                    <div class="form-group">
-                        <label for="creator-name">Public Creator Name</label>
-                        <input type="text" id="creator-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="creator-bio">Your Bio (A short description)</label>
-                        <textarea id="creator-bio" rows="4" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="profile-image">Profile Image URL</label>
-                        <input type="url" id="profile-image" placeholder="images/your-image.png" required>
-                    </div>
+                    <div class="form-group"><label for="creator-name">Public Creator Name</label><input type="text" id="creator-name" required></div>
+                    <div class="form-group"><label for="creator-bio">Your Bio</label><textarea id="creator-bio" rows="4" required></textarea></div>
+                    <div class="form-group"><label for="profile-image">Profile Image URL</label><input type="url" id="profile-image" placeholder="images/your-image.png" required></div>
                     <button type="submit" class="btn btn-primary">Create Profile</button>
                     <p id="form-status"></p>
                 </form>
@@ -74,29 +51,14 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-
-        // --- UI Logic (Theme & Sidebar) ---
         const themeToggle = document.getElementById('theme-toggle');
-        function applyTheme(theme) {
-            if (theme === 'light') {
-                document.documentElement.setAttribute('data-theme', 'light');
-                themeToggle.checked = false;
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-                themeToggle.checked = true;
-            }
-            localStorage.setItem('theme', theme);
-        }
+        function applyTheme(theme) { if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = false; } else { document.documentElement.removeAttribute('data-theme'); themeToggle.checked = true; } localStorage.setItem('theme', theme); }
         const currentTheme = localStorage.getItem('theme') || 'dark';
         applyTheme(currentTheme);
         themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
         const sidebarToggler = document.getElementById('sidebar-toggler');
         const appContent = document.getElementById('app-content');
-        if (sidebarToggler && appContent) {
-            sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
-        }
-        
-        // --- Page-Specific Logic ---
+        if (sidebarToggler && appContent) { sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); }); }
         const piUserString = sessionStorage.getItem('piUser');
         if (!piUserString) { window.location.href = 'index.html'; }
         const piUser = JSON.parse(piUserString);
@@ -111,42 +73,29 @@
   appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
   measurementId: "G-DG6WWPYQ3Z"
 };
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
         const loader = document.getElementById('loader');
         const registrationFormDiv = document.getElementById('creator-registration-form');
-        if (!piUser || !piUser.uid) {
-            loader.innerHTML = "<h1>Error: Could not verify user ID.</h1>";
-        } else {
+        if (!piUser || !piUser.uid) { loader.innerHTML = "<h1>Error: Could not verify user ID.</h1>"; } 
+        else {
             const creatorDocRef = doc(db, 'creators', piUser.uid);
             const creatorDoc = await getDoc(creatorDocRef);
-            if (creatorDoc.exists()) {
-                window.location.href = 'creator_dashboard.html';
-            } else {
-                loader.classList.add('hidden');
-                registrationFormDiv.classList.remove('hidden');
-            }
+            if (creatorDoc.exists()) { window.location.href = 'creator_dashboard.html'; } 
+            else { loader.classList.add('hidden'); registrationFormDiv.classList.remove('hidden'); }
         }
-        
         const registrationForm = document.getElementById('registration-form');
         registrationForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formStatus = document.getElementById('form-status');
             formStatus.textContent = "Creating profile...";
-            const newCreatorData = {
-                name: document.getElementById('creator-name').value,
-                bio: document.getElementById('creator-bio').value,
-                profileImage: document.getElementById('profile-image').value,
-                ownerUid: piUser.uid
-            };
+            const newCreatorData = { name: document.getElementById('creator-name').value, bio: document.getElementById('creator-bio').value, profileImage: document.getElementById('profile-image').value, ownerUid: piUser.uid };
             try {
                 await setDoc(doc(db, 'creators', piUser.uid), newCreatorData);
                 formStatus.textContent = "Profile created! Redirecting...";
                 setTimeout(() => { window.location.href = 'creator_dashboard.html'; }, 2000);
-            } catch (error) {
-                formStatus.textContent = "Error: Could not create profile.";
-            }
+            } catch (error) { formStatus.textContent = "Error: Could not create profile."; }
         });
     </script>
 </body>
