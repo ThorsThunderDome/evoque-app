@@ -273,3 +273,42 @@ input:checked + .slider:before { transform: translateX(22px); }
     border-radius: var(--border-radius);
     text-align: center;
 }
+/* --- Supporter Progress Bar --- */
+#progress-bar-section {
+    background-color: var(--surface-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-top: 20px;
+    text-align: center;
+}
+.progress-bar-container {
+    width: 100%;
+    background-color: var(--background-color);
+    border-radius: 10px;
+    position: relative;
+    height: 30px;
+    margin-top: 10px;
+}
+#progress-bar-fill {
+    height: 100%;
+    width: 0%; /* Starts at 0, JS will update this */
+    background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+    border-radius: 10px;
+    transition: width 1.5s ease-in-out;
+    box-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--accent-color);
+    animation: pulse 2s infinite;
+}
+#progress-bar-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--text-color);
+    font-weight: bold;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 5px var(--accent-color); }
+    50% { box-shadow: 0 0 15px var(--primary-color); }
+    100% { box-shadow: 0 0 5px var(--accent-color); }
+}

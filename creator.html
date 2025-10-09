@@ -54,6 +54,13 @@
                     <p id="creator-bio">Loading bio...</p>
                 </div>
             </div>
+            <div id="progress-bar-section">
+            <p><strong>First 100 Supporters Goal</strong></p>
+            <div class="progress-bar-container">
+                <div id="progress-bar-fill"></div>
+                <span id="progress-bar-text">0 / 100</span>
+            </div>
+        </div>
             <div class="profile-content">
                 <h2>Membership Tiers</h2>
                 <div id="tiers-list" class="grid-container"></div>
@@ -150,6 +157,24 @@
                 document.getElementById('creator-name').textContent = creator.name;
                 document.getElementById('creator-bio').textContent = creator.bio;
                 document.getElementById('creator-avatar').src = creator.profileImage;
+
+// --- PROGRESS BAR LOGIC ---
+                    const supporterCount = creator.supporterCount || 0;
+                    if (supporterCount < 100) {
+                        const progressBarFill = document.getElementById('progress-bar-fill');
+                        const progressBarText = document.getElementById('progress-bar-text');
+                        const progressPercentage = (supporterCount / 100) * 100;
+                        
+                        // Use a timeout to make the animation visible on load
+                        setTimeout(() => {
+                            progressBarFill.style.width = `${progressPercentage}%`;
+                        }, 100);
+                        
+                        progressBarText.textContent = `${supporterCount} / 100`;
+                    } else {
+                        // If goal is met or exceeded, hide the progress bar
+                        document.getElementById('progress-bar-section').classList.add('hidden');
+                    }
 
                 const tiersQuery = query(collection(db, "creators", creatorId, 'tiers'), orderBy('price'));
                 const tiersSnapshot = await getDocs(tiersQuery);
