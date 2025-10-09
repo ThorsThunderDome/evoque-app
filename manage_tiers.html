@@ -16,62 +16,47 @@
 </head>
 <body>
     <div id="app-content" class="sidebar-collapsed">
-<aside id="sidebar">
-    <div class="sidebar-header">
-        <img id="creator-avatar-sidebar" src="" alt="Creator Avatar" class="logo">
-        <h2 id="creator-name-sidebar">My Hub</h2>
-    </div>
-    <nav class="nav-menu">
-        <ul>
-            <li><a href="creator_dashboard.html" class="active">Dashboard</a></li>
-            <li><a href="my_supporters.html">My Supporters</a></li>
-            <li><a href="manage_tiers.html">My Tiers</a></li>
-            <li><a href="create_post.html">Create Post</a></li>
-        </ul>
-    </nav>
-    <div class="sidebar-footer">
-        <a href="dashboard.html" class="btn btn-secondary">Switch to Supporter Space</a>
-        
-        <div class="theme-switcher">
-            <span>Light</span>
-            <label class="switch">
-                <input type="checkbox" id="theme-toggle">
-                <span class="slider round"></span>
-            </label>
-            <span>Dark</span>
-        </div>
-        <div id="user-profile">
-            <p>Connected as: <strong id="username-display"></strong></p>
-        </div>
-    </div>
-</aside>
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <img id="creator-avatar-sidebar" src="" alt="Creator Avatar" class="logo">
+                <h2 id="creator-name-sidebar">My Hub</h2>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li><a href="creator_dashboard.html">Dashboard</a></li>
+                    <li><a href="my_supporters.html">My Supporters</a></li>
+                    <li><a href="manage_tiers.html" class="active">My Tiers</a></li>
+                    <li><a href="create_post.html">Create Post</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="dashboard.html" class="btn btn-secondary">Switch to Supporter Space</a>
+                <div class="theme-switcher">
+                    <span>Light</span>
+                    <label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider round"></span></label>
+                    <span>Dark</span>
+                </div>
+                <div id="user-profile">
+                    <p>Connected as: <strong id="username-display"></strong></p>
+                </div>
+            </div>
+        </aside>
         <main id="main-content">
             <button id="sidebar-toggler"><span></span></button>
             <h1>Manage Your Tiers</h1>
             <div class="content-section">
                 <h2>Create a New Tier</h2>
                 <form id="create-tier-form">
-                    <div class="form-group">
-                        <label for="tier-name">Tier Name (e.g., Bronze, Silver)</label>
-                        <input type="text" id="tier-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="tier-price">Monthly Price (in π)</label>
-                        <input type="number" id="tier-price" step="0.01" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="tier-description">Benefits (one per line)</label>
-                        <textarea id="tier-description" rows="5" required></textarea>
-                    </div>
+                    <div class="form-group"><label for="tier-name">Tier Name</label><input type="text" id="tier-name" required></div>
+                    <div class="form-group"><label for="tier-price">Monthly Price (in π)</label><input type="number" id="tier-price" step="0.01" min="0" required></div>
+                    <div class="form-group"><label for="tier-description">Benefits (one per line)</label><textarea id="tier-description" rows="5" required></textarea></div>
                     <button type="submit" class="btn btn-primary">Create Tier</button>
                     <p id="form-status"></p>
                 </form>
             </div>
             <div class="content-section">
                 <h2>Your Existing Tiers</h2>
-                <div id="existing-tiers-list">
-                <div class="loader"></div>
-                </div>
+                <div id="existing-tiers-list"><div class="loader"></div></div>
             </div>
         </main>
     </div>
@@ -80,26 +65,24 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
         import { getFirestore, collection, doc, getDoc, getDocs, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-        // --- UI Logic (Theme & Sidebar) ---
+        // --- UI Logic ---
         const themeToggle = document.getElementById('theme-toggle');
         function applyTheme(theme) {
             if (theme === 'light') {
-                document.documentElement.setAttribute('data-theme', 'light');
-                themeToggle.checked = false;
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-                themeToggle.checked = true;
-            }
-            localStorage.setItem('theme', theme);
+            document.documentElement.setAttribute('data-theme', 'light');
+            themeToggle.checked = false;
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            themeToggle.checked = true;
         }
+        localStorage.setItem('theme', theme);
+    }
         const currentTheme = localStorage.getItem('theme') || 'dark';
         applyTheme(currentTheme);
         themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
         const sidebarToggler = document.getElementById('sidebar-toggler');
         const appContent = document.getElementById('app-content');
-        if (sidebarToggler && appContent) {
-            sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
-        }
+        if (sidebarToggler && appContent) { sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); }); }
 
         // --- Page-Specific Logic ---
         const piUserString = sessionStorage.getItem('piUser');
@@ -134,10 +117,7 @@
             tierListDiv.innerHTML = '';
             const q = query(tiersCollectionRef, orderBy('price'));
             const snapshot = await getDocs(q);
-            if (snapshot.empty) {
-                tierListDiv.innerHTML = '<p>You have not created any tiers yet.</p>';
-                return;
-            }
+            if (snapshot.empty) { tierListDiv.innerHTML = '<p>You have not created any tiers yet.</p>'; return; }
             snapshot.forEach(doc => {
                 const tier = doc.data();
                 const tierElement = document.createElement('div');
@@ -163,9 +143,7 @@
                 formStatus.textContent = 'Tier created successfully!';
                 createTierForm.reset();
                 loadTiers();
-            } catch (error) {
-                formStatus.textContent = 'Error creating tier.';
-            }
+            } catch (error) { formStatus.textContent = 'Error creating tier.'; }
         });
         loadTiers();
     </script>

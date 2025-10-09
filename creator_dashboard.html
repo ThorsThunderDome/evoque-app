@@ -16,35 +16,31 @@
 </head>
 <body>
     <div id="app-content" class="sidebar-collapsed">
-<aside id="sidebar">
-    <div class="sidebar-header">
-        <img id="creator-avatar-sidebar" src="" alt="Creator Avatar" class="logo">
-        <h2 id="creator-name-sidebar">My Hub</h2>
-    </div>
-    <nav class="nav-menu">
-        <ul>
-            <li><a href="creator_dashboard.html" class="active">Dashboard</a></li>
-            <li><a href="my_supporters.html">My Supporters</a></li>
-            <li><a href="manage_tiers.html">My Tiers</a></li>
-            <li><a href="create_post.html">Create Post</a></li>
-        </ul>
-    </nav>
-    <div class="sidebar-footer">
-        <a href="dashboard.html" class="btn btn-secondary">Switch to Supporter Space</a>
-        
-        <div class="theme-switcher">
-            <span>Light</span>
-            <label class="switch">
-                <input type="checkbox" id="theme-toggle">
-                <span class="slider round"></span>
-            </label>
-            <span>Dark</span>
-        </div>
-        <div id="user-profile">
-            <p>Connected as: <strong id="username-display"></strong></p>
-        </div>
-    </div>
-</aside>
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <img id="creator-avatar-sidebar" src="" alt="Creator Avatar" class="logo">
+                <h2 id="creator-name-sidebar">My Hub</h2>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li><a href="creator_dashboard.html" class="active">Dashboard</a></li>
+                    <li><a href="my_supporters.html">My Supporters</a></li>
+                    <li><a href="manage_tiers.html">My Tiers</a></li>
+                    <li><a href="create_post.html">Create Post</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="dashboard.html" class="btn btn-secondary">Switch to Supporter Space</a>
+                <div class="theme-switcher">
+                    <span>Light</span>
+                    <label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider round"></span></label>
+                    <span>Dark</span>
+                </div>
+                <div id="user-profile">
+                    <p>Connected as: <strong id="username-display"></strong></p>
+                </div>
+            </div>
+        </aside>
         <main id="main-content">
             <button id="sidebar-toggler"><span></span></button>
             <h1>Welcome to Your Creator Dashboard, <span id="creator-name-main"></span>!</h1>
@@ -73,16 +69,10 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-        // --- UI Logic (Theme & Sidebar) ---
+        // --- UI Logic ---
         const themeToggle = document.getElementById('theme-toggle');
         function applyTheme(theme) {
-            if (theme === 'light') {
-                document.documentElement.setAttribute('data-theme', 'light');
-                themeToggle.checked = false;
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-                themeToggle.checked = true;
-            }
+            if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = false; } else { document.documentElement.removeAttribute('data-theme'); themeToggle.checked = true; }
             localStorage.setItem('theme', theme);
         }
         const currentTheme = localStorage.getItem('theme') || 'dark';
