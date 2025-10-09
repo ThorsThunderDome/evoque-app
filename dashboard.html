@@ -95,7 +95,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const membershipsGrid = document.getElementById('memberships-grid');
+   const membershipsGrid = document.getElementById('memberships-grid');
     membershipsGrid.innerHTML = '<div class="loader"></div>';
     let subsFound = 0;
 
@@ -106,8 +106,7 @@
             if (subsFound === 1) membershipsGrid.innerHTML = '';
             
             const creatorId = key.split('_')[1];
-            const membershipDataString = sessionStorage.getItem(key);
-            const membershipData = JSON.parse(membershipDataString);
+            const membershipData = JSON.parse(sessionStorage.getItem(key));
             const tierId = membershipData.tierId;
             const supporterNumber = membershipData.number; // Get the supporter number
 
@@ -132,7 +131,6 @@
                     `;
                     membershipsGrid.appendChild(card);
 
-                    // Attach event listeners right after creating the card
                     card.querySelector('.view-creator-btn').addEventListener('click', (e) => {
                         sessionStorage.setItem('selectedCreatorId', e.target.dataset.id);
                         window.location.href = 'creator.html';
@@ -144,11 +142,11 @@
                         event.target.innerHTML = isHidden ? 'My NFTs ▼' : 'My NFTs ▲';
 
                         if (!isHidden && content.innerHTML === '') {
-                            // Use the real supporter number
-                            const nfts = [
-                                { name: 'Membership NFT', tier: tier.name },
-                                { name: `First Supporter Badge #${supporterNumber}`, date: 'Oct 2025' }
-                            ];
+                            const nfts = [{ name: 'Membership NFT', tier: tier.name }];
+                            // NEW: Add the First Supporter badge only if they have a number
+                            if (supporterNumber) {
+                                nfts.push({ name: `First Supporter Badge #${supporterNumber}`, date: 'Oct 2025' });
+                            }
                             let nftHtml = '<ul>';
                             nfts.forEach(nft => {
                                 nftHtml += `<li><strong>${nft.name}</strong><br><small>${nft.tier || `Earned: ${nft.date}`}</small></li>`;
@@ -163,7 +161,7 @@
     }
     
     if (subsFound === 0) {
-        membershipsGrid.innerHTML = '<p>You have not subscribed to any creators yet.</p>';
+        membershipsGrid.innerHTML = '<p>You are not subscribed to any creators yet.</p>';
     }
 </script>
 </body>
