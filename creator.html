@@ -75,6 +75,11 @@
                     <p>Loading products...</p>
                 </div>
                 </div>
+                <div class="profile-content">
+                <h2>Active Bounties</h2>
+                <div id="bounties-list">
+                    </div>
+            </div>
         </main>
     </div>
 
@@ -251,6 +256,30 @@
                     merchListDiv.appendChild(card);
                 });
             }
+            // --- NEW: Render Placeholder Bounty ---
+            const bountiesListDiv = document.getElementById('bounties-list');
+            const mockBounty = {
+                title: "My First Music Video",
+                goal: 500,
+                current: 125,
+                supporters: 12
+            };
+            
+            const card = document.createElement('div');
+            card.className = 'bounty-card management-card'; // Reuse style
+            const progress = (mockBounty.current / mockBounty.goal) * 100;
+            card.innerHTML = `
+                <h3>${mockBounty.title}</h3>
+                <p>Help fund this project! Every contribution gets a special recognition NFT.</p>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" style="width: ${progress}%;"></div>
+                    <span class="progress-bar-text">${mockBounty.current} / ${mockBounty.goal} π</span>
+                </div>
+                <p>${mockBounty.supporters} supporters have contributed so far.</p>
+                <button class="btn btn-primary" style="margin-top: 15px;">Contribute (Coming Soon)</button>
+            `;
+            bountiesListDiv.appendChild(card);
+
 
         } catch (error) {
             console.error("Error fetching creator page:", error);

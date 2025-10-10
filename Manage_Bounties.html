@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evoque - Manage Bounties</title>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); }
+        })();
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app-content" class="sidebar-collapsed">
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <img id="creator-avatar-sidebar" src="" alt="Creator Avatar" class="logo">
+                <h2 id="creator-name-sidebar">My Hub</h2>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li><a href="creator_dashboard.html">Dashboard</a></li>
+                    <li><a href="my_supporters.html">My Supporters</a></li>
+                    <li><a href="manage_tiers.html">My Tiers</a></li>
+                    <li><a href="create_post.html">Create Post</a></li>
+                    <li><a href="manage_merch.html">Manage Merch</a></li>
+                    <li><a href="manage_bounties.html" class="active">Manage Bounties</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="dashboard.html" class="btn btn-secondary">Switch to Supporter Space</a>
+                <div class="theme-switcher">
+                    <span>Light</span><label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider round"></span></label><span>Dark</span>
+                </div>
+                <div id="user-profile"><p>Connected as: <strong id="username-display"></strong></p></div>
+            </div>
+        </aside>
+        <main id="main-content">
+            <button id="sidebar-toggler"><span></span></button>
+            <h1>Manage Bounties</h1>
+            <p>Create time-sensitive funding goals for special projects.</p>
+            <div class="content-section">
+                <h2>Create a New Bounty</h2>
+                <form id="create-bounty-form">
+                    <div class="form-group"><label for="bounty-title">Bounty Title (e.g., New Album Fund)</label><input type="text" id="bounty-title" required></div>
+                    <div class="form-group"><label for="bounty-goal">Funding Goal (in π)</label><input type="number" id="bounty-goal" step="1" min="0" required></div>
+                    <div class="form-group"><label for="bounty-desc">Description</label><textarea id="bounty-desc" rows="4" required></textarea></div>
+                    <button type="submit" class="btn btn-primary">Launch Bounty</button>
+                    <p id="form-status"></p>
+                </form>
+            </div>
+            <div class="content-section">
+                <h2>Your Active Bounties</h2>
+                <div id="existing-bounties-list">
+                    </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+
+        // --- UI Logic ---
+        const themeToggle = document.getElementById('theme-toggle');
+        function applyTheme(theme) {
+        if (theme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+            themeToggle.checked = false;
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            themeToggle.checked = true;
+        }
+        localStorage.setItem('theme', theme);
+    }
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    applyTheme(currentTheme);
+    themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
+    const sidebarToggler = document.getElementById('sidebar-toggler');
+    const appContent = document.getElementById('app-content');
+    if (sidebarToggler && appContent) {
+        sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
+    }
+
+        // --- Page-Specific Logic ---
+        const piUserString = sessionStorage.getItem('piUser');
+        if (!piUserString) { window.location.href = 'index.html'; }
+        const piUser = JSON.parse(piUserString);
+        document.getElementById('username-display').textContent = piUser.username;
+
+        const firebaseConfig = {
+  apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
+  authDomain: "evoque-app.firebaseapp.com",
+  projectId: "evoque-app",
+  storageBucket: "evoque-app.firebasestorage.app",
+  messagingSenderId: "790735748571",
+  appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
+  measurementId: "G-DG6WWPYQ3Z"
+};
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Fetch creator data for sidebar
+        const creatorDocRef = doc(db, 'creators', piUser.uid);
+        const docSnap = await getDoc(creatorDocRef);
+        if (docSnap.exists()) {
+            const creatorData = docSnap.data();
+            document.getElementById('creator-name-sidebar').textContent = creatorData.name;
+            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
+        }
+        
+        // --- Placeholder Logic for Bounties ---
+        const bountiesListDiv = document.getElementById('existing-bounties-list');
+        const mockBounty = {
+            title: "My First Music Video",
+            goal: 500,
+            current: 125,
+            supporters: 12
+        };
+
+        function loadBounties() {
+            bountiesListDiv.innerHTML = '';
+            const card = document.createElement('div');
+            card.className = 'bounty-card'; // We'll style this
+            const progress = (mockBounty.current / mockBounty.goal) * 100;
+            card.innerHTML = `
+                <h3>${mockBounty.title}</h3>
+                <p><strong>Goal:</strong> ${mockBounty.goal} π</p>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" style="width: ${progress}%;"></div>
+                    <span class="progress-bar-text">${mockBounty.current} / ${mockBounty.goal} π</span>
+                </div>
+                <p>${mockBounty.supporters} supporters so far</p>
+            `;
+            bountiesListDiv.appendChild(card);
+        }
+
+        const createBountyForm = document.getElementById('create-bounty-form');
+        createBountyForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formStatus = document.getElementById('form-status');
+            formStatus.textContent = 'Bounty created successfully! (Placeholder)';
+            createBountyForm.reset();
+            setTimeout(() => formStatus.textContent = '', 3000);
+        });
+
+        loadBounties();
+    </script>
+</body>
+</html>
