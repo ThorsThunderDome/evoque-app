@@ -69,6 +69,12 @@
                 <h2>Recent Posts</h2>
                 <div id="posts-feed"></div>
             </div>
+            <div class="profile-content">
+                <h2>Merch Store</h2>
+                <div id="merch-list" class="grid-container">
+                    <p>Loading products...</p>
+                </div>
+                </div>
         </main>
     </div>
 
@@ -223,6 +229,29 @@
             } else {
                 document.getElementById('main-content').innerHTML = "<h1>Creator not found.</h1>";
             }
+                 // --- NEW: Fetch and render Merch ---
+            const merchQuery = query(collection(db, "creators", creatorId, 'merch'), orderBy('createdAt', 'desc'));
+            const merchSnapshot = await getDocs(merchQuery);
+            const merchListDiv = document.getElementById('merch-list');
+            merchListDiv.innerHTML = '';
+
+            if (merchSnapshot.empty) {
+                merchListDiv.innerHTML = "<p>This creator has no merch for sale yet.</p>";
+            } else {
+                merchSnapshot.forEach(doc => {
+                    const item = doc.data();
+                    const card = document.createElement('div');
+                    card.className = 'creator-card merch-card'; // Add a new class for styling
+                    card.innerHTML = `
+                        <img src="${item.imageUrl}" alt="${item.name}" class="merch-image">
+                        <h3>${item.name}</h3>
+                        <p>${item.description}</p>
+                        <a href="${item.storeLink}" target="_blank" class="btn btn-primary">View in Store</a>
+                    `;
+                    merchListDiv.appendChild(card);
+                });
+            }
+
         } catch (error) {
             console.error("Error fetching creator page:", error);
             document.getElementById('main-content').innerHTML = "<h1>Error loading page. Please check the console.</h1>";
