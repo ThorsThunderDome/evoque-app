@@ -55,7 +55,21 @@
                 </div>
                 <p id="incentive-status"></p>
             </div>
-
+            <div class="content-section">
+                <h2>Edit Your Profile</h2>
+                <form id="edit-profile-form">
+                    <div class="form-group">
+                        <label for="creator-name">Public Creator Name</label>
+                        <input type="text" id="creator-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="creator-bio">Your Bio</label>
+                        <textarea id="creator-bio" rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <p id="edit-form-status"></p>
+                </form>
+            </div>
             </main>
     </div>
 
@@ -84,12 +98,13 @@
         sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
     }
 
-        // --- Page-Specific Logic ---
-        const piUserString = sessionStorage.getItem('piUser');
-        if (!piUserString) { window.location.href = 'index.html'; }
-        const piUser = JSON.parse(piUserString);
-        document.getElementById('username-display').textContent = piUser.username;
+         // --- Page-Specific Logic ---
+    const piUserString = sessionStorage.getItem('piUser');
+    if (!piUserString) { window.location.href = 'index.html'; }
+    const piUser = JSON.parse(piUserString);
+    document.getElementById('username-display').textContent = piUser.username;
 
+    
         const firebaseConfig = {
   apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
   authDomain: "evoque-app.firebaseapp.com",
@@ -103,24 +118,33 @@
         const db = getFirestore(app);
 
         const creatorDocRef = doc(db, 'creators', piUser.uid);
-        const incentiveToggle = document.getElementById('incentive-toggle');
-        const incentiveStatus = document.getElementById('incentive-status');
+    const incentiveToggle = document.getElementById('incentive-toggle');
+    const incentiveStatus = document.getElementById('incentive-status');
+    
+    // --- NEW: Edit Profile Form Elements ---
+    const editProfileForm = document.getElementById('edit-profile-form');
+    const creatorNameInput = document.getElementById('creator-name');
+    const creatorBioInput = document.getElementById('creator-bio');
+    const editFormStatus = document.getElementById('edit-form-status');
 
-        try {
-            const docSnap = await getDoc(creatorDocRef);
-            if (docSnap.exists()) {
-                const creatorData = docSnap.data();
-                document.getElementById('creator-name-sidebar').textContent = creatorData.name;
-                document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
+    try {
+        const docSnap = await getDoc(creatorDocRef);
+        if (docSnap.exists()) {
+            const creatorData = docSnap.data();
+            document.getElementById('creator-name-sidebar').textContent = creatorData.name;
+            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
 
-                incentiveToggle.checked = creatorData.firstSupporterIncentiveActive;
-
-                // Logic to disable the toggle if it's been turned off once
-                if (creatorData.firstSupporterIncentiveActive === false) {
-                    incentiveToggle.disabled = true;
-                    incentiveStatus.textContent = "This setting has been permanently turned off.";
-                }
+            // --- Incentive Toggle Logic (no changes) ---
+            incentiveToggle.checked = creatorData.firstSupporterIncentiveActive;
+            if (creatorData.firstSupporterIncentiveActive === false) {
+                incentiveToggle.disabled = true;
+                incentiveStatus.textContent = "This setting is permanently off.";
             }
+
+            // --- NEW: Pre-fill the edit form ---
+            creatorNameInput.value = creatorData.name;
+            creatorBioInput.value = creatorData.bio;
+        }
         } catch (error) { console.error("Error loading creator data", error); }
 
         incentiveToggle.addEventListener('change', async (e) => {
@@ -140,6 +164,26 @@
                 e.target.checked = !newValue; // Revert toggle on failure
             }
         });
+        // --- NEW: Handle Edit Profile Form Submission ---
+    editProfileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        editFormStatus.textContent = "Saving...";
+
+        const updatedData = {
+            name: creatorNameInput.value,
+            bio: creatorBioInput.value
+        };
+
+        try {
+            await updateDoc(creatorDocRef, updatedData);
+            editFormStatus.textContent = "Profile updated successfully!";
+            // Update the sidebar name as well
+            document.getElementById('creator-name-sidebar').textContent = updatedData.name;
+        } catch (error) {
+            console.error("Error updating profile: ", error);
+            editFormStatus.textContent = "Error updating profile. Please try again.";
+        }
+    });
     </script>
 </body>
 </html>
