@@ -21,10 +21,13 @@
             </div>
             <nav class="nav-menu">
                 <ul>
-                    <li><a href="creator_dashboard.html" class="active">Dashboard</a></li>
+                    <li><a href="creator_dashboard.html">Dashboard</a></li>
                     <li><a href="my_supporters.html">My Supporters</a></li>
                     <li><a href="manage_tiers.html">My Tiers</a></li>
                     <li><a href="create_post.html">Create Post</a></li>
+                    <li><a href="manage_merch.html">Manage Merch</a></li>
+                    <li><a href="manage_bounties.html">Manage Bounties</a></li>
+                    <li><a href="creator_settings.html">Settings</a></li>
                 </ul>
             </nav>
             <div class="sidebar-footer">
@@ -36,37 +39,43 @@
             </div>
         </aside>
         <main id="main-content">
-            <button id="sidebar-toggler"><span></span></button>
-            <h1>Welcome to Your Creator Dashboard, <span id="creator-name-main"></span>!</h1>
-            <p>This is your space to manage your community and content.</p>
-            <div class="grid-container" style="margin-top: 30px;">
-                <div class="management-card">
-                    <h3>First 100 Supporters Program</h3>
-                    <p>Allow your first 100 supporters to earn royalties. This can only be turned off once.</p>
-                    <div class="settings-toggle">
-                        <span>Off</span>
-                        <label class="switch">
-                            <input type="checkbox" id="incentive-toggle">
-                            <span class="slider round"></span>
-                        </label>
-                        <span>On</span>
-                    </div>
-                </div>
-                <div class="management-card"><h3>Membership Tiers</h3><p>Create and manage support levels.</p> <a href="manage_tiers.html" class="btn btn-primary">Manage Tiers</a></div>
-                <div class="management-card"><h3>Create a Post</h3><p>Share content with supporters.</p> <a href="create_post.html" class="btn btn-primary">Create Post</a></div>
-                <div class="management-card"><h3>My Supporters</h3><p>View your member list.</p> <a href="my_supporters.html" class="btn btn-primary">Member list</a></div>
-                <div class="management-card">
-                    <h3>Merch Store</h3>
-                    <p>Add and manage physical products for your store.</p>
-                    <a href="manage_merch.html" class="btn btn-primary">Manage Merch</a>
-                </div>
-                <div class="management-card">
-                    <h3>Bounties</h3>
-                    <p>Create funding goals for special projects.</p>
-                    <a href="manage_bounties.html" class="btn btn-primary">Manage Bounties</a>
-                </div>
-            </div>
-        </main>
+    <button id="sidebar-toggler"><span></span></button>
+    <h1>Welcome to Your Creator Dashboard, <span id="creator-name-main"></span>!</h1>
+    <p>This is your space to manage your community and content.</p>
+    
+    <div class="grid-container" style="margin-top: 30px;">
+        <div class="management-card">
+            <h3>Membership Tiers</h3>
+            <p>Create and manage the different levels of support for your members.</p>
+            <a href="manage_tiers.html" class="btn btn-primary">Manage Tiers</a>
+        </div>
+        <div class="management-card">
+            <h3>Create a Post</h3>
+            <p>Share exclusive content with your supporters based on their tier.</p>
+            <a href="create_post.html" class="btn btn-primary">New Post</a>
+        </div>
+        <div class="management-card">
+            <h3>My Supporters</h3>
+            <p>View a list of the members who are currently supporting you.</p>
+            <a href="my_supporters.html" class="btn btn-primary">View Supporters</a>
+        </div>
+        <div class="management-card">
+            <h3>Merch Store</h3>
+            <p>Add and manage physical products for your store.</p>
+            <a href="manage_merch.html" class="btn btn-primary">Manage Merch</a>
+        </div>
+        <div class="management-card">
+            <h3>Bounties</h3>
+            <p>Create funding goals for special projects.</p>
+            <a href="manage_bounties.html" class="btn btn-primary">Manage Bounties</a>
+        </div>
+        <div class="management-card">
+            <h3>Settings</h3>
+            <p>Manage your profile and incentives.</p>
+            <a href="creator_settings.html" class="btn btn-primary">Settings</a>
+        </div>
+    </div>
+</main>
     </div>
 
     <script type="module">

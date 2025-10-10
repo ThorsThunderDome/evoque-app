@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evoque - Manage Bounties</title>
+    <title>Evoque - Settings</title>
     <script>
         (function() {
             const theme = localStorage.getItem('theme') || 'dark';
@@ -27,7 +27,7 @@
                     <li><a href="create_post.html">Create Post</a></li>
                     <li><a href="manage_merch.html">Manage Merch</a></li>
                     <li><a href="manage_bounties.html">Manage Bounties</a></li>
-                    <li><a href="creator_settings.html">Settings</a></li>
+                    <li><a href="creator_settings.html" class="active">Settings</a></li>
                 </ul>
             </nav>
             <div class="sidebar-footer">
@@ -40,29 +40,28 @@
         </aside>
         <main id="main-content">
             <button id="sidebar-toggler"><span></span></button>
-            <h1>Manage Bounties</h1>
-            <p>Create time-sensitive funding goals for special projects.</p>
+            <h1>Creator Settings</h1>
+            
             <div class="content-section">
-                <h2>Create a New Bounty</h2>
-                <form id="create-bounty-form">
-                    <div class="form-group"><label for="bounty-title">Bounty Title (e.g., New Album Fund)</label><input type="text" id="bounty-title" required></div>
-                    <div class="form-group"><label for="bounty-goal">Funding Goal (in π)</label><input type="number" id="bounty-goal" step="1" min="0" required></div>
-                    <div class="form-group"><label for="bounty-desc">Description</label><textarea id="bounty-desc" rows="4" required></textarea></div>
-                    <button type="submit" class="btn btn-primary">Launch Bounty</button>
-                    <p id="form-status"></p>
-                </form>
+                <h2>First 100 Supporters Program</h2>
+                <p>Allow your first 100 supporters to earn royalties. This can only be turned off once.</p>
+                <div class="settings-toggle" style="justify-content: left;">
+                    <span>Off</span>
+                    <label class="switch">
+                        <input type="checkbox" id="incentive-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                    <span>On</span>
+                </div>
+                <p id="incentive-status"></p>
             </div>
-            <div class="content-section">
-                <h2>Your Active Bounties</h2>
-                <div id="existing-bounties-list">
-                    </div>
-            </div>
-        </main>
+
+            </main>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
         // --- UI Logic ---
         const themeToggle = document.getElementById('theme-toggle');
@@ -103,51 +102,44 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Fetch creator data for sidebar
         const creatorDocRef = doc(db, 'creators', piUser.uid);
-        const docSnap = await getDoc(creatorDocRef);
-        if (docSnap.exists()) {
-            const creatorData = docSnap.data();
-            document.getElementById('creator-name-sidebar').textContent = creatorData.name;
-            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
-        }
-        
-        // --- Placeholder Logic for Bounties ---
-        const bountiesListDiv = document.getElementById('existing-bounties-list');
-        const mockBounty = {
-            title: "My First Music Video",
-            goal: 500,
-            current: 125,
-            supporters: 12
-        };
+        const incentiveToggle = document.getElementById('incentive-toggle');
+        const incentiveStatus = document.getElementById('incentive-status');
 
-        function loadBounties() {
-            bountiesListDiv.innerHTML = '';
-            const card = document.createElement('div');
-            card.className = 'bounty-card'; // We'll style this
-            const progress = (mockBounty.current / mockBounty.goal) * 100;
-            card.innerHTML = `
-                <h3>${mockBounty.title}</h3>
-                <p><strong>Goal:</strong> ${mockBounty.goal} π</p>
-                <div class="progress-bar-container">
-                    <div class="progress-bar-fill" style="width: ${progress}%;"></div>
-                    <span class="progress-bar-text">${mockBounty.current} / ${mockBounty.goal} π</span>
-                </div>
-                <p>${mockBounty.supporters} supporters so far</p>
-            `;
-            bountiesListDiv.appendChild(card);
-        }
+        try {
+            const docSnap = await getDoc(creatorDocRef);
+            if (docSnap.exists()) {
+                const creatorData = docSnap.data();
+                document.getElementById('creator-name-sidebar').textContent = creatorData.name;
+                document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
 
-        const createBountyForm = document.getElementById('create-bounty-form');
-        createBountyForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const formStatus = document.getElementById('form-status');
-            formStatus.textContent = 'Bounty created successfully! (Placeholder)';
-            createBountyForm.reset();
-            setTimeout(() => formStatus.textContent = '', 3000);
+                incentiveToggle.checked = creatorData.firstSupporterIncentiveActive;
+
+                // Logic to disable the toggle if it's been turned off once
+                if (creatorData.firstSupporterIncentiveActive === false) {
+                    incentiveToggle.disabled = true;
+                    incentiveStatus.textContent = "This setting has been permanently turned off.";
+                }
+            }
+        } catch (error) { console.error("Error loading creator data", error); }
+
+        incentiveToggle.addEventListener('change', async (e) => {
+            const newValue = e.target.checked;
+            incentiveStatus.textContent = "Updating...";
+            try {
+                await updateDoc(creatorDocRef, {
+                    firstSupporterIncentiveActive: newValue
+                });
+                incentiveStatus.textContent = "Setting updated successfully!";
+                if (newValue === false) {
+                    incentiveToggle.disabled = true;
+                    incentiveStatus.textContent = "This setting has been permanently turned off.";
+                }
+            } catch (error) {
+                incentiveStatus.textContent = "Error updating setting. Please try again.";
+                e.target.checked = !newValue; // Revert toggle on failure
+            }
         });
-
-        loadBounties();
     </script>
 </body>
 </html>
