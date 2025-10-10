@@ -52,6 +52,7 @@
                 <div>
                     <h1 id="creator-name">Loading...</h1>
                     <p id="creator-bio">Loading bio...</p>
+                    <div id="social-icons-container"></div>
                 </div>
             </div>
             <div id="progress-bar-section">
@@ -161,6 +162,18 @@
                 const creatorData = docSnap.data();
                 document.getElementById('creator-name').textContent = creatorData.name;
                 document.getElementById('creator-bio').textContent = creatorData.bio;
+                // ADD THIS NEW BLOCK
+                const socialIconsContainer = document.getElementById('social-icons-container');
+                if (creator.socialLinks) {
+                    let iconsHTML = '';
+                    if (creator.socialLinks.twitter) {
+                        iconsHTML += `<a href="${creator.socialLinks.twitter}" target="_blank" class="social-icon twitter"></a>`;
+                    }
+                    if (creator.socialLinks.youtube) {
+                        iconsHTML += `<a href="${creator.socialLinks.youtube}" target="_blank" class="social-icon youtube"></a>`;
+                    }
+                    socialIconsContainer.innerHTML = iconsHTML;
+                }
                 document.getElementById('creator-avatar').src = creatorData.profileImage;
 
                 // Progress Bar Logic

@@ -70,6 +70,22 @@
                     <p id="edit-form-status"></p>
                 </form>
             </div>
+            <div class="content-section">
+                <h2>Social Links</h2>
+                <p>Add links to your other social media profiles.</p>
+                <form id="social-links-form">
+                    <div class="form-group">
+                        <label for="link-twitter">Twitter URL</label>
+                        <input type="url" id="link-twitter" placeholder="https://twitter.com/username">
+                    </div>
+                    <div class="form-group">
+                        <label for="link-youtube">YouTube URL</label>
+                        <input type="url" id="link-youtube" placeholder="https://youtube.com/c/channelname">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Social Links</button>
+                    <p id="social-form-status"></p>
+                </form>
+            </div>
             </main>
     </div>
 
@@ -127,6 +143,11 @@
     const creatorBioInput = document.getElementById('creator-bio');
     const editFormStatus = document.getElementById('edit-form-status');
 
+    const socialLinksForm = document.getElementById('social-links-form');
+    const twitterInput = document.getElementById('link-twitter');
+    const youtubeInput = document.getElementById('link-youtube');
+    const socialFormStatus = document.getElementById('social-form-status');
+
     try {
         const docSnap = await getDoc(creatorDocRef);
         if (docSnap.exists()) {
@@ -159,6 +180,11 @@
                     incentiveToggle.disabled = true;
                     incentiveStatus.textContent = "This setting has been permanently turned off.";
                 }
+                // NEW: Pre-fill social links
+                if (creatorData.socialLinks) {
+                    twitterInput.value = creatorData.socialLinks.twitter || '';
+                    youtubeInput.value = creatorData.socialLinks.youtube || '';
+                }
             } catch (error) {
                 incentiveStatus.textContent = "Error updating setting. Please try again.";
                 e.target.checked = !newValue; // Revert toggle on failure
@@ -184,6 +210,23 @@
             editFormStatus.textContent = "Error updating profile. Please try again.";
         }
     });
+// Handle social links form submission
+        socialLinksForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            socialFormStatus.textContent = "Saving...";
+            const socialLinksData = {
+                twitter: twitterInput.value,
+                youtube: youtubeInput.value
+            };
+            try {
+                await updateDoc(creatorDocRef, {
+                    socialLinks: socialLinksData
+                });
+                socialFormStatus.textContent = "Social links updated successfully!";
+            } catch (error) {
+                socialFormStatus.textContent = "Error updating links. Please try again.";
+            }
+        });
     </script>
 </body>
 </html>
