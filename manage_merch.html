@@ -101,6 +101,8 @@
   appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
   measurementId: "G-DG6WWPYQ3Z"
 };
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
         const creatorDocRef = doc(db, 'creators', piUser.uid);
         const merchCollectionRef = collection(creatorDocRef, 'merch');
