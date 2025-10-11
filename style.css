@@ -34,26 +34,6 @@ body {
 
 .hidden { display: none !important; }
 
-/* --- Login Page --- */
-#login-page {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    text-align: center;
-    padding: 20px;
-    background: linear-gradient(-45deg, #121212, #1c1329, #2b1a42, #121212);
-    background-size: 400% 400%;
-    animation: gradient-bg 15s ease infinite;
-}
-
-@keyframes gradient-bg {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
 #app-content { display: flex; position: relative; }
 #sidebar {
     width: 250px;
@@ -409,4 +389,75 @@ input:checked + .slider:before { transform: translateX(22px); }
         opacity: 1;
         transform: translateY(0);
     }
+}
+/* --- NEW LANDING PAGE STYLES --- */
+.hero-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+    padding: 20px;
+    background: var(--background-color);
+    overflow: hidden;
+}
+
+.hero-content {
+    max-width: 600px;
+}
+
+.hero-illustration {
+    width: 120%;
+    margin-top: -50px;
+    opacity: 0.3;
+}
+
+.hero-illustration img {
+    width: 100%;
+}
+
+.feature-section {
+    padding: 80px 40px;
+    text-align: center;
+    background-color: var(--surface-color);
+}
+
+.steps-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+    max-width: 1100px;
+    margin: 60px auto 0;
+}
+
+.step img {
+    height: 80px;
+    margin-bottom: 20px;
+    filter: var(--logo-filter) drop-shadow(0 0 10px var(--primary-color));
+}
+
+.cta-section {
+    padding: 100px 40px;
+    text-align: center;
+    background: linear-gradient(-45deg, #121212, #2b1a42);
+    position: relative;
+}
+
+.cta-section .pi-logo-cta {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    opacity: 0.05;
+}
+
+.cta-section h2 {
+    font-size: 2.5em;
+}
+
+.cta-section .btn {
+    margin-top: 30px;
+    max-width: 300px;
 }

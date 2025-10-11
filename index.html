@@ -3,25 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evoque - Connect</title>
+    <title>Evoque - The Creator Platform on Pi</title>
     <script>
         (function() {
             const theme = localStorage.getItem('theme') || 'dark';
-            if (theme === 'light') {
-                document.documentElement.setAttribute('data-theme', 'light');
-            }
+            if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); }
         })();
     </script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="login-page">
-    <img src="images/evoque-logo.png" alt="Evoque Logo" class="logo animate-fade-in-down">
-    <h1 class="animate-fade-in-up">Welcome to Evoque</h1>
-    <p class="animate-fade-in-up" style="animation-delay: 0.2s;">The ultimate launchpad for creators on the Pi Network. Connect your wallet to begin.</p>
-    <button id="pi-connect-btn" class="btn btn-primary animate-fade-in-up" style="animation-delay: 0.4s;">Connect with Pi</button>
-    <p id="auth-status" class="hidden"></p>
-</div>
+    <section class="hero-section">
+        <div class="hero-content">
+            <img src="images/evoque-logo.png" alt="Evoque Logo" class="logo animate-fade-in-down">
+            <h1 class="animate-fade-in-up">The Home for Creators on the Pi Network.</h1>
+            <p class="animate-fade-in-up" style="animation-delay: 0.2s;">Build a community, share your work, and earn Pi directly from your supporters.</p>
+            <button id="pi-connect-btn" class="btn btn-primary animate-fade-in-up" style="animation-delay: 0.4s;">Connect with Pi to Get Started</button>
+            <p id="auth-status" class="hidden"></p>
+        </div>
+        <div class="hero-illustration">
+            <img src="images/hero-illustration.png" alt="Illustration of creator content">
+        </div>
+    </section>
+
+    <section class="feature-section">
+        <h2>A Direct Link Between You and Your Audience</h2>
+        <div class="steps-container">
+            <div class="step">
+                <img src="images/step1-icon.png" alt="Create icon">
+                <h3>1. Create Your Page</h3>
+                <p>Launch your creator page in minutes. Set up membership tiers, post exclusive content, and offer products.</p>
+            </div>
+            <div class="step">
+                <img src="images/step2-icon.png" alt="Share icon">
+                <h3>2. Share Your Work</h3>
+                <p>Publish images, videos, audio, and text posts. You decide which tiers get access to what content.</p>
+            </div>
+            <div class="step">
+                <img src="images/step3-icon.png" alt="Earn icon">
+                <h3>3. Earn Pi</h3>
+                <p>Your supporters pay you directly in Pi. No middlemen, no complicated fees. It's your business, your community.</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="cta-section">
+        <img src="images/pi-logo.png" alt="Pi Network Logo" class="pi-logo-cta">
+        <h2>Your Community is Waiting.</h2>
+        <p>Become one of the first creators to build a business on the Pi Network.</p>
+        <button id="pi-connect-btn-bottom" class="btn btn-primary">Start Your Page</button>
+    </section>
+
+    <footer style="text-align: center; padding: 20px; color: var(--text-secondary-color);">
+        <a href="privacy.html" style="color: var(--text-secondary-color); margin-right: 20px;">Privacy Policy</a>
+        <a href="terms.html" style="color: var(--text-secondary-color);">Terms of Service</a>
+    </footer>
 
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <script type="module">
