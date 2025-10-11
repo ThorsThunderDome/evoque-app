@@ -78,29 +78,30 @@
 };
         
         try {
-            initializeApp(firebaseConfig);
-        } catch(e) {
-            authStatus.textContent = "Error initializing. Please refresh.";
-            authStatus.classList.remove('hidden');
-        }
-        
-        try {
-            Pi.init({ version: "2.0", sandbox: true });
-        } catch (err) { console.error("Pi SDK failed", err); }
+        initializeApp(firebaseConfig);
+    } catch(e) {
+        authStatus.textContent = "Error initializing. Please refresh.";
+        authStatus.classList.remove('hidden');
+    }
+    
+    try {
+        Pi.init({ version: "2.0", sandbox: true });
+    } catch (err) { console.error("Pi SDK failed", err); }
 
-        async function authenticateWithPi() {
-            authStatus.textContent = 'Authenticating...';
-            authStatus.classList.remove('hidden');
-            try {
-                const scopes = ['username', 'payments'];
-                const authResult = await Pi.authenticate(scopes, () => {});
-                sessionStorage.setItem('piUser', JSON.stringify(authResult.user));
-                window.location.href = 'dashboard.html';
-            } catch (err) {
-                authStatus.textContent = `Authentication failed. Please try again.`;
-            }
+    async function authenticateWithPi() {
+        authStatus.textContent = 'Authenticating...';
+        authStatus.classList.remove('hidden');
+        try {
+            const scopes = ['username', 'payments'];
+            const authResult = await Pi.authenticate(scopes, () => {});
+            sessionStorage.setItem('piUser', JSON.stringify(authResult.user));
+            window.location.href = 'dashboard.html';
+        } catch (err) {
+            authStatus.textContent = `Authentication failed. Please try again.`;
         }
-        // Connect the main login button
+    }
+
+    // Connect the main login button
     if (connectButton) {
         connectButton.addEventListener('click', authenticateWithPi);
     }
@@ -111,6 +112,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
-    </script>
+</script>
 </body>
 </html>
