@@ -162,15 +162,16 @@
                 const creatorData = docSnap.data();
                 document.getElementById('creator-name').textContent = creatorData.name;
                 document.getElementById('creator-bio').textContent = creatorData.bio;
+               
                 // ADD THIS NEW BLOCK
                 const socialIconsContainer = document.getElementById('social-icons-container');
-                if (creator.socialLinks) {
+                if (creatorData.socialLinks) {
                     let iconsHTML = '';
-                    if (creator.socialLinks.twitter) {
-                        iconsHTML += `<a href="${creator.socialLinks.twitter}" target="_blank" class="social-icon twitter"></a>`;
+                    if (creatorData.socialLinks.twitter) {
+                        iconsHTML += `<a href="${creatorData.socialLinks.twitter}" target="_blank" class="social-icon twitter"></a>`;
                     }
-                    if (creator.socialLinks.youtube) {
-                        iconsHTML += `<a href="${creator.socialLinks.youtube}" target="_blank" class="social-icon youtube"></a>`;
+                    if (creatorData.socialLinks.youtube) {
+                        iconsHTML += `<a href="${creatorData.socialLinks.youtube}" target="_blank" class="social-icon youtube"></a>`;
                     }
                     socialIconsContainer.innerHTML = iconsHTML;
                 }
