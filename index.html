@@ -49,9 +49,12 @@
     
     <section class="cta-section">
         <img src="images/pi-logo.png" alt="Pi Network Logo" class="pi-logo-cta">
-        <h2>Your Community is Waiting.</h2>
-        <p>Become one of the first creators to build a business on the Pi Network.</p>
-        <button id="back-to-top-btn" class="btn btn-secondary">Back to Top</button>
+        
+        <div class="cta-content">
+            <h2>Your Community is Waiting.</h2>
+            <p>Become one of the first creators to build a business on the Pi Network.</p>
+            <button id="pi-connect-btn-bottom" class="btn btn-primary connect-button">Start Your Page</button>
+        </div>
     </section>
 
     <footer style="text-align: center; padding: 20px; color: var(--text-secondary-color);">
@@ -101,17 +104,11 @@
         }
     }
 
-    // Connect the main login button
-    if (connectButton) {
-        connectButton.addEventListener('click', authenticateWithPi);
-    }
-
-    // Connect the new "Back to Top" button
-    if (backToTopButton) {
-        backToTopButton.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    }
+    // Find all buttons with the .connect-button class and add the listener
+    const connectButtons = document.querySelectorAll('.connect-button');
+    connectButtons.forEach(button => {
+        button.addEventListener('click', authenticateWithPi);
+    });
 </script>
 </body>
 </html>
