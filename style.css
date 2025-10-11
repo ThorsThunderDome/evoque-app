@@ -498,3 +498,18 @@ input:checked + .slider:before { transform: translateX(22px); }
     position: relative;
     z-index: 2;
 }
+/* --- Dashboard Royalties Styles --- */
+.royalty-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--surface-color);
+    padding: 15px 20px;
+    border-radius: var(--border-radius);
+    margin-bottom: 10px;
+}
+
+.royalty-amount {
+    font-weight: bold;
+    color: #4CAF50; /* A success/money green color */
+}

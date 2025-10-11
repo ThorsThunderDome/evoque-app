@@ -41,15 +41,29 @@
             </div>
         </aside>
         <main id="main-content">
-            <button id="sidebar-toggler"><span></span></button>
-            <h1>My Supporter Dashboard</h1>
-            <section id="my-memberships-section">
-                <h2>My Memberships</h2>
-                <div id="memberships-grid" class="grid-container">
-                    <div class="loader"></div>
-                </div>
-            </section>
-        </main>
+    <button id="sidebar-toggler"><span></span></button>
+    <h1>My Supporter Dashboard</h1>
+
+    <section id="my-memberships-section">
+        <h2>My Memberships</h2>
+        <div id="memberships-grid" class="grid-container">
+            <div class="loader"></div>
+        </div>
+    </section>
+
+    <section id="my-royalties-section" class="profile-content">
+        <h2>My Royalties (First 100 Program)</h2>
+        <p>Your potential earnings from being an early supporter. This is an estimate based on creator activity.</p>
+        <div id="royalties-list">
+            </div>
+    </section>
+
+    <section id="profile-settings-section" class="profile-content">
+        <h2>Profile Settings</h2>
+        <p>This is where supporters will be able to manage their profile and notification settings in the future.</p>
+        <button class="btn btn-secondary" disabled>Edit Profile (Coming Soon)</button>
+    </section>
+    </main>
     </div>
 
     <script type="module">
@@ -163,6 +177,27 @@
     if (subsFound === 0) {
         membershipsGrid.innerHTML = '<p>You are not subscribed to any creators yet.</p>';
     }
+    // Render Placeholder Royalties
+        const royaltiesListDiv = document.getElementById('royalties-list');
+        const mockRoyalties = [
+            { creatorName: "Aria Synth", potentialEarnings: 12.50 },
+            { creatorName: "Pixel Pioneers", potentialEarnings: 4.20 }
+        ];
+        if (mockRoyalties.length > 0) {
+            let royaltiesHTML = '';
+            mockRoyalties.forEach(royalty => {
+                royaltiesHTML += `
+                    <div class="royalty-item">
+                        <span>Earnings from <strong>${royalty.creatorName}</strong></span>
+                        <span class="royalty-amount">+${royalty.potentialEarnings.toFixed(2)} π</span>
+                    </div>
+                `;
+            });
+            royaltiesListDiv.innerHTML = royaltiesHTML;
+        } else {
+            royaltiesListDiv.innerHTML = "<p>You are not yet earning royalties from any creators.</p>";
+        }
+        // --- END OF NEW BLOCK ---
 </script>
 </body>
 </html>
