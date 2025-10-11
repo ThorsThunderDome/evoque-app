@@ -34,6 +34,7 @@ body {
 
 .hidden { display: none !important; }
 
+/* --- Login Page --- */
 #login-page {
     display: flex;
     flex-direction: column;
@@ -42,8 +43,16 @@ body {
     height: 100vh;
     text-align: center;
     padding: 20px;
+    background: linear-gradient(-45deg, #121212, #1c1329, #2b1a42, #121212);
+    background-size: 400% 400%;
+    animation: gradient-bg 15s ease infinite;
 }
-#login-page .logo { width: 120px; height: 120px; margin-bottom: 20px; }
+
+@keyframes gradient-bg {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
 
 #app-content { display: flex; position: relative; }
 #sidebar {
@@ -368,4 +377,36 @@ input:checked + .slider:before { transform: translateX(22px); }
 }
 .social-icon.youtube {
     background-image: url('images/youtube-icon.png');
+}
+/* --- Entry Animations --- */
+.animate-fade-in-down {
+    opacity: 0;
+    animation: fade-in-down 0.8s ease-out forwards;
+}
+
+.animate-fade-in-up {
+    opacity: 0;
+    animation: fade-in-up 0.8s ease-out forwards;
+}
+
+@keyframes fade-in-down {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
