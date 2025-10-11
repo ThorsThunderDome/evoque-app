@@ -18,7 +18,7 @@
             <img src="images/evoque-logo.png" alt="Evoque Logo" class="logo animate-fade-in-down">
             <h1 class="animate-fade-in-up">The Home for Creators on the Pi Network.</h1>
             <p class="animate-fade-in-up" style="animation-delay: 0.2s;">Build a community, share your work, and earn Pi directly from your supporters.</p>
-            <button id="pi-connect-btn" class="btn btn-primary animate-fade-in-up" style="animation-delay: 0.4s;">Connect with Pi to Get Started</button>
+            <button id="pi-connect-btn" class="btn btn-primary animate-fade-in-up connect-button" style="animation-delay: 0.4s;">Connect with Pi to Get Started</button>
             <p id="auth-status" class="hidden"></p>
         </div>
         <div class="hero-illustration">
@@ -51,7 +51,7 @@
         <img src="images/pi-logo.png" alt="Pi Network Logo" class="pi-logo-cta">
         <h2>Your Community is Waiting.</h2>
         <p>Become one of the first creators to build a business on the Pi Network.</p>
-        <button id="pi-connect-btn-bottom" class="btn btn-primary">Start Your Page</button>
+        <button id="pi-connect-btn-bottom" class="btn btn-primary connect-button">Start Your Page</button>
     </section>
 
     <footer style="text-align: center; padding: 20px; color: var(--text-secondary-color);">
@@ -99,9 +99,11 @@
                 authStatus.textContent = `Authentication failed. Please try again.`;
             }
         }
-        if (connectButton) {
-            connectButton.addEventListener('click', authenticateWithPi);
-        }
+        // NEW: Find all buttons with the .connect-button class and add the listener
+    const connectButtons = document.querySelectorAll('.connect-button');
+    connectButtons.forEach(button => {
+        button.addEventListener('click', authenticateWithPi);
+    });
     </script>
 </body>
 </html>
