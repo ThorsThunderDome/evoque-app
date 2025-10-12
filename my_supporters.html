@@ -60,26 +60,31 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-        // --- UI Logic ---
-        const themeToggle = document.getElementById('theme-toggle');
-        function applyTheme(theme) { if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = false; } else { document.documentElement.removeAttribute('data-theme'); themeToggle.checked = true; } localStorage.setItem('theme', theme); }
-        const currentTheme = localStorage.getItem('theme') || 'dark';
-        applyTheme(currentTheme);
-        themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
-        const sidebarToggler = document.getElementById('sidebar-toggler');
-        const appContent = document.getElementById('app-content');
-        if (sidebarToggler && appContent) { sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); }); }
+        // --- UI Logic (Theme & Sidebar) ---
+    const themeToggle = document.getElementById('theme-toggle');
+    function applyTheme(theme) {
+        if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = false; } 
+        else { document.documentElement.removeAttribute('data-theme'); themeToggle.checked = true; }
+        localStorage.setItem('theme', theme);
+    }
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    applyTheme(currentTheme);
+    themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
+    const sidebarToggler = document.getElementById('sidebar-toggler');
+    const appContent = document.getElementById('app-content');
+    if (sidebarToggler && appContent) {
+        sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
+    }
 
-        // --- Page-Specific Logic ---
-        const piUserString = sessionStorage.getItem('piUser');
-        if (!piUserString) { window.location.href = 'index.html'; }
-        const piUser = JSON.parse(piUserString);
-        document.getElementById('username-display').textContent = piUser.username;
-        
-
+    // --- Page-Specific Logic ---
+    const piUserString = sessionStorage.getItem('piUser');
+    if (!piUserString) { window.location.href = 'index.html'; }
+    const piUser = JSON.parse(piUserString);
+    document.getElementById('username-display').textContent = piUser.username;
+     
              const firebaseConfig = {
   apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
   authDomain: "evoque-app.firebaseapp.com",
@@ -89,41 +94,46 @@
   appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
   measurementId: "G-DG6WWPYQ3Z"
 };
-        
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        try {
-            const creatorDocRef = doc(db, 'creators', piUser.uid);
-            const docSnap = await getDoc(creatorDocRef);
-            if (docSnap.exists()) {
-                const creatorData = docSnap.data();
-                document.getElementById('creator-name-sidebar').textContent = creatorData.name;
-                document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
-            }
-        } catch (error) { console.error("Could not load creator data for sidebar", error); }
 
-        // Updated mock data to include number and contribution
-        const mockSupporters = [
-            { number: 1, username: 'Pioneer1', tierName: 'Gold Tier', contribution: 10 },
-            { number: 2, username: 'JaneDoe', tierName: 'Silver Tier', contribution: 5 },
-            { number: 3, username: 'TestUser', tierName: 'Silver Tier', contribution: 5 }
-        ];
         const tableBody = document.getElementById('supporters-table-body');
+    tableBody.innerHTML = '<tr><td colspan="4"><div class="loader"></div></td></tr>';
+
+    try {
+        const creatorDocRef = doc(db, 'creators', piUser.uid);
+        const docSnap = await getDoc(creatorDocRef);
+        if (docSnap.exists()) {
+            const creatorData = docSnap.data();
+            document.getElementById('creator-name-sidebar').textContent = creatorData.name;
+            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
+        }
+
+        // --- NEW: Fetch real supporters from the database ---
+        const supportersQuery = query(collection(creatorDocRef, 'supporters'), orderBy('subscribedAt', 'desc'));
+        const snapshot = await getDocs(supportersQuery);
+
         tableBody.innerHTML = '';
-        if (mockSupporters.length === 0) {
+        if (snapshot.empty) {
             tableBody.innerHTML = '<tr><td colspan="4">You have no supporters yet.</td></tr>';
         } else {
-            mockSupporters.forEach(supporter => {
+            snapshot.forEach(doc => {
+                const supporter = doc.data();
                 const row = document.createElement('tr');
+                // Use the real data to build the table row
                 row.innerHTML = `
-                    <td>#${supporter.number}</td>
-                    <td>${supporter.username}</td>
+                    <td>${supporter.supporterNumber ? `#${supporter.supporterNumber}` : '-'}</td>
+                    <td>${supporter.supporterUsername}</td>
                     <td>${supporter.tierName}</td>
                     <td>${supporter.contribution.toFixed(2)}</td>
                 `;
                 tableBody.appendChild(row);
             });
         }
-    </script>
+    } catch (error) {
+        console.error("Error fetching supporters list:", error);
+        tableBody.innerHTML = '<tr><td colspan="4">Error loading supporters. Please try again.</td></tr>';
+    }
+</script>
 </body>
 </html>
