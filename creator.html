@@ -86,9 +86,9 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-    import { getFirestore, collection, doc, getDoc, getDocs, query, where, orderBy, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, query, where, orderBy, updateDoc, increment, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-    // --- UI Logic (Theme & Sidebar) ---
+    // --- UI Logic ---
     const themeToggle = document.getElementById('theme-toggle');
     function applyTheme(theme) {
         if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = false; } 
@@ -135,13 +135,27 @@
                     let newSupporterNumber = null;
                     let successMessage = "Subscription successful! Refresh the page to see your new access.";
 
+                    // Check for incentive program
                     if (creatorData.firstSupporterIncentiveActive && (creatorData.supporterCount || 0) < 100) {
                         const currentCount = creatorData.supporterCount || 0;
                         newSupporterNumber = currentCount + 1;
                         await updateDoc(creatorDocRef, { supporterCount: increment(1) });
-                        successMessage = `Subscription successful! You are supporter #${newSupporterNumber}. Refresh the page.`;
+                        successMessage = `Subscription successful! You are supporter #${newSupporterNumber}.`;
                     }
 
+                    // --- NEW: SAVE SUBSCRIPTION RECORD TO DATABASE ---
+                    const supporterRecord = {
+  apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
+  authDomain: "evoque-app.firebaseapp.com",
+  projectId: "evoque-app",
+  storageBucket: "evoque-app.firebasestorage.app",
+  messagingSenderId: "790735748571",
+  appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
+  measurementId: "G-DG6WWPYQ3Z"
+};
+                    await addDoc(collection(creatorDocRef, 'supporters'), supporterRecord);
+                    // --- END OF NEW LOGIC ---
+                    
                     const membershipKey = `membership_${creatorId}`;
                     const membershipData = { tierId: tierId, number: newSupporterNumber };
                     sessionStorage.setItem(membershipKey, JSON.stringify(membershipData));
