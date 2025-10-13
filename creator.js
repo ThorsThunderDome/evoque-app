@@ -11,10 +11,10 @@ if (!creatorId) {
 
     // This function now uses the createPiPayment from app.js
     async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
-        if (!window.createPiPayment) {
-            alert("Payment script not loaded.");
-            return;
-        }
+        if (typeof window.createPiPayment !== 'function') {
+    alert("Payment script not loaded. Please refresh the page.");
+    return;
+    }
 
         // We will pass the specific tier info to the payment function
         await window.createPiPayment({
