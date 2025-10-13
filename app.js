@@ -1,13 +1,10 @@
-// app.js - UPDATED VERSION
+// app.js - CORRECTED AND CLEANED VERSION
 
-// Import functions from the Firebase SDKs
-// Add getStorage to this line
-import { getStorage } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js"; 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+// --- All Imports Must Be at the Top ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-functions.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js";
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
@@ -20,20 +17,101 @@ const firebaseConfig = {
   measurementId: "G-DG6WWPYQ3Z"
 };
 
-// --- Global Variables ---
-// We initialize these here so all other scripts can use them.
+// --- Global Variables & Initialization ---
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
-export const storage = getStorage(app); // <-- ADD THIS LINE
+export const storage = getStorage(app);
 export const piUser = JSON.parse(sessionStorage.getItem('piUser'));
 
-// --- Initialize Pi and Firebase Functions ---
 try {
     const functions = getFunctions(app);
     window.piPayment = httpsCallable(functions, 'piPayment');
     Pi.init({ version: "2.0", sandbox: true });
 } catch(e) {
     console.error("Initialization failed:", e);
+}
+
+// --- Reusable Functions ---
+
+const onIncompletePaymentFound = async (payment) => {
+    console.log("Incomplete payment found:", payment);
+    try {
+        await window.piPayment({ 
+            action: 'complete', 
+            paymentId: payment.identifier, 
+            txid: payment.transaction.txid 
+        });
+        alert("Your previous payment was successfully completed!");
+    } catch (error) {
+        console.error("Failed to complete previous payment.", error);
+        alert("There was an issue completing your previous payment.");
+    }
+};
+
+export async function uploadFile(file, path) {
+  if (!file) return null;
+  const storageRef = ref(storage, path);
+  try {
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
+  } catch (error) {
+    console.error("File upload failed:", error);
+    throw new Error("File upload failed.");
+  }
+}
+
+async function authenticateWithPi() {
+    const authStatus = document.getElementById('auth-status');
+    if (authStatus) {
+        authStatus.textContent = 'Authenticating... Please check the Pi App.';
+        authStatus.classList.remove('hidden');
+    }
+    try {
+        const scopes = ['username', 'payments'];
+        const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
+        
+        sessionStorage.setItem('piUser', JSON.stringify(authResult.user));
+        window.location.href = 'dashboard.html';
+    } catch (err) {
+        console.error("Authentication failed:", err);
+        if (authStatus) {
+            authStatus.textContent = `Authentication failed. Please try again.`;
+        }
+    }
+}
+
+export async function createPiPayment(paymentDetails) {
+    window.createPiPayment = createPiPayment; // Make it globally accessible
+    try {
+        const paymentData = {
+            amount: paymentDetails.amount || 1.00,
+            memo: paymentDetails.memo || "Subscription to My Creator Page",
+            metadata: paymentDetails.metadata || { plan: 'default' }
+        };
+        
+        const callbacks = {
+            onReadyForServerApproval: async (paymentId) => {
+                await window.piPayment({ action: 'approve', paymentId: paymentId });
+            },
+            onReadyForServerCompletion: async (paymentId, txid) => {
+                await window.piPayment({ action: 'complete', paymentId: paymentId, txid: txid });
+            },
+            onCancel: function(paymentId) {
+                alert(`Payment (#${paymentId}) was cancelled.`);
+            },
+            onError: function(error, payment) {
+                alert(`An error occurred during payment (#${payment.identifier}).`);
+                console.error("Payment Error:", error);
+            }
+        };
+
+        await Pi.createPayment(paymentData, callbacks);
+
+    } catch (err) {
+        alert("Failed to create payment.");
+        console.error("createPiPayment error:", err);
+    }
 }
 
 // --- Common UI Logic ---
@@ -67,112 +145,9 @@ function setupCommonUI() {
         usernameDisplay.textContent = piUser.username;
     }
 }
-// Run the UI setup logic as soon as the DOM is ready
 document.addEventListener('DOMContentLoaded', setupCommonUI);
 
-
-// --- Reusable Functions ---
-
-/**
-     * This function is required by the Pi SDK.
-     * It handles payments that were started but not completed.
-     * We use it to call our backend to complete the transaction.
-     */
-    const onIncompletePaymentFound = async (payment) => {
-        console.log("Incomplete payment found:", payment);
-        try {
-            await window.piPayment({ 
-                action: 'complete', 
-                paymentId: payment.identifier, 
-                txid: payment.transaction.txid 
-            });
-            alert("Your previous payment was successfully completed!");
-        } catch (error) {
-            console.error("Failed to complete previous payment.", error);
-            alert("There was an issue completing your previous payment. Please check your transaction history.");
-        }
-    };
-    import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js";
-
-/**
- * Uploads a file to Firebase Storage and returns the download URL.
- * @param {File} file The file to upload.
- * @param {string} path The path where the file should be stored (e.g., 'profileImages/userId').
- * @returns {Promise<string>} The public URL of the uploaded file.
- */
-export async function uploadFile(file, path) {
-  if (!file) return null;
-  const storageRef = ref(storage, path);
-  try {
-    const snapshot = await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    return downloadURL;
-  } catch (error) {
-    console.error("File upload failed:", error);
-    throw new Error("File upload failed.");
-  }
-}
-    /**
- * Authenticates the user with the Pi App.
- */
-async function authenticateWithPi() {
-    const authStatus = document.getElementById('auth-status');
-    if (authStatus) {
-        authStatus.textContent = 'Authenticating... Please check the Pi App.';
-        authStatus.classList.remove('hidden');
-    }
-    try {
-        const scopes = ['username', 'payments'];
-        const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
-        
-        sessionStorage.setItem('piUser', JSON.stringify(authResult.user));
-        window.location.href = 'dashboard.html';
-    } catch (err) {
-        console.error("Authentication failed:", err);
-        if (authStatus) {
-            authStatus.textContent = `Authentication failed. Please try again.`;
-        }
-    }
-}
-
-/**
- * Creates a new Pi payment.
- */
-async function createPiPayment() {
-    try {
-        const paymentData = {
-            amount: 1.00,
-            memo: "Subscription to My Creator Page",
-            metadata: { userId: 'user123', plan: 'premium' }
-        };
-        
-        const callbacks = {
-            onReadyForServerApproval: async (paymentId) => {
-                await window.piPayment({ action: 'approve', paymentId: paymentId });
-            },
-            onReadyForServerCompletion: async (paymentId, txid) => {
-                await window.piPayment({ action: 'complete', paymentId: paymentId, txid: txid });
-            },
-            onCancel: (paymentId) => {
-                alert("Payment was cancelled.");
-            },
-            onError: (error, payment) => {
-                alert("An error occurred during payment.");
-                console.error("Payment Error:", error);
-            }
-        };
-
-        await Pi.createPayment(paymentData, callbacks);
-
-    } catch (err) {
-        alert("Failed to create payment.");
-        console.error("createPayment error:", err);
-    }
-}
-// --- Event Listeners ---
-// We need to make sure these elements exist before adding listeners.
-
-// For the main login page (index.html)
+// --- Event Listeners for Specific Pages ---
 const connectButtons = document.querySelectorAll('.connect-button');
 if (connectButtons.length > 0) {
     connectButtons.forEach(button => {
@@ -180,7 +155,6 @@ if (connectButtons.length > 0) {
     });
 }
 
-// For pages with a payment button (e.g., dashboard.html)
 const payButton = document.getElementById('pay-button');
 if (payButton) {
   payButton.addEventListener('click', createPiPayment);

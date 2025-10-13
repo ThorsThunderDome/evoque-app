@@ -406,7 +406,11 @@ input:checked + .slider:before { transform: translateX(22px); }
     flex-basis: 50%;
     max-width: 550px;
     text-align: left;
+    display: flex; /* Add this */
+    flex-direction: column; /* Add this */
+    align-items: flex-start; /* Add this to align items to the left */
 }
+
 .hero-text .logo {
     width: 480px;
     height: 480px;
