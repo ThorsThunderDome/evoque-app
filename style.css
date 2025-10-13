@@ -416,8 +416,8 @@ input:checked + .slider:before { transform: translateX(22px); }
     margin-left: 0; /* Ensures there's no extra left margin */
 }
 .hero-text .logo {
-    width: 400px;
-    height: 400px;
+    width: 480px; /* Adjust size as you like */
+    margin-bottom: 20px; /* Adds a nice space below the logo */
 }
 .hero-text h1 {
     font-size: 3em;
