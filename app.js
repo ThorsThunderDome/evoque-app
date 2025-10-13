@@ -1,6 +1,10 @@
 // app.js - UPDATED VERSION
 
 // Import functions from the Firebase SDKs
+// Add getStorage to this line
+import { getStorage } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js"; 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-functions.js";
@@ -20,6 +24,7 @@ const firebaseConfig = {
 // We initialize these here so all other scripts can use them.
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+export const storage = getStorage(app); // <-- ADD THIS LINE
 export const piUser = JSON.parse(sessionStorage.getItem('piUser'));
 
 // --- Initialize Pi and Firebase Functions ---
@@ -87,6 +92,26 @@ document.addEventListener('DOMContentLoaded', setupCommonUI);
             alert("There was an issue completing your previous payment. Please check your transaction history.");
         }
     };
+    import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js";
+
+/**
+ * Uploads a file to Firebase Storage and returns the download URL.
+ * @param {File} file The file to upload.
+ * @param {string} path The path where the file should be stored (e.g., 'profileImages/userId').
+ * @returns {Promise<string>} The public URL of the uploaded file.
+ */
+export async function uploadFile(file, path) {
+  if (!file) return null;
+  const storageRef = ref(storage, path);
+  try {
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
+  } catch (error) {
+    console.error("File upload failed:", error);
+    throw new Error("File upload failed.");
+  }
+}
     /**
  * Authenticates the user with the Pi App.
  */

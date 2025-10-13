@@ -1,5 +1,5 @@
-// create_post.js
-import { db, piUser } from './app.js';
+// create_post.js - UPDATED
+import { db, piUser, uploadFile } from './app.js';
 import { collection, doc, getDoc, getDocs, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 const creatorDocRef = doc(db, 'creators', piUser.uid);
@@ -47,25 +47,38 @@ createPostForm.addEventListener('submit', async (e) => {
         return;
     }
 
+    const mediaFile = document.getElementById('media-file').files[0];
     const mediaType = document.getElementById('media-type').value;
-    const mediaUrl = document.getElementById('media-url').value;
-
-    const newPost = {
-        title: document.getElementById('post-title').value,
-        content: document.getElementById('post-content').value,
-        media: { type: mediaType, url: mediaUrl },
-        accessibleTiers: selectedTiers,
-        createdAt: serverTimestamp(),
-        creatorId: piUser.uid,
-        creatorName: creatorData.name,
-        creatorImage: creatorData.profileImage
-    };
+    let mediaUrl = "";
 
     try {
+        // 1. If a file was selected, upload it
+        if (mediaFile && mediaType !== 'none') {
+            const mediaPath = `postMedia/${piUser.uid}/${Date.now()}_${mediaFile.name}`;
+            mediaUrl = await uploadFile(mediaFile, mediaPath);
+        }
+
+        // 2. Create the new post object
+        const newPost = {
+            title: document.getElementById('post-title').value,
+            content: document.getElementById('post-content').value,
+            media: { 
+                type: mediaType, 
+                url: mediaUrl 
+            },
+            accessibleTiers: selectedTiers,
+            createdAt: serverTimestamp(),
+            creatorId: piUser.uid,
+            creatorName: creatorData.name,
+            creatorImage: creatorData.profileImage
+        };
+
+        // 3. Save the post to Firestore
         await addDoc(collection(db, 'posts'), newPost);
         formStatus.textContent = 'Post published!';
         createPostForm.reset();
         setTimeout(() => formStatus.textContent = '', 3000);
+
     } catch (error) {
         console.error("Error creating post:", error);
         formStatus.textContent = 'Error publishing post.';

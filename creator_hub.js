@@ -1,6 +1,7 @@
 // creator_hub.js
-import { db, piUser } from './app.js';
+import { db, piUser, uploadFile } from './app.js'; // <-- Add uploadFile here
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+
 
 const loader = document.getElementById('loader');
 const registrationFormDiv = document.getElementById('creator-registration-form');
@@ -34,16 +35,27 @@ registrationForm.addEventListener('submit', async (e) => {
     const formStatus = document.getElementById('form-status');
     formStatus.textContent = "Creating profile...";
 
-    const newCreatorData = {
-        name: document.getElementById('creator-name').value,
-        bio: document.getElementById('creator-bio').value,
-        profileImage: document.getElementById('profile-image').value,
-        ownerUid: piUser.uid,
-        supporterCount: 0, // Initialize supporter count
-        firstSupporterIncentiveActive: true // Default to on
-    };
+    const imageFile = document.getElementById('profile-image-file').files[0];
+    if (!imageFile) {
+        formStatus.textContent = "Please select a profile image.";
+        return;
+    }
 
     try {
+        // 1. Upload the file first
+        const imagePath = `profileImages/${piUser.uid}/${imageFile.name}`;
+        const imageUrl = await uploadFile(imageFile, imagePath);
+
+        // 2. Then, create the profile with the new URL
+        const newCreatorData = {
+            name: document.getElementById('creator-name').value,
+            bio: document.getElementById('creator-bio').value,
+            profileImage: imageUrl, // Use the URL from storage
+            ownerUid: piUser.uid,
+            supporterCount: 0,
+            firstSupporterIncentiveActive: true
+        };
+
         await setDoc(doc(db, 'creators', piUser.uid), newCreatorData);
         formStatus.textContent = "Profile created! Redirecting...";
         setTimeout(() => {
@@ -51,7 +63,7 @@ registrationForm.addEventListener('submit', async (e) => {
         }, 2000);
     } catch (error) {
         console.error("Error creating profile:", error);
-        formStatus.textContent = "Error: Could not create profile. Please try again.";
+        formStatus.textContent = "Error: Could not create profile.";
     }
 });
 

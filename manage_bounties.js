@@ -1,10 +1,12 @@
-// manage_bounties.js
-import { db, piUser } from './app.js';
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+// manage_merch.js - UPDATED
+import { db, piUser, uploadFile } from './app.js';
+import { collection, doc, getDoc, getDocs, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+
+const creatorDocRef = doc(db, 'creators', piUser.uid);
+const merchCollectionRef = collection(creatorDocRef, 'merch');
 
 // Fetch creator data for sidebar
 async function loadSidebarData() {
-    const creatorDocRef = doc(db, 'creators', piUser.uid);
     try {
         const docSnap = await getDoc(creatorDocRef);
         if (docSnap.exists()) {
@@ -17,41 +19,71 @@ async function loadSidebarData() {
     }
 }
 
-// --- Placeholder Logic for Bounties ---
-const bountiesListDiv = document.getElementById('existing-bounties-list');
-const mockBounty = {
-    title: "My First Music Video",
-    goal: 500,
-    current: 125,
-    supporters: 12
-};
-
-function loadBounties() {
-    bountiesListDiv.innerHTML = '';
-    const card = document.createElement('div');
-    card.className = 'bounty-card';
-    const progress = (mockBounty.current / mockBounty.goal) * 100;
-    card.innerHTML = `
-        <h3>${mockBounty.title}</h3>
-        <p><strong>Goal:</strong> ${mockBounty.goal} π</p>
-        <div class="progress-bar-container">
-            <div class="progress-bar-fill" style="width: ${progress}%;"></div>
-            <span class="progress-bar-text">${mockBounty.current} / ${mockBounty.goal} π</span>
-        </div>
-        <p>${mockBounty.supporters} supporters so far</p>
-    `;
-    bountiesListDiv.appendChild(card);
+async function loadMerch() {
+    const merchListDiv = document.getElementById('existing-merch-list');
+    merchListDiv.innerHTML = '<div class="loader"></div>';
+    try {
+        const q = query(merchCollectionRef, orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        merchListDiv.innerHTML = '';
+        if (snapshot.empty) {
+            merchListDiv.innerHTML = '<p>You have not added any products yet.</p>';
+        } else {
+            snapshot.forEach(doc => {
+                const item = doc.data();
+                const card = document.createElement('div');
+                card.className = 'creator-card merch-card';
+                card.innerHTML = `
+                    <img src="${item.imageUrl}" alt="${item.name}" class="merch-image">
+                    <h3>${item.name}</h3>
+                    <p>${item.description}</p>
+                    <a href="${item.storeLink}" target="_blank" class="btn btn-primary">View in Store</a>
+                `;
+                merchListDiv.appendChild(card);
+            });
+        }
+    } catch (error) {
+        console.error("Error loading merch:", error);
+        merchListDiv.innerHTML = '<p>Error loading products. Please try again.</p>';
+    }
 }
 
-const createBountyForm = document.getElementById('create-bounty-form');
-createBountyForm.addEventListener('submit', (e) => {
+const createMerchForm = document.getElementById('create-merch-form');
+createMerchForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const formStatus = document.getElementById('form-status');
-    formStatus.textContent = 'Bounty created successfully! (Placeholder)';
-    createBountyForm.reset();
-    setTimeout(() => formStatus.textContent = '', 3000);
+    formStatus.textContent = 'Adding product...';
+
+    const imageFile = document.getElementById('merch-image-file').files[0];
+    if (!imageFile) {
+        formStatus.textContent = "Please select a product image.";
+        return;
+    }
+
+    try {
+        // 1. Upload the image file
+        const imagePath = `merchImages/${piUser.uid}/${Date.now()}_${imageFile.name}`;
+        const imageUrl = await uploadFile(imageFile, imagePath);
+
+        // 2. Create the product document with the new URL
+        const newProduct = {
+            name: document.getElementById('merch-name').value,
+            description: document.getElementById('merch-desc').value,
+            imageUrl: imageUrl, // Use the uploaded file's URL
+            storeLink: document.getElementById('merch-link').value,
+            createdAt: serverTimestamp()
+        };
+        
+        await addDoc(merchCollectionRef, newProduct);
+        formStatus.textContent = 'Product added successfully!';
+        createMerchForm.reset();
+        loadMerch(); // Refresh the list
+    } catch (error) {
+        console.error("Error adding product:", error);
+        formStatus.textContent = 'Error adding product.';
+    }
 });
 
 // Run all page-load functions
 loadSidebarData();
-loadBounties();
+loadMerch();
