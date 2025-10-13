@@ -412,13 +412,12 @@ input:checked + .slider:before { transform: translateX(22px); }
 }
 /* --- Final Logo Alignment Fix --- */
 .hero-text .logo {
-    align-self: flex-start; /* Forces the logo to the start of the container */
-    margin-left: 0; /* Ensures there's no extra left margin */
+    width: 300px; /* Or your preferred size */
+    margin-bottom: 20px;
+    align-self: flex-start;
+    margin-left: 0;
 }
-.hero-text .logo {
-    width: 300px; /* Adjust size as you like */
-    margin-bottom: 20px; /* Adds a nice space below the logo */
-}
+
 .hero-text h1 {
     font-size: 3em;
 }

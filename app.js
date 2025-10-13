@@ -1,4 +1,4 @@
-// app.js - CORRECTED AND CLEANED VERSION
+// app.js - FINAL, COMPLETE VERSION
 
 // --- All Imports Must Be at the Top ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
@@ -31,92 +31,69 @@ try {
     console.error("Initialization failed:", e);
 }
 
-// --- Reusable Functions ---
-
-const onIncompletePaymentFound = async (payment) => {
-    console.log("Incomplete payment found:", payment);
-    try {
-        await window.piPayment({ 
-            action: 'complete', 
-            paymentId: payment.identifier, 
-            txid: payment.transaction.txid 
-        });
-        alert("Your previous payment was successfully completed!");
-    } catch (error) {
-        console.error("Failed to complete previous payment.", error);
-        alert("There was an issue completing your previous payment.");
-    }
-};
-
+// --- Reusable Functions (Available for Import) ---
 export async function uploadFile(file, path) {
   if (!file) return null;
   const storageRef = ref(storage, path);
   try {
     const snapshot = await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    return downloadURL;
+    return await getDownloadURL(snapshot.ref);
   } catch (error) {
     console.error("File upload failed:", error);
     throw new Error("File upload failed.");
   }
 }
 
+// --- Functions that will be attached to the window object ---
 async function authenticateWithPi() {
-    const authStatus = document.getElementById('auth-status');
-    if (authStatus) {
-        authStatus.textContent = 'Authenticating... Please check the Pi App.';
-        authStatus.classList.remove('hidden');
-    }
+    const onIncompletePaymentFound = async (payment) => {
+        try {
+            await window.piPayment({ action: 'complete', paymentId: payment.identifier, txid: payment.transaction.txid });
+            alert("Your previous payment was successfully completed!");
+        } catch (error) {
+            console.error("Failed to complete previous payment.", error);
+        }
+    };
     try {
         const scopes = ['username', 'payments'];
         const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
-        
         sessionStorage.setItem('piUser', JSON.stringify(authResult.user));
         window.location.href = 'dashboard.html';
     } catch (err) {
         console.error("Authentication failed:", err);
-        if (authStatus) {
-            authStatus.textContent = `Authentication failed. Please try again.`;
-        }
     }
 }
 
-export async function createPiPayment(paymentDetails) {
-    window.createPiPayment = createPiPayment; // Make it globally accessible
+async function createPiPayment(paymentDetails) {
     try {
         const paymentData = {
-            amount: paymentDetails.amount || 1.00,
-            memo: paymentDetails.memo || "Subscription to My Creator Page",
-            metadata: paymentDetails.metadata || { plan: 'default' }
+            amount: paymentDetails.amount,
+            memo: paymentDetails.memo,
+            metadata: paymentDetails.metadata
         };
-        
         const callbacks = {
             onReadyForServerApproval: async (paymentId) => {
                 await window.piPayment({ action: 'approve', paymentId: paymentId });
             },
             onReadyForServerCompletion: async (paymentId, txid) => {
                 await window.piPayment({ action: 'complete', paymentId: paymentId, txid: txid });
+                alert("Payment Completed! Your access has been updated. Please refresh the page.");
             },
-            onCancel: function(paymentId) {
-                alert(`Payment (#${paymentId}) was cancelled.`);
-            },
-            onError: function(error, payment) {
-                alert(`An error occurred during payment (#${payment.identifier}).`);
-                console.error("Payment Error:", error);
+            onCancel: (paymentId) => { alert(`Payment (#${paymentId}) was cancelled.`); },
+            onError: (error, payment) => {
+                alert(`An error occurred during payment (#${payment ? payment.identifier : 'N/A'}).`);
+                console.error("Payment Error:", error); // CORRECTED: Use the 'error' variable
             }
         };
-
         await Pi.createPayment(paymentData, callbacks);
-
     } catch (err) {
-        alert("Failed to create payment.");
         console.error("createPiPayment error:", err);
     }
 }
 
-// --- Common UI Logic ---
-function setupCommonUI() {
-    // Theme Switcher
+// --- Main App Initialization Logic ---
+function initializeAppLogic() {
+    // Setup Theme Switcher
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
         const applyTheme = (theme) => {
@@ -129,14 +106,14 @@ function setupCommonUI() {
         themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
     }
 
-    // Sidebar Toggler
+    // Setup Sidebar Toggler
     const sidebarToggler = document.getElementById('sidebar-toggler');
     const appContent = document.getElementById('app-content');
     if (sidebarToggler && appContent) {
         sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
     }
 
-    // Username Display and Auth Check
+    // Auth Check & Username Display
     const usernameDisplay = document.getElementById('username-display');
     const isAuthPage = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
     if (!piUser && !isAuthPage) {
@@ -144,18 +121,15 @@ function setupCommonUI() {
     } else if (usernameDisplay && piUser) {
         usernameDisplay.textContent = piUser.username;
     }
-}
-document.addEventListener('DOMContentLoaded', setupCommonUI);
 
-// --- Event Listeners for Specific Pages ---
-const connectButtons = document.querySelectorAll('.connect-button');
-if (connectButtons.length > 0) {
-    connectButtons.forEach(button => {
-        button.addEventListener('click', authenticateWithPi);
-    });
+    // Attach Event Listeners
+    const connectButtons = document.querySelectorAll('.connect-button');
+    connectButtons.forEach(button => button.addEventListener('click', authenticateWithPi));
+    
+    // CRITICAL FIX: Make functions globally available
+    window.createPiPayment = createPiPayment;
 }
 
-const payButton = document.getElementById('pay-button');
-if (payButton) {
-  payButton.addEventListener('click', createPiPayment);
-}
+// Run the main app logic only when the document is fully loaded.
+document.addEventListener('DOMContentLoaded', initializeAppLogic);
+
