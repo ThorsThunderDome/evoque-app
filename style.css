@@ -416,8 +416,8 @@ input:checked + .slider:before { transform: translateX(22px); }
     margin-left: 0; /* Ensures there's no extra left margin */
 }
 .hero-text .logo {
-    width: 100px;
-    height: 100px;
+    width: 400px;
+    height: 400px;
 }
 .hero-text h1 {
     font-size: 3em;
@@ -426,7 +426,6 @@ input:checked + .slider:before { transform: translateX(22px); }
     width: auto; /* Allow button to not be full-width */
     padding: 15px 30px;
 }
-
 
 .hero-image-container {
     flex-basis: 50%;
