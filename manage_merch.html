@@ -47,7 +47,7 @@
                     <div class="form-group"><label for="merch-name">Product Name</label><input type="text" id="merch-name" required></div>
                     <div class="form-group"><label for="merch-desc">Description</label><textarea id="merch-desc" rows="4" required></textarea></div>
                     <div class="form-group"><label for="merch-image">Image URL</label><input type="url" id="merch-image" placeholder="https://..." required></div>
-                    <div class="form-group"><label for="merch-link">External Store Link</label><input type="url" id="merch-link" placeholder="https://your-store.com/product" required></div>
+                    <div class="form-group"><label for="merch-link">Pi Mall Store Link</label><input type="url" id="merch-link" placeholder="https://pima.ll/yourstore" required></div>
                     <button type="submit" class="btn btn-primary">Add Product</button>
                     <p id="form-status"></p>
                 </form>
@@ -61,108 +61,9 @@
         </main>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-        import { getFirestore, collection, doc, getDoc, getDocs, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-
-        // --- UI Logic ---
-
-    const themeToggle = document.getElementById('theme-toggle');
-    function applyTheme(theme) {
-        if (theme === 'light') {
-            document.documentElement.setAttribute('data-theme', 'light');
-            themeToggle.checked = false;
-        } else {
-            document.documentElement.removeAttribute('data-theme');
-            themeToggle.checked = true;
-        }
-        localStorage.setItem('theme', theme);
-    }
-    const currentTheme = localStorage.getItem('theme') || 'dark';
-    applyTheme(currentTheme);
-    themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
-    const sidebarToggler = document.getElementById('sidebar-toggler');
-    const appContent = document.getElementById('app-content');
-    if (sidebarToggler && appContent) {
-        sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
-    }
-
-
-        // --- Page-Specific Logic ---
-        const piUserString = sessionStorage.getItem('piUser');
-        if (!piUserString) { window.location.href = 'index.html'; }
-        const piUser = JSON.parse(piUserString);
-        document.getElementById('username-display').textContent = piUser.username;
-
-        const firebaseConfig = {
-  apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
-  authDomain: "evoque-app.firebaseapp.com",
-  projectId: "evoque-app",
-  storageBucket: "evoque-app.firebasestorage.app",
-  messagingSenderId: "790735748571",
-  appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
-  measurementId: "G-DG6WWPYQ3Z"
-};
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-        const creatorDocRef = doc(db, 'creators', piUser.uid);
-        const merchCollectionRef = collection(creatorDocRef, 'merch');
-
-        // Fetch creator data for sidebar
-        const docSnap = await getDoc(creatorDocRef);
-        if (docSnap.exists()) {
-            const creatorData = docSnap.data();
-            document.getElementById('creator-name-sidebar').textContent = creatorData.name;
-            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
-        }
-
-        async function loadMerch() {
-            const merchListDiv = document.getElementById('existing-merch-list');
-            merchListDiv.innerHTML = '<div class="loader"></div>';
-            const q = query(merchCollectionRef, orderBy('createdAt', 'desc'));
-            const snapshot = await getDocs(q);
-            merchListDiv.innerHTML = '';
-            if (snapshot.empty) {
-                merchListDiv.innerHTML = '<p>You have not added any products yet.</p>';
-            } else {
-                snapshot.forEach(doc => {
-                    const item = doc.data();
-                    const card = document.createElement('div');
-                    card.className = 'creator-card'; // Reuse style
-                    card.innerHTML = `
-                        <img src="${item.imageUrl}" alt="${item.name}" class="creator-avatar">
-                        <h3>${item.name}</h3>
-                        <p>${item.description}</p>
-                    `;
-                    merchListDiv.appendChild(card);
-                });
-            }
-        }
-
-        const createMerchForm = document.getElementById('create-merch-form');
-        createMerchForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formStatus = document.getElementById('form-status');
-            formStatus.textContent = 'Adding product...';
-            const newProduct = {
-                name: document.getElementById('merch-name').value,
-                description: document.getElementById('merch-desc').value,
-                imageUrl: document.getElementById('merch-image').value,
-                storeLink: document.getElementById('merch-link').value,
-                createdAt: serverTimestamp()
-            };
-            try {
-                await addDoc(merchCollectionRef, newProduct);
-                formStatus.textContent = 'Product added successfully!';
-                createMerchForm.reset();
-                loadMerch();
-            } catch (error) {
-                formStatus.textContent = 'Error adding product.';
-            }
-        });
-
-        loadMerch();
-    </script>
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script src="app.js" type="module"></script>
+    <script src="manage_merch.js" type="module"></script>
+</body>
 </body>
 </html>

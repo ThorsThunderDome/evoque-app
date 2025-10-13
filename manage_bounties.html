@@ -60,94 +60,9 @@
         </main>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-
-        // --- UI Logic ---
-        const themeToggle = document.getElementById('theme-toggle');
-        function applyTheme(theme) {
-        if (theme === 'light') {
-            document.documentElement.setAttribute('data-theme', 'light');
-            themeToggle.checked = false;
-        } else {
-            document.documentElement.removeAttribute('data-theme');
-            themeToggle.checked = true;
-        }
-        localStorage.setItem('theme', theme);
-    }
-    const currentTheme = localStorage.getItem('theme') || 'dark';
-    applyTheme(currentTheme);
-    themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
-    const sidebarToggler = document.getElementById('sidebar-toggler');
-    const appContent = document.getElementById('app-content');
-    if (sidebarToggler && appContent) {
-        sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
-    }
-
-        // --- Page-Specific Logic ---
-        const piUserString = sessionStorage.getItem('piUser');
-        if (!piUserString) { window.location.href = 'index.html'; }
-        const piUser = JSON.parse(piUserString);
-        document.getElementById('username-display').textContent = piUser.username;
-
-        const firebaseConfig = {
-  apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
-  authDomain: "evoque-app.firebaseapp.com",
-  projectId: "evoque-app",
-  storageBucket: "evoque-app.firebasestorage.app",
-  messagingSenderId: "790735748571",
-  appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
-  measurementId: "G-DG6WWPYQ3Z"
-};
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Fetch creator data for sidebar
-        const creatorDocRef = doc(db, 'creators', piUser.uid);
-        const docSnap = await getDoc(creatorDocRef);
-        if (docSnap.exists()) {
-            const creatorData = docSnap.data();
-            document.getElementById('creator-name-sidebar').textContent = creatorData.name;
-            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
-        }
-        
-        // --- Placeholder Logic for Bounties ---
-        const bountiesListDiv = document.getElementById('existing-bounties-list');
-        const mockBounty = {
-            title: "My First Music Video",
-            goal: 500,
-            current: 125,
-            supporters: 12
-        };
-
-        function loadBounties() {
-            bountiesListDiv.innerHTML = '';
-            const card = document.createElement('div');
-            card.className = 'bounty-card'; // We'll style this
-            const progress = (mockBounty.current / mockBounty.goal) * 100;
-            card.innerHTML = `
-                <h3>${mockBounty.title}</h3>
-                <p><strong>Goal:</strong> ${mockBounty.goal} π</p>
-                <div class="progress-bar-container">
-                    <div class="progress-bar-fill" style="width: ${progress}%;"></div>
-                    <span class="progress-bar-text">${mockBounty.current} / ${mockBounty.goal} π</span>
-                </div>
-                <p>${mockBounty.supporters} supporters so far</p>
-            `;
-            bountiesListDiv.appendChild(card);
-        }
-
-        const createBountyForm = document.getElementById('create-bounty-form');
-        createBountyForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const formStatus = document.getElementById('form-status');
-            formStatus.textContent = 'Bounty created successfully! (Placeholder)';
-            createBountyForm.reset();
-            setTimeout(() => formStatus.textContent = '', 3000);
-        });
-
-        loadBounties();
-    </script>
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script src="app.js" type="module"></script>
+    <script src="manage_bounties.js" type="module"></script>
+</body>
 </body>
 </html>

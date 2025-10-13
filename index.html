@@ -63,52 +63,7 @@
     </footer>
 
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-    <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-
-    const connectButton = document.getElementById('pi-connect-btn');
-    const backToTopButton = document.getElementById('back-to-top-btn');
-    const authStatus = document.getElementById('auth-status');
-
-             const firebaseConfig = {
-  apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
-  authDomain: "evoque-app.firebaseapp.com",
-  projectId: "evoque-app",
-  storageBucket: "evoque-app.firebasestorage.app",
-  messagingSenderId: "790735748571",
-  appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
-  measurementId: "G-DG6WWPYQ3Z"
-};
-        
-        try {
-        initializeApp(firebaseConfig);
-    } catch(e) {
-        authStatus.textContent = "Error initializing. Please refresh.";
-        authStatus.classList.remove('hidden');
-    }
-    
-    try {
-        Pi.init({ version: "2.0", sandbox: true });
-    } catch (err) { console.error("Pi SDK failed", err); }
-
-    async function authenticateWithPi() {
-        authStatus.textContent = 'Authenticating...';
-        authStatus.classList.remove('hidden');
-        try {
-            const scopes = ['username', 'payments'];
-            const authResult = await Pi.authenticate(scopes, () => {});
-            sessionStorage.setItem('piUser', JSON.stringify(authResult.user));
-            window.location.href = 'dashboard.html';
-        } catch (err) {
-            authStatus.textContent = `Authentication failed. Please try again.`;
-        }
-    }
-
-    // Find all buttons with the .connect-button class and add the listener
-    const connectButtons = document.querySelectorAll('.connect-button');
-    connectButtons.forEach(button => {
-        button.addEventListener('click', authenticateWithPi);
-    });
-</script>
+    <script src="app.js" type="module"></script>
+</body>
 </body>
 </html>

@@ -408,8 +408,8 @@ input:checked + .slider:before { transform: translateX(22px); }
     text-align: left;
 }
 .hero-text .logo {
-    width: 60px;
-    height: 60px;
+    width: 480px;
+    height: 480px;
 }
 .hero-text h1 {
     font-size: 3em;
@@ -512,4 +512,8 @@ input:checked + .slider:before { transform: translateX(22px); }
 .royalty-amount {
     font-weight: bold;
     color: #4CAF50; /* A success/money green color */
+}
+/* --- Fix for CTA Section in Light Mode --- */
+.cta-section {
+    color: #FFFFFF; /* Forces all text inside to be white */
 }

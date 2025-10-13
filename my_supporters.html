@@ -59,81 +59,9 @@
         </main>
     </div>
 
-    <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-    import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-
-        // --- UI Logic (Theme & Sidebar) ---
-    const themeToggle = document.getElementById('theme-toggle');
-    function applyTheme(theme) {
-        if (theme === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = false; } 
-        else { document.documentElement.removeAttribute('data-theme'); themeToggle.checked = true; }
-        localStorage.setItem('theme', theme);
-    }
-    const currentTheme = localStorage.getItem('theme') || 'dark';
-    applyTheme(currentTheme);
-    themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
-    const sidebarToggler = document.getElementById('sidebar-toggler');
-    const appContent = document.getElementById('app-content');
-    if (sidebarToggler && appContent) {
-        sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
-    }
-
-    // --- Page-Specific Logic ---
-    const piUserString = sessionStorage.getItem('piUser');
-    if (!piUserString) { window.location.href = 'index.html'; }
-    const piUser = JSON.parse(piUserString);
-    document.getElementById('username-display').textContent = piUser.username;
-     
-             const firebaseConfig = {
-  apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
-  authDomain: "evoque-app.firebaseapp.com",
-  projectId: "evoque-app",
-  storageBucket: "evoque-app.firebasestorage.app",
-  messagingSenderId: "790735748571",
-  appId: "1:790735748571:web:1938b35b04ef1c3a92fbfe",
-  measurementId: "G-DG6WWPYQ3Z"
-};
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        const tableBody = document.getElementById('supporters-table-body');
-    tableBody.innerHTML = '<tr><td colspan="4"><div class="loader"></div></td></tr>';
-
-    try {
-        const creatorDocRef = doc(db, 'creators', piUser.uid);
-        const docSnap = await getDoc(creatorDocRef);
-        if (docSnap.exists()) {
-            const creatorData = docSnap.data();
-            document.getElementById('creator-name-sidebar').textContent = creatorData.name;
-            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
-        }
-
-        // --- NEW: Fetch real supporters from the database ---
-        const supportersQuery = query(collection(creatorDocRef, 'supporters'), orderBy('subscribedAt', 'desc'));
-        const snapshot = await getDocs(supportersQuery);
-
-        tableBody.innerHTML = '';
-        if (snapshot.empty) {
-            tableBody.innerHTML = '<tr><td colspan="4">You have no supporters yet.</td></tr>';
-        } else {
-            snapshot.forEach(doc => {
-                const supporter = doc.data();
-                const row = document.createElement('tr');
-                // Use the real data to build the table row
-                row.innerHTML = `
-                    <td>${supporter.supporterNumber ? `#${supporter.supporterNumber}` : '-'}</td>
-                    <td>${supporter.supporterUsername}</td>
-                    <td>${supporter.tierName}</td>
-                    <td>${supporter.contribution.toFixed(2)}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-    } catch (error) {
-        console.error("Error fetching supporters list:", error);
-        tableBody.innerHTML = '<tr><td colspan="4">Error loading supporters. Please try again.</td></tr>';
-    }
-</script>
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script src="app.js" type="module"></script>
+    <script src="my_supporters.js" type="module"></script>
+</body>
 </body>
 </html>
