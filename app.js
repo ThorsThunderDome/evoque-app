@@ -1,4 +1,4 @@
-// app.js - FINAL VERSION (WITH PAYMENT FIX)
+// app.js - FINAL, COMPLETE VERSION (WITH REGION & PAYMENT ID FIX)
 
 // --- All Imports Must Be at the Top ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
@@ -24,14 +24,17 @@ export const storage = getStorage(app);
 export const piUser = JSON.parse(sessionStorage.getItem('piUser'));
 
 try {
-    const functions = getFunctions(app);
+    // CRITICAL FIX #1: Specify the function's region ('us-central1')
+    // This resolves the 400 Bad Request error by telling the client exactly where to send the data.
+    const functions = getFunctions(app, 'us-central1'); 
     window.piPayment = httpsCallable(functions, 'piPayment');
+    
     Pi.init({ version: "2.0", sandbox: true });
 } catch(e) {
     console.error("Initialization failed:", e);
 }
 
-// --- Reusable Functions ---
+// --- Reusable Functions (Available for Import) ---
 export async function uploadFile(file, path) {
   if (!file) return null;
   const storageRef = ref(storage, path);
@@ -44,17 +47,16 @@ export async function uploadFile(file, path) {
   }
 }
 
-// NEW: Export this function so other files can use it for re-authentication
-export const onIncompletePaymentFound = async (payment) => {
-    try {
-        await window.piPayment({ action: 'complete', paymentId: payment.identifier, txid: payment.transaction.txid });
-        alert("Your previous payment was successfully completed!");
-    } catch (error) {
-        console.error("Failed to complete previous payment.", error);
-    }
-};
-
+// --- Functions that will be attached to the window object ---
 async function authenticateWithPi() {
+    const onIncompletePaymentFound = async (payment) => {
+        try {
+            await window.piPayment({ action: 'complete', paymentId: payment.identifier, txid: payment.transaction.txid });
+            alert("Your previous payment was successfully completed!");
+        } catch (error) {
+            console.error("Failed to complete previous payment.", error);
+        }
+    };
     try {
         const scopes = ['username', 'payments'];
         const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
@@ -74,6 +76,13 @@ async function createPiPayment(paymentDetails) {
         };
         const callbacks = {
             onReadyForServerApproval: async (paymentId) => {
+                // CRITICAL FIX #2: Add a safety check for the paymentId
+                console.log("onReadyForServerApproval triggered with paymentId:", paymentId); // For debugging
+                if (!paymentId) {
+                    console.error("Payment ID is missing in onReadyForServerApproval callback!");
+                    alert("Error: Could not get a valid Payment ID from Pi. Please try again.");
+                    return; // Stop the function if the ID is invalid
+                }
                 await window.piPayment({ action: 'approve', paymentId: paymentId });
             },
             onReadyForServerCompletion: async (paymentId, txid) => {
@@ -82,19 +91,19 @@ async function createPiPayment(paymentDetails) {
             },
             onCancel: (paymentId) => { alert(`Payment (#${paymentId}) was cancelled.`); },
             onError: (error, payment) => { 
-                alert(`An error occurred during payment (#${payment ? payment.identifier : 'N/A'}).`);
+                alert(`An error occurred during payment (#${payment ? payment.identifier : 'N/A'}).`); 
                 console.error("Payment Error:", error);
             }
         };
         await Pi.createPayment(paymentData, callbacks);
     } catch (err) {
         console.error("createPiPayment error:", err);
-        throw err; // Re-throw the error so the calling function knows it failed
     }
 }
 
 // --- Main App Initialization Logic ---
 function initializeAppLogic() {
+    // Setup Theme Switcher
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
         const applyTheme = (theme) => {
@@ -107,12 +116,14 @@ function initializeAppLogic() {
         themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
     }
 
+    // Setup Sidebar Toggler
     const sidebarToggler = document.getElementById('sidebar-toggler');
     const appContent = document.getElementById('app-content');
     if (sidebarToggler && appContent) {
         sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
     }
 
+    // Auth Check & Username Display
     const usernameDisplay = document.getElementById('username-display');
     const isAuthPage = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
     if (!piUser && !isAuthPage) {
@@ -121,11 +132,14 @@ function initializeAppLogic() {
         usernameDisplay.textContent = piUser.username;
     }
 
+    // Attach Event Listeners
     const connectButtons = document.querySelectorAll('.connect-button');
     connectButtons.forEach(button => button.addEventListener('click', authenticateWithPi));
     
+    // Make functions globally available
     window.createPiPayment = createPiPayment;
 }
 
+// Run the main app logic only when the document is fully loaded.
 document.addEventListener('DOMContentLoaded', initializeAppLogic);
 
