@@ -64,6 +64,8 @@ async function authenticateWithPi() {
     }
 }
 
+// app.js
+
 async function createPiPayment(paymentDetails) {
     try {
         const paymentData = {
@@ -71,28 +73,57 @@ async function createPiPayment(paymentDetails) {
             memo: paymentDetails.memo,
             metadata: paymentDetails.metadata
         };
+
         const callbacks = {
-            onReadyForServerApproval: async (paymentId) => {
-                if (!paymentId) {
-                    console.error("Payment ID is missing!");
-                    alert("Error: Could not get a valid Payment ID from Pi.");
+            onReadyForServerApproval: (paymentId) => {
+                console.log(`[APPROVAL] Received paymentId: ${paymentId}`);
+                if (!paymentId || typeof paymentId !== 'string') {
+                    console.error('[APPROVAL] Invalid or missing paymentId from Pi SDK.', paymentId);
+                    alert('A critical error occurred: The payment process returned an invalid ID.');
                     return;
                 }
-                await window.piPayment({ action: 'approve', paymentId: paymentId });
+
+                const payload = { action: 'approve', paymentId: paymentId };
+                console.log('[APPROVAL] Sending payload to backend:', payload);
+
+                window.piPayment(payload)
+                    .then((result) => {
+                        console.log('[APPROVAL] Backend approval successful:', result);
+                    })
+                    .catch((error) => {
+                        console.error('[APPROVAL] Backend approval failed. Full Error:', error);
+                        alert(`Payment approval failed: ${error.message}. Please check the console for details.`);
+                    });
             },
-            onReadyForServerCompletion: async (paymentId, txid) => {
-                await window.piPayment({ action: 'complete', paymentId: paymentId, txid: txid });
-                alert("Payment Completed! Your access has been updated. Please refresh the page.");
+            onReadyForServerCompletion: (paymentId, txid) => {
+                console.log(`[COMPLETION] Received paymentId: ${paymentId} with txid: ${txid}`);
+                const payload = { action: 'complete', paymentId: paymentId, txid: txid };
+                console.log('[COMPLETION] Sending payload to backend:', payload);
+
+                window.piPayment(payload)
+                    .then((result) => {
+                        console.log('[COMPLETION] Backend completion successful:', result);
+                        alert("Payment Completed! Your access has been updated. Please refresh the page.");
+                    })
+                    .catch((error) => {
+                        console.error('[COMPLETION] Backend completion failed. Full Error:', error);
+                        alert(`Payment completion failed: ${error.message}. Please check the console for details.`);
+                    });
             },
-            onCancel: (paymentId) => { alert(`Payment (#${paymentId}) was cancelled.`); },
-            onError: (error, payment) => { 
-                alert(`An error occurred during payment (#${payment ? payment.identifier : 'N/A'}).`);
-                console.error("Payment Error:", error);
+            onCancel: (paymentId) => {
+                console.warn(`[CANCEL] Payment (#${paymentId}) was cancelled by the user.`);
+                alert(`Payment (#${paymentId}) was cancelled.`);
+            },
+            onError: (error, payment) => {
+                console.error('[ERROR] An SDK-level error occurred during payment.', { error, payment });
+                alert(`An error occurred during the payment process. See console for details.`);
             }
         };
+
         await Pi.createPayment(paymentData, callbacks);
+
     } catch (err) {
-        console.error("createPiPayment error:", err);
+        console.error("A fatal error occurred in createPiPayment:", err);
         throw err;
     }
 }
