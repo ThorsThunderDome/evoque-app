@@ -21,7 +21,9 @@ export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const piUser = JSON.parse(sessionStorage.getItem('piUser'));
-const PI_PAYMENT_FUNCTION_URL = "https://us-central1-evoque-app.cloudfunctions.net/piPayment";
+
+// UPDATED THE URL TO POINT TO THE NEW FUNCTION NAME
+const PI_PAYMENT_FUNCTION_URL = "https://us-central1-evoque-app.cloudfunctions.net/processPiPayment";
 
 try {
     Pi.init({ version: "2.0", sandbox: true });

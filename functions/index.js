@@ -1,7 +1,6 @@
 const functions = require("firebase-functions");
 const axios = require("axios");
 const admin = require("firebase-admin");
-// The 'cors' package has been removed.
 
 admin.initializeApp();
 
@@ -18,23 +17,22 @@ try {
 
 const PI_API_URL = "https://api.pi.network/v2";
 
-exports.piPayment = functions.https.onRequest(async (req, res) => {
+// RENAMED THE FUNCTION HERE
+exports.processPiPayment = functions.https.onRequest(async (req, res) => {
     // --- MANUAL CORS HANDLING ---
     const allowedOrigin = "https://evoque-app-production.up.railway.app";
     res.set('Access-Control-Allow-Origin', allowedOrigin);
 
     if (req.method === 'OPTIONS') {
-        // This is a preflight request. Respond with the required headers.
         res.set('Access-Control-Allow-Methods', 'POST');
         res.set('Access-Control-Allow-Headers', 'Content-Type');
-        res.set('Access-Control-Max-Age', '3600'); // Cache preflight response for 1 hour
+        res.set('Access-Control-Max-Age', '3600');
         return res.status(204).send('');
     }
     // --- END MANUAL CORS HANDLING ---
 
-    // The rest of your function logic now runs for non-OPTIONS requests (i.e., your POST request)
     if (!PI_API_KEY) {
-        functions.logger.error("piPayment called, but the server is missing the PI_API_KEY configuration.");
+        functions.logger.error("Function called, but the server is missing the PI_API_KEY configuration.");
         return res.status(500).json({ error: "Server configuration error. API key is missing." });
     }
     
@@ -69,7 +67,7 @@ exports.piPayment = functions.https.onRequest(async (req, res) => {
             return res.status(400).json({ error: 'Invalid action specified.' });
         }
     } catch (error) {
-        functions.logger.error('An error occurred in piPayment function', error);
+        functions.logger.error('An error occurred in the function', error);
         const errorMessage = error.response ? error.response.data : error.message;
         return res.status(500).json({ error: 'An internal server error occurred.', details: errorMessage });
     }
