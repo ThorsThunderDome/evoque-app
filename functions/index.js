@@ -1,12 +1,11 @@
 const functions = require("firebase-functions");
 const axios = require("axios");
 const admin = require("firebase-admin");
+const dns = require('dns'); // Import the DNS module
 
 admin.initializeApp();
 
-// The key is now loaded from process.env, which is populated by the .env file during deployment.
 const PI_API_KEY = process.env.PI_API_KEY;
-
 const PI_API_URL = "https://api.pi.network/v2";
 
 exports.processPiPayment = functions.https.onRequest(async (req, res) => {
@@ -20,7 +19,17 @@ exports.processPiPayment = functions.https.onRequest(async (req, res) => {
         return res.status(204).send('');
     }
 
-    // Check if the key was loaded successfully.
+    // --- DNS SANITY TEST ---
+    try {
+        await dns.promises.lookup('google.com');
+        functions.logger.info("DNS Test Passed: Successfully resolved google.com");
+    } catch (dnsErr) {
+        functions.logger.error("DNS Test FAILED: Could not resolve google.com.", dnsErr);
+        // If this fails, we know all outbound networking is blocked.
+        return res.status(500).json({ error: 'Server networking test failed.', details: dnsErr.message });
+    }
+    // --- END DNS SANITY TEST ---
+
     if (!PI_API_KEY) {
         console.error("FATAL ERROR: PI_API_KEY is not defined in the environment.");
         return res.status(500).json({ error: "Server configuration error. API key is missing." });
@@ -34,14 +43,7 @@ exports.processPiPayment = functions.https.onRequest(async (req, res) => {
 
     try {
         const { action, paymentId, txid } = req.body;
-        functions.logger.info(`Received request:`, { action, paymentId, txid });
-
-        if (!action || !paymentId) {
-            functions.logger.error("Missing action or paymentId", { body: req.body });
-            return res.status(400).json({ error: "Function must be called with 'action' and 'paymentId'." });
-        }
-
-let response;
+        let response;
         if (action === 'approve') {
             response = await axios.post(`${PI_API_URL}/payments/${paymentId}/approve`, {}, { headers });
             return res.status(200).json({ success: true, data: response.data });
