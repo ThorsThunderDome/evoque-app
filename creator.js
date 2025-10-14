@@ -1,27 +1,28 @@
-// creator.js - FINAL, CORRECTED VERSION
-import { db, piUser } from './app.js';
+// creator.js - FINAL VERSION (WITH PAYMENT FIX)
+import { db, piUser, onIncompletePaymentFound } from './app.js'; // Import the new function
 import { collection, doc, getDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-// This function will handle the subscription click
 async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
-    if (typeof window.createPiPayment !== 'function') {
-        alert("Payment script not loaded. Please refresh the page.");
-        return;
-    }
     try {
+        // STEP 1: Re-authenticate to get fresh permissions before paying.
+        const scopes = ['username', 'payments'];
+        await Pi.authenticate(scopes, onIncompletePaymentFound);
+
+        // STEP 2: Now that we have the scope, create the payment.
         const creatorId = sessionStorage.getItem('selectedCreatorId');
         await window.createPiPayment({
             amount: tierPrice,
             memo: `Subscription to ${creatorData.name} - ${tierName}`,
             metadata: { supporterUid: piUser.uid, creatorUid: creatorId, tierId: tierId }
         });
-        alert("Payment flow initiated! Check the Pi App to approve.");
+
     } catch (error) {
-        console.error("Error initiating payment flow:", error);
+        // This will catch both authentication and payment errors
+        console.error("Payment process failed:", error);
+        alert("Could not complete the payment process. Please try again.");
     }
 }
 
-// This is the main function that loads and builds the entire page
 async function initializeCreatorPage() {
     const creatorId = sessionStorage.getItem('selectedCreatorId');
     const mainContent = document.getElementById('main-content');
@@ -135,7 +136,7 @@ async function initializeCreatorPage() {
         const bountyCard = document.createElement('div');
         bountyCard.className = 'bounty-card management-card';
         const progress = (mockBounty.current / mockBounty.goal) * 100;
-        bountyCard.innerHTML = `<h3>${mockBounty.title}</h3><p>Help fund this project! Every contribution gets a special recognition NFT.</p><div class="progress-bar-container"><div class="progress-bar-fill" style="width: ${progress}%;"></div><span class="progress-bar-text">${mockBounty.current} / ${mockBounty.goal} π</span></div><p>${mockBounty.supporters} supporters have contributed so far.</p><button class="btn btn-primary" style="margin-top: 15px;">Contribute (Coming Soon)</button>`;
+        bountyCard.innerHTML = `<h3>${mockBounty.title}</h3><p>Help fund this project! Every contribution gets a special recognition NFT.</p><div class="progress-bar-container"><div class="progress-bar-fill" style="width: ${progress}%;"></div><span class="progress-bar-text">${mockBounty.current} / ${mockBounty.goal} π</span></div><p>${mockBounty.supporters} have contributed so far.</p><button class="btn btn-primary" style="margin-top: 15px;">Contribute (Coming Soon)</button>`;
         bountiesListDiv.appendChild(bountyCard);
 
     } catch (error) {
@@ -144,6 +145,5 @@ async function initializeCreatorPage() {
     }
 }
 
-// CRITICAL FIX: Run the main function only after the document is fully loaded.
 document.addEventListener('DOMContentLoaded', initializeCreatorPage);
 

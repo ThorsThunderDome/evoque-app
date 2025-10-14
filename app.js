@@ -1,4 +1,4 @@
-// app.js - FINAL, COMPLETE VERSION
+// app.js - FINAL VERSION (WITH PAYMENT FIX)
 
 // --- All Imports Must Be at the Top ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
@@ -31,7 +31,7 @@ try {
     console.error("Initialization failed:", e);
 }
 
-// --- Reusable Functions (Available for Import) ---
+// --- Reusable Functions ---
 export async function uploadFile(file, path) {
   if (!file) return null;
   const storageRef = ref(storage, path);
@@ -44,16 +44,17 @@ export async function uploadFile(file, path) {
   }
 }
 
-// --- Functions that will be attached to the window object ---
+// NEW: Export this function so other files can use it for re-authentication
+export const onIncompletePaymentFound = async (payment) => {
+    try {
+        await window.piPayment({ action: 'complete', paymentId: payment.identifier, txid: payment.transaction.txid });
+        alert("Your previous payment was successfully completed!");
+    } catch (error) {
+        console.error("Failed to complete previous payment.", error);
+    }
+};
+
 async function authenticateWithPi() {
-    const onIncompletePaymentFound = async (payment) => {
-        try {
-            await window.piPayment({ action: 'complete', paymentId: payment.identifier, txid: payment.transaction.txid });
-            alert("Your previous payment was successfully completed!");
-        } catch (error) {
-            console.error("Failed to complete previous payment.", error);
-        }
-    };
     try {
         const scopes = ['username', 'payments'];
         const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
@@ -80,20 +81,20 @@ async function createPiPayment(paymentDetails) {
                 alert("Payment Completed! Your access has been updated. Please refresh the page.");
             },
             onCancel: (paymentId) => { alert(`Payment (#${paymentId}) was cancelled.`); },
-            onError: (error, payment) => {
+            onError: (error, payment) => { 
                 alert(`An error occurred during payment (#${payment ? payment.identifier : 'N/A'}).`);
-                console.error("Payment Error:", error); // CORRECTED: Use the 'error' variable
+                console.error("Payment Error:", error);
             }
         };
         await Pi.createPayment(paymentData, callbacks);
     } catch (err) {
         console.error("createPiPayment error:", err);
+        throw err; // Re-throw the error so the calling function knows it failed
     }
 }
 
 // --- Main App Initialization Logic ---
 function initializeAppLogic() {
-    // Setup Theme Switcher
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
         const applyTheme = (theme) => {
@@ -106,14 +107,12 @@ function initializeAppLogic() {
         themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
     }
 
-    // Setup Sidebar Toggler
     const sidebarToggler = document.getElementById('sidebar-toggler');
     const appContent = document.getElementById('app-content');
     if (sidebarToggler && appContent) {
         sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
     }
 
-    // Auth Check & Username Display
     const usernameDisplay = document.getElementById('username-display');
     const isAuthPage = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
     if (!piUser && !isAuthPage) {
@@ -122,14 +121,11 @@ function initializeAppLogic() {
         usernameDisplay.textContent = piUser.username;
     }
 
-    // Attach Event Listeners
     const connectButtons = document.querySelectorAll('.connect-button');
     connectButtons.forEach(button => button.addEventListener('click', authenticateWithPi));
     
-    // CRITICAL FIX: Make functions globally available
     window.createPiPayment = createPiPayment;
 }
 
-// Run the main app logic only when the document is fully loaded.
 document.addEventListener('DOMContentLoaded', initializeAppLogic);
 
