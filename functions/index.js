@@ -1,11 +1,16 @@
 const functions = require("firebase-functions");
 const axios = require("axios");
 const admin = require("firebase-admin");
+const https = require('https');
+const crypto = require('crypto');
+
+// WORKAROUND for SSL handshake issues with some servers/proxies
+// This tells Node.js to be more flexible with its encryption negotiation.
+https.globalAgent.options.secureOptions = crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT;
 
 admin.initializeApp();
 
 const PI_API_KEY = process.env.PI_API_KEY;
-// We are now using the direct IP address for the Pi API server
 const PI_API_URL_BY_IP = "https://104.18.1.135/v2"; 
 
 exports.processPiPayment = functions.https.onRequest(async (req, res) => {
@@ -14,7 +19,7 @@ exports.processPiPayment = functions.https.onRequest(async (req, res) => {
 
     if (req.method === 'OPTIONS') {
         res.set('Access-Control-Allow-Methods', 'POST');
-        res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Added Authorization
+        res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         res.set('Access-Control-Max-Age', '3600');
         return res.status(204).send('');
     }
@@ -24,7 +29,6 @@ exports.processPiPayment = functions.https.onRequest(async (req, res) => {
         return res.status(500).json({ error: "Server configuration error. API key is missing." });
     }
     
-    // We create the headers object, including the Host header, which is required when using a direct IP.
     const requestHeaders = { 
         'Authorization': `Key ${PI_API_KEY}`,
         'Host': 'api.pi.network'
