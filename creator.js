@@ -144,4 +144,3 @@ async function initializeCreatorPage() {
 
 // CRITICAL FIX: Listen for the app-ready event before running the page logic
 window.addEventListener('app-ready', initializeCreatorPage);
-
