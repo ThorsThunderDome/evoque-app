@@ -44,16 +44,16 @@ export async function uploadFile(file, path) {
   }
 }
 
-// --- Functions that will be attached to the window object ---
+export const onIncompletePaymentFound = async (payment) => {
+    try {
+        await window.piPayment({ action: 'complete', paymentId: payment.identifier, txid: payment.transaction.txid });
+        alert("Your previous payment was successfully completed!");
+    } catch (error) {
+        console.error("Failed to complete previous payment.", error);
+    }
+};
+
 async function authenticateWithPi() {
-    const onIncompletePaymentFound = async (payment) => {
-        try {
-            await window.piPayment({ action: 'complete', paymentId: payment.identifier, txid: payment.transaction.txid });
-            alert("Your previous payment was successfully completed!");
-        } catch (error) {
-            console.error("Failed to complete previous payment.", error);
-        }
-    };
     try {
         const scopes = ['username', 'payments'];
         const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
@@ -73,12 +73,10 @@ async function createPiPayment(paymentDetails) {
         };
         const callbacks = {
             onReadyForServerApproval: async (paymentId) => {
-                // CRITICAL FIX #2: Add a safety check for the paymentId
-                console.log("onReadyForServerApproval triggered with paymentId:", paymentId); // For debugging
                 if (!paymentId) {
-                    console.error("Payment ID is missing in onReadyForServerApproval callback!");
-                    alert("Error: Could not get a valid Payment ID from Pi. Please try again.");
-                    return; // Stop the function if the ID is invalid
+                    console.error("Payment ID is missing!");
+                    alert("Error: Could not get a valid Payment ID from Pi.");
+                    return;
                 }
                 await window.piPayment({ action: 'approve', paymentId: paymentId });
             },
