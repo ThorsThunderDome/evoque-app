@@ -1,6 +1,6 @@
-// app.js - FINAL, COMPLETE VERSION (WITH REGION & PAYMENT ID FIX)
+// app.js - FINAL VERSION (WITH INITIALIZATION EVENT)
 
-// --- All Imports Must Be at the Top ---
+// --- All Imports ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-functions.js";
@@ -24,17 +24,14 @@ export const storage = getStorage(app);
 export const piUser = JSON.parse(sessionStorage.getItem('piUser'));
 
 try {
-    // CRITICAL FIX #1: Specify the function's region ('us-central1')
-    // This resolves the 400 Bad Request error by telling the client exactly where to send the data.
     const functions = getFunctions(app, 'us-central1'); 
     window.piPayment = httpsCallable(functions, 'piPayment');
-    
     Pi.init({ version: "2.0", sandbox: true });
 } catch(e) {
     console.error("Initialization failed:", e);
 }
 
-// --- Reusable Functions (Available for Import) ---
+// --- Reusable Functions ---
 export async function uploadFile(file, path) {
   if (!file) return null;
   const storageRef = ref(storage, path);
@@ -91,19 +88,20 @@ async function createPiPayment(paymentDetails) {
             },
             onCancel: (paymentId) => { alert(`Payment (#${paymentId}) was cancelled.`); },
             onError: (error, payment) => { 
-                alert(`An error occurred during payment (#${payment ? payment.identifier : 'N/A'}).`); 
+                alert(`An error occurred during payment (#${payment ? payment.identifier : 'N/A'}).`);
                 console.error("Payment Error:", error);
             }
         };
         await Pi.createPayment(paymentData, callbacks);
     } catch (err) {
         console.error("createPiPayment error:", err);
+        throw err;
     }
 }
 
 // --- Main App Initialization Logic ---
 function initializeAppLogic() {
-    // Setup Theme Switcher
+    // Setup UI
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
         const applyTheme = (theme) => {
@@ -115,15 +113,13 @@ function initializeAppLogic() {
         applyTheme(currentTheme);
         themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
     }
-
-    // Setup Sidebar Toggler
     const sidebarToggler = document.getElementById('sidebar-toggler');
     const appContent = document.getElementById('app-content');
     if (sidebarToggler && appContent) {
         sidebarToggler.addEventListener('click', () => { appContent.classList.toggle('sidebar-collapsed'); });
     }
 
-    // Auth Check & Username Display
+    // Auth Check
     const usernameDisplay = document.getElementById('username-display');
     const isAuthPage = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
     if (!piUser && !isAuthPage) {
@@ -132,14 +128,17 @@ function initializeAppLogic() {
         usernameDisplay.textContent = piUser.username;
     }
 
-    // Attach Event Listeners
+    // Attach Global Listeners
     const connectButtons = document.querySelectorAll('.connect-button');
     connectButtons.forEach(button => button.addEventListener('click', authenticateWithPi));
     
     // Make functions globally available
     window.createPiPayment = createPiPayment;
+    
+    // CRITICAL FIX: Announce that the app is ready for other scripts
+    window.dispatchEvent(new CustomEvent('app-ready'));
 }
 
-// Run the main app logic only when the document is fully loaded.
+// Run the main app logic when the document is ready.
 document.addEventListener('DOMContentLoaded', initializeAppLogic);
 

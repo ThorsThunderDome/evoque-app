@@ -1,14 +1,12 @@
-// creator.js - FINAL VERSION (WITH PAYMENT FIX)
-import { db, piUser, onIncompletePaymentFound } from './app.js'; // Import the new function
+// creator.js - FINAL VERSION (WITH INITIALIZATION EVENT)
+import { db, piUser, onIncompletePaymentFound } from './app.js';
 import { collection, doc, getDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
     try {
-        // STEP 1: Re-authenticate to get fresh permissions before paying.
         const scopes = ['username', 'payments'];
         await Pi.authenticate(scopes, onIncompletePaymentFound);
 
-        // STEP 2: Now that we have the scope, create the payment.
         const creatorId = sessionStorage.getItem('selectedCreatorId');
         await window.createPiPayment({
             amount: tierPrice,
@@ -17,7 +15,6 @@ async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
         });
 
     } catch (error) {
-        // This will catch both authentication and payment errors
         console.error("Payment process failed:", error);
         alert("Could not complete the payment process. Please try again.");
     }
@@ -145,5 +142,6 @@ async function initializeCreatorPage() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', initializeCreatorPage);
+// CRITICAL FIX: Listen for the app-ready event before running the page logic
+window.addEventListener('app-ready', initializeCreatorPage);
 
