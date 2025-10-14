@@ -1,7 +1,7 @@
 const functions = require("firebase-functions");
 const axios = require("axios");
 const admin = require("firebase-admin");
-const cors = require("cors")({ origin: true });
+const cors = require("cors")({ origin: "https://evoque-app-production.up.railway.app" });
 
 admin.initializeApp();
 
