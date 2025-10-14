@@ -1,4 +1,4 @@
-// app.js - FINAL VERSION (WITH FETCH)
+// app.js - FINAL VERSION (WITH DETAILED ERROR REPORTING)
 
 // --- All Imports ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
@@ -21,8 +21,6 @@ export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const piUser = JSON.parse(sessionStorage.getItem('piUser'));
-
-// UPDATED THE URL TO POINT TO THE NEW FUNCTION NAME
 const PI_PAYMENT_FUNCTION_URL = "https://us-central1-evoque-app.cloudfunctions.net/processPiPayment";
 
 try {
@@ -53,7 +51,14 @@ async function callPiPaymentAPI(payload) {
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
-        throw new Error(errorData.error || errorData.message);
+        // --- THIS IS THE CRITICAL CHANGE ---
+        // We now construct a more detailed error message, including the 'details' field from the server.
+        let detailedMessage = errorData.error || 'Unknown server error';
+        if (errorData.details) {
+            const detailsString = typeof errorData.details === 'object' ? JSON.stringify(errorData.details) : errorData.details;
+            detailedMessage += ` | Details: ${detailsString}`;
+        }
+        throw new Error(detailedMessage);
     }
     return response.json();
 }
