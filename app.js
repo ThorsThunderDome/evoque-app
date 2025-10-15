@@ -95,8 +95,6 @@ async function createPiPayment(paymentDetails) {
             onReadyForServerApproval: (paymentId) => {
                 console.log(`[APPROVAL] Received paymentId: ${paymentId}`);
                 const payload = { action: 'approve', paymentId: paymentId };
-                console.log('[APPROVAL] Sending payload to backend via fetch:', payload);
-
                 callPiPaymentAPI(payload)
                     .then((result) => console.log('[APPROVAL] Backend approval successful:', result))
                     .catch((error) => {
@@ -107,12 +105,25 @@ async function createPiPayment(paymentDetails) {
             onReadyForServerCompletion: (paymentId, txid) => {
                 console.log(`[COMPLETION] Received paymentId: ${paymentId}, txid: ${txid}`);
                 const payload = { action: 'complete', paymentId: paymentId, txid: txid };
-                console.log('[COMPLETION] Sending payload to backend via fetch:', payload);
-
+                
                 callPiPaymentAPI(payload)
                     .then((result) => {
                         console.log('[COMPLETION] Backend completion successful:', result);
-                        alert("Payment Completed! Your access has been updated. Please refresh the page.");
+                        
+                        // --- NEW LOGIC: Save subscription to sessionStorage and reload ---
+                        if (result.success && result.subscription) {
+                            const { creatorId, tierId } = result.subscription;
+                            const membershipKey = `membership_${creatorId}`;
+                            const membershipData = { tierId: tierId };
+                            sessionStorage.setItem(membershipKey, JSON.stringify(membershipData));
+                            
+                            alert("Payment Completed! Your access has been updated. The page will now refresh.");
+                            // Reload the page to show the newly unlocked content
+                            window.location.reload(); 
+                        } else {
+                            // Fallback for safety
+                            alert("Payment Completed! Please refresh the page to see your new access.");
+                        }
                     })
                     .catch((error) => {
                         console.error('[COMPLETION] Backend completion failed:', error);
