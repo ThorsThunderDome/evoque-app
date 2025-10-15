@@ -1,15 +1,15 @@
 // my_supporters.js
 import { db } from './app.js';
-import { collection, doc, getDoc, getDocs, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+import { collection, doc, getDoc, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 const tableBody = document.getElementById('supporters-table-body');
 
 async function initializePage() {
-    // --- FIX: Get piUser AFTER the app is ready ---
+    // FIX: Get piUser AFTER the app is ready
     const piUser = JSON.parse(sessionStorage.getItem('piUser'));
     if (!piUser || !piUser.uid) {
         console.error("My Supporters Error: User not found in session.");
-        tableBody.innerHTML = '<tr><td colspan="4">Could not load supporters. Please log in.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="4">Could not load supporters. Please log in again.</td></tr>';
         return;
     }
 
@@ -24,7 +24,8 @@ async function initializePage() {
             document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage || 'images/default-avatar.png';
         }
 
-        const supportersQuery = query(collection(db, 'subscriptions'), where('creatorUid', '==', piUser.uid), orderBy('createdAt', 'desc'));
+        // FIX: Removed orderBy('createdAt') to prevent needing a composite index
+        const supportersQuery = query(collection(db, 'subscriptions'), where('creatorUid', '==', piUser.uid));
 
         onSnapshot(supportersQuery, async (snapshot) => {
             if (snapshot.empty) {
@@ -32,14 +33,13 @@ async function initializePage() {
                 return;
             }
 
-            // --- FIX: Used getDocs on a collection, which is correct ---
             const tiersSnapshot = await getDocs(collection(creatorDocRef, 'tiers'));
             const tierInfo = {};
             tiersSnapshot.forEach(tierDoc => {
                 tierInfo[tierDoc.id] = tierDoc.data();
             });
             
-            const supporterIds = snapshot.docs.map(doc => doc.data().supporterUid);
+            const supporterIds = snapshot.docs.map(subDoc => subDoc.data().supporterUid);
             const userDocsPromises = supporterIds.map(id => getDoc(doc(db, 'users', id)));
             const userDocs = await Promise.all(userDocsPromises);
             const usernames = {};
@@ -49,9 +49,12 @@ async function initializePage() {
                 }
             });
 
+            // FIX: Sort the results manually in JavaScript instead of in the query
+            const supporters = snapshot.docs.map(d => d.data());
+            supporters.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
+
             tableBody.innerHTML = '';
-            snapshot.docs.forEach((doc, index) => {
-                const subscription = doc.data();
+            supporters.forEach((subscription, index) => {
                 const row = document.createElement('tr');
                 const currentTierInfo = tierInfo[subscription.tierId] || { name: 'Unknown Tier', price: 0 };
                 const price = typeof currentTierInfo.price === 'number' ? currentTierInfo.price.toFixed(2) : 'N/A';
@@ -76,5 +79,6 @@ async function initializePage() {
     }
 }
 
+// The entire script now waits for the 'app-ready' event
 window.addEventListener('app-ready', initializePage);
 

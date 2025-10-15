@@ -2,8 +2,14 @@
 import { db, onIncompletePaymentFound } from './app.js';
 import { collection, doc, getDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-// --- handleSubscription function remains the same ---
 async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
+    // FIX: Get piUser directly from sessionStorage when the function is called
+    const piUser = JSON.parse(sessionStorage.getItem('piUser'));
+    if (!piUser) {
+        alert("Please connect your wallet first by logging in again.");
+        return;
+    }
+
     try {
         const scopes = ['username', 'payments'];
         await Pi.authenticate(scopes, onIncompletePaymentFound);
@@ -21,21 +27,16 @@ async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
     }
 }
 
-// --- NEW: Function to specifically load sidebar data for the logged-in user ---
-async function loadSidebarData() {
-    const piUser = JSON.parse(sessionStorage.getItem('piUser'));
-    if (!piUser) return; // Don't run if not logged in
-    
-    // The supporter's sidebar is generic and doesn't need creator-specific data
-    document.getElementById('username-display').textContent = piUser.username;
-}
-
 async function initializeCreatorPage() {
-    // --- FIX: Call the new sidebar function immediately ---
-    loadSidebarData();
-
     const creatorId = sessionStorage.getItem('selectedCreatorId');
     const mainContent = document.getElementById('main-content');
+    // FIX: Get piUser after app is ready to ensure it's available
+    const piUser = JSON.parse(sessionStorage.getItem('piUser'));
+
+    // This ensures the sidebar always loads its user-specific data
+    if (piUser && document.getElementById('username-display')) {
+        document.getElementById('username-display').textContent = piUser.username;
+    }
 
     if (!creatorId) {
         mainContent.innerHTML = "<h1>Error: Creator ID not found. Please go back and select a creator.</h1>";
@@ -52,38 +53,39 @@ async function initializeCreatorPage() {
         }
 
         const creatorData = docSnap.data();
-        const piUser = JSON.parse(sessionStorage.getItem('piUser')); // Get user again for logic
 
-         // --- NEW: Set Header Image ---
+        // FIX: Make all rendering resilient to missing data to prevent crashes
         const headerImageContainer = document.getElementById('creator-header-image');
-        if (creatorData.headerImage) {
-            headerImageContainer.style.backgroundImage = `url(${creatorData.headerImage})`;
-        } else {
-            // Optional: apply a default style if no header image exists
-            headerImageContainer.style.backgroundColor = 'var(--surface-color)';
+        if (headerImageContainer) {
+            headerImageContainer.style.backgroundImage = `url(${creatorData.headerImage || ''})`;
         }
-
-        // --- Render the rest of the page content (existing code) ---
-        document.getElementById('creator-name').textContent = creatorData.name;
-        document.getElementById('creator-bio').textContent = creatorData.bio;
+        
+        document.getElementById('creator-name').textContent = creatorData.name || 'Creator Name';
+        document.getElementById('creator-bio').textContent = creatorData.bio || 'No bio available.';
         document.getElementById('creator-avatar').src = creatorData.profileImage || 'images/default-avatar.png';
         
         const socialIconsContainer = document.getElementById('social-icons-container');
-        socialIconsContainer.innerHTML = '';
-        if (creatorData.socialLinks) {
-            if (creatorData.socialLinks.twitter) socialIconsContainer.innerHTML += `<a href="${creatorData.socialLinks.twitter}" target="_blank" class="social-icon twitter"></a>`;
-            if (creatorData.socialLinks.youtube) socialIconsContainer.innerHTML += `<a href="${creatorData.socialLinks.youtube}" target="_blank" class="social-icon youtube"></a>`;
+        if (socialIconsContainer) {
+            socialIconsContainer.innerHTML = '';
+            if (creatorData.socialLinks) {
+                if (creatorData.socialLinks.twitter) socialIconsContainer.innerHTML += `<a href="${creatorData.socialLinks.twitter}" target="_blank" class="social-icon twitter"></a>`;
+                if (creatorData.socialLinks.youtube) socialIconsContainer.innerHTML += `<a href="${creatorData.socialLinks.youtube}" target="_blank" class="social-icon youtube"></a>`;
+            }
         }
         
         const supporterCount = creatorData.supporterCount || 0;
-        if (creatorData.firstSupporterIncentiveActive && supporterCount < 100) {
-            document.getElementById('progress-bar-fill').style.width = `${supporterCount}%`;
-            document.getElementById('progress-bar-text').textContent = `${supporterCount} / 100`;
-        } else {
-            document.getElementById('progress-bar-section').classList.add('hidden');
+        const progressBarSection = document.getElementById('progress-bar-section');
+        if (progressBarSection) {
+            if (creatorData.firstSupporterIncentiveActive && supporterCount < 100) {
+                progressBarSection.classList.remove('hidden');
+                document.getElementById('progress-bar-fill').style.width = `${supporterCount}%`;
+                document.getElementById('progress-bar-text').textContent = `${supporterCount} / 100`;
+            } else {
+                progressBarSection.classList.add('hidden');
+            }
         }
 
-        const tiersQuery = query(collection(db, "creators", creatorId, 'tiers'), orderBy('price'));
+        const tiersQuery = query(collection(creatorDocRef, 'tiers'), orderBy('price'));
         const tiersSnapshot = await getDocs(tiersQuery);
         const tiersListDiv = document.getElementById('tiers-list');
         tiersListDiv.innerHTML = '';
@@ -166,5 +168,6 @@ async function initializeCreatorPage() {
 }
 
 window.addEventListener('app-ready', initializeCreatorPage);
+
 
 
