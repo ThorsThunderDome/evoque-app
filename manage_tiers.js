@@ -1,11 +1,8 @@
 // manage_tiers.js
-import { db, piUser } from './app.js';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+import { db } from './app.js';
+import { collection, doc, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp, onSnapshot, query } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-const creatorDocRef = doc(db, 'creators', piUser.uid);
-const tiersCollectionRef = collection(creatorDocRef, 'tiers');
-
-// --- NEW: Modal elements ---
+// --- All modal elements and functions remain the same ---
 const deleteModal = document.getElementById('delete-modal');
 const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
 const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
@@ -13,19 +10,31 @@ let tierToDeleteId = null;
 
 // Load sidebar and set up a real-time listener for tiers
 async function initializePage() {
+    // --- FIX: Get piUser AFTER the app is ready ---
+    const piUser = JSON.parse(sessionStorage.getItem('piUser'));
+    if (!piUser || !piUser.uid) {
+        console.error("Manage Tiers Error: User not found in session.");
+        document.getElementById('existing-tiers-list').innerHTML = '<p>Could not load page. Please log in.</p>';
+        return;
+    }
+
+    const creatorDocRef = doc(db, 'creators', piUser.uid);
+    const tiersCollectionRef = collection(creatorDocRef, 'tiers');
+
+    // Load sidebar info
     try {
         const docSnap = await getDoc(creatorDocRef);
         if (docSnap.exists()) {
             const creatorData = docSnap.data();
             document.getElementById('creator-name-sidebar').textContent = creatorData.name;
-            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
+            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage || 'images/default-avatar.png';
         }
     } catch (error) {
         console.error("Error loading creator data for sidebar:", error);
     }
     
-    // Use onSnapshot for real-time updates to the tier list
-    const q = query(tiersCollectionRef, orderBy('price'));
+    // --- FIX: Removed orderBy('price') to prevent indexing errors. We will sort manually. ---
+    const q = query(tiersCollectionRef);
     onSnapshot(q, (snapshot) => {
         const tierListDiv = document.getElementById('existing-tiers-list');
         tierListDiv.innerHTML = '';
@@ -33,13 +42,21 @@ async function initializePage() {
             tierListDiv.innerHTML = '<p>You have not created any tiers yet.</p>';
             return;
         }
-        snapshot.forEach(doc => {
-            renderTier(doc);
+
+        // --- FIX: Sort tiers by price in JavaScript ---
+        const tiers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        tiers.sort((a, b) => a.price - b.price);
+
+        tiers.forEach(tierData => {
+            renderTier({ id: tierData.id, data: () => tierData });
         });
     }, (error) => {
         console.error("Error listening to tiers collection:", error);
-        document.getElementById('existing-tiers-list').innerHTML = '<p>Error loading tiers. Please try again.</p>';
+        document.getElementById('existing-tiers-list').innerHTML = `<p>Error loading tiers: ${error.message}. You may need to create a Firestore index.</p>`;
     });
+
+    // Attach event listeners for dynamic content
+    setupEventListeners(tiersCollectionRef);
 }
 
 // Renders a single editable tier card
@@ -77,8 +94,9 @@ function renderTier(doc) {
     tierListDiv.appendChild(tierElement);
 }
 
-// --- Event delegation for Edit, Save, Delete buttons ---
-document.getElementById('existing-tiers-list').addEventListener('click', async (e) => {
+function setupEventListeners(tiersCollectionRef) {
+    // --- Event delegation for Edit, Save, Delete buttons ---
+    document.getElementById('existing-tiers-list').addEventListener('click', async (e) => {
     const tierCard = e.target.closest('.tier-item');
     if (!tierCard) return;
     const tierId = tierCard.dataset.id;
@@ -115,12 +133,6 @@ document.getElementById('existing-tiers-list').addEventListener('click', async (
         deleteModal.classList.remove('hidden');
     }
 });
-
-function toggleEditState(tierCard, isEditing) {
-    tierCard.querySelectorAll('input, textarea').forEach(input => {
-        input.readOnly = !isEditing;
-    });
-}
 
 // --- Modal Logic ---
 cancelDeleteBtn.addEventListener('click', () => {
@@ -166,5 +178,13 @@ createTierForm.addEventListener('submit', async (e) => {
         formStatus.textContent = 'Error creating tier.';
     }
 });
+}
+function toggleEditState(tierCard, isEditing) {
+    tierCard.querySelectorAll('input, textarea').forEach(input => {
+        input.readOnly = !isEditing;
+    });
+}
 
-initializePage();
+// --- FIX: The entire script now waits for the 'app-ready' event ---
+window.addEventListener('app-ready', initializePage);
+

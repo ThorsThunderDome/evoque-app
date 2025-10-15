@@ -1,41 +1,55 @@
 // my_supporters.js
-import { db, piUser } from './app.js';
-import { collection, doc, getDoc, getDocs, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+import { db } from './app.js';
+import { collection, doc, getDoc, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 const tableBody = document.getElementById('supporters-table-body');
 
 async function initializePage() {
+    // --- FIX: Get piUser AFTER the app is ready ---
+    const piUser = JSON.parse(sessionStorage.getItem('piUser'));
+    if (!piUser || !piUser.uid) {
+        console.error("My Supporters Error: User not found in session.");
+        tableBody.innerHTML = '<tr><td colspan="4">Could not load supporters. Please log in.</td></tr>';
+        return;
+    }
+
     tableBody.innerHTML = '<tr><td colspan="4"><div class="loader"></div></td></tr>';
     const creatorDocRef = doc(db, 'creators', piUser.uid);
     
+    // Load sidebar info once
     try {
-        // Load sidebar info once
         const docSnap = await getDoc(creatorDocRef);
         if (docSnap.exists()) {
             const creatorData = docSnap.data();
             document.getElementById('creator-name-sidebar').textContent = creatorData.name;
-            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
+            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage || 'images/default-avatar.png';
+        }
+    } catch (error) {
+        console.error("Error loading sidebar data:", error);
+    }
+
+    // --- Real-time listener for supporters ---
+    const supportersQuery = query(collection(db, 'subscriptions'), where('creatorUid', '==', piUser.uid), orderBy('createdAt', 'desc'));
+
+    onSnapshot(supportersQuery, async (snapshot) => {
+        if (snapshot.empty) {
+            tableBody.innerHTML = '<tr><td colspan="4">You have no supporters yet.</td></tr>';
+            return;
         }
 
-        // --- NEW: Real-time listener for supporters ---
-        const supportersQuery = query(collection(db, 'subscriptions'), where('creatorUid', '==', piUser.uid), orderBy('createdAt', 'desc'));
-
-        onSnapshot(supportersQuery, async (snapshot) => {
-            if (snapshot.empty) {
-                tableBody.innerHTML = '<tr><td colspan="4">You have no supporters yet.</td></tr>';
-                return;
-            }
-
-            // Fetch all tier names and prices to display in the table
-            const tiersSnapshot = await getDocs(collection(creatorDocRef, 'tiers'));
+        try {
+            const tiersSnapshot = await getDoc(collection(creatorDocRef, 'tiers'));
             const tierInfo = {};
-            tiersSnapshot.forEach(tierDoc => {
-                tierInfo[tierDoc.id] = tierDoc.data();
-            });
+            if (tiersSnapshot && !tiersSnapshot.empty) {
+                tiersSnapshot.forEach(tierDoc => {
+                    tierInfo[tierDoc.id] = tierDoc.data();
+                });
+            }
             
-            // To get supporter usernames, we need to fetch user profiles
             const supporterIds = snapshot.docs.map(doc => doc.data().supporterUid);
-            const userDocs = await Promise.all(supporterIds.map(id => getDoc(doc(db, 'users', id))));
+            // Fetch all supporter user profiles in parallel
+            const userDocsPromises = supporterIds.map(id => getDoc(doc(db, 'users', id)));
+            const userDocs = await Promise.all(userDocsPromises);
             const usernames = {};
             userDocs.forEach(userDoc => {
                 if(userDoc.exists()) {
@@ -44,31 +58,29 @@ async function initializePage() {
             });
 
             tableBody.innerHTML = '';
-            let supporterCounter = 0;
-            snapshot.forEach(doc => {
+            snapshot.docs.forEach((doc, index) => {
                 const subscription = doc.data();
-                supporterCounter++;
                 const row = document.createElement('tr');
                 const currentTierInfo = tierInfo[subscription.tierId] || { name: 'Unknown Tier', price: 0 };
-
+                const price = typeof currentTierInfo.price === 'number' ? currentTierInfo.price.toFixed(2) : 'N/A';
+                
                 row.innerHTML = `
-                    <td>#${supporterCounter}</td>
+                    <td>#${index + 1}</td>
                     <td>${usernames[subscription.supporterUid] || 'Anonymous'}</td>
                     <td>${currentTierInfo.name}</td>
-                    <td>${(currentTierInfo.price).toFixed(2)}</td>
+                    <td>${price}</td>
                 `;
                 tableBody.appendChild(row);
             });
-
-        }, (error) => {
-            console.error("Error listening to supporters list:", error);
-            tableBody.innerHTML = '<tr><td colspan="4">Error loading supporters. Please try again.</td></tr>';
-        });
-        
-    } catch (error) {
-        console.error("Error initializing supporters page:", error);
-        tableBody.innerHTML = '<tr><td colspan="4">An unexpected error occurred.</td></tr>';
-    }
+        } catch (error) {
+            console.error("Error processing supporters list:", error);
+            tableBody.innerHTML = '<tr><td colspan="4">Error rendering supporters. Please try again.</td></tr>';
+        }
+    }, (error) => {
+        console.error("Error listening to supporters list:", error);
+        tableBody.innerHTML = '<tr><td colspan="4">Error loading supporters. Please try again.</td></tr>';
+    });
 }
 
-initializePage();
+// --- FIX: The entire script now waits for the 'app-ready' event ---
+window.addEventListener('app-ready', initializePage);

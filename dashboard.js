@@ -1,11 +1,12 @@
 // dashboard.js
-import { db, piUser } from './app.js';
+import { db } from './app.js';
 import { collection, doc, getDoc, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 const membershipsGrid = document.getElementById('memberships-grid');
 const nftModal = document.getElementById('nft-modal');
 const nftModalClose = document.getElementById('nft-modal-close');
 
+// --- All modal and NFT functions remain the same ---
 function showNftModal(nftData, creatorData) {
     document.getElementById('nft-modal-image').src = creatorData.profileImage || 'images/default-avatar.png';
     document.getElementById('nft-modal-creator-name').textContent = creatorData.name;
@@ -35,7 +36,17 @@ nftModal.addEventListener('click', (e) => {
     }
 });
 
-async function loadDashboard() {
+async function initializeDashboard() {
+    // --- FIX: Get piUser AFTER the app is ready ---
+    const piUser = JSON.parse(sessionStorage.getItem('piUser'));
+
+    // This check prevents all subsequent errors if the user isn't properly loaded
+    if (!piUser || !piUser.uid) {
+        console.error("Dashboard Error: User not found in session.");
+        membershipsGrid.innerHTML = '<p>Could not load your dashboard. Please try logging in again.</p>';
+        return;
+    }
+
     membershipsGrid.innerHTML = '<div class="loader"></div>';
     
     // Listen for subscriptions in real-time
@@ -47,11 +58,12 @@ async function loadDashboard() {
             return;
         }
 
-        membershipsGrid.innerHTML = '';
-        for (const doc of snapshot.docs) {
-            const subscription = doc.data();
-            const creatorId = subscription.creatorUid;
-            
+        // Use a Set to avoid re-fetching data for the same creator
+        const creatorIds = new Set();
+        snapshot.forEach(doc => creatorIds.add(doc.data().creatorUid));
+
+        membershipsGrid.innerHTML = ''; // Clear the grid before rendering
+        for (const creatorId of creatorIds) {
             try {
                 const creatorDoc = await getDoc(doc(db, 'creators', creatorId));
                 if (!creatorDoc.exists()) continue;
@@ -108,13 +120,14 @@ async function loadDashboard() {
                         });
                     }
                 });
-            } catch (error) { console.error("Error fetching subscription details", error); }
+            } catch (error) { console.error("Error fetching subscription details for creator:", creatorId, error); }
         }
     });
+
+    // Mock Royalties - this can be developed later
+    const royaltiesListDiv = document.getElementById('royalties-list');
+    royaltiesListDiv.innerHTML = "<p>You are not yet earning royalties from any creators.</p>";
 }
 
-// Mock Royalties - this can be developed later
-const royaltiesListDiv = document.getElementById('royalties-list');
-royaltiesListDiv.innerHTML = "<p>You are not yet earning royalties from any creators.</p>";
-
-window.addEventListener('app-ready', loadDashboard);
+// --- FIX: The entire script now waits for the 'app-ready' event ---
+window.addEventListener('app-ready', initializeDashboard);
