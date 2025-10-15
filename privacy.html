@@ -6,56 +6,105 @@
     <title>Evoque - Privacy Policy</title>
     <script>
     (function() {
-        const theme = localStorage.getItem('theme');
+        const theme = localStorage.getItem('theme') || 'dark';
         if (theme === 'light') {
             document.documentElement.setAttribute('data-theme', 'light');
         }
     })();
-</script>
+    </script>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Add some basic legal-doc styling for readability */
+        .legal-content h2 {
+            margin-top: 2em;
+            border-bottom: 1px solid var(--surface-color);
+            padding-bottom: 0.5em;
+        }
+        .legal-content h3 {
+            margin-top: 1.5em;
+        }
+    </style>
 </head>
-<body style="padding: 20px 40px;">
+<body style="padding: 20px 40px; max-width: 900px; margin: 0 auto;">
 
     <header style="text-align: center; margin-bottom: 40px;">
         <img src="images/evoque-logo.png" alt="Evoque Logo" class="logo" style="width: 80px; height: 80px;">
         <h1>Privacy Policy for Evoque</h1>
-        <p>Last Updated: October 6, 2025</p>
+        <p>Last Updated: October 15, 2025</p>
     </header>
 
-    <main>
-        <h2>1. Introduction</h2>
-        <p>Welcome to Evoque. We are committed to protecting your privacy. This Privacy Policy explains how we collect, use, and share information about you when you use our application within the Pi Browser.</p>
+    <main class="legal-content">
 
-        <h2>2. Information We Collect</h2>
-        <p>When you authenticate with your Pi account, we receive the following information from the Pi platform:</p>
-        <ul>
-            <li>Your Pi Username</li>
-            <li>Your unique Pi User ID (UID)</li>
-        </ul>
-        <p>If you register as a creator, we also collect the following information that you provide:</p>
-        <ul>
-            <li>Your public creator name</li>
-            <li>Your public bio</li>
-            <li>A URL to your profile image</li>
-        </ul>
+        <!-- Part I: Foundational Legal & Technical Analysis -->
+        <section>
+            <h2>Part I: Foundational Legal & Technical Analysis for Web3 Platforms</h2>
+            <p>This initial section provides a comprehensive analysis of the fundamental legal and technological shifts inherent in the transition from Web2 to Web3. It serves as a foundational memorandum to contextualize and justify the specific drafting choices and risk allocations presented in the subsequent Privacy Policy. Understanding these core distinctions is essential for constructing legally robust and operationally relevant documents for any decentralized application or protocol.</p>
+            
+            <h3>Section 1: The Paradigm Shift from Web2 to Web3: Core Legal Distinctions</h3>
+            <p>The evolution from Web2 to Web3 represents a fundamental restructuring of the digital landscape that redefines the relationship between users, platforms, and data. Web3 disrupts the centralized control model by leveraging decentralized technologies like blockchain to empower users with direct ownership and control over their data and digital assets through self-custodied cryptographic wallets. This transition from a "trust in company" model to a "trust in code" model reallocates risk and responsibility from the platform to the individual user. You, the user, are endowed with total sovereignty over your assets but also bear the absolute responsibility for their security.</p>
+            
+            <h3>Section 2: Navigating the Legal Status of On-Chain Components</h3>
+            <p>Smart contracts are self-executing computer programs where the terms of an agreement are written directly into code and deployed on a blockchain. While they can be legally binding, they are often immutable, meaning they cannot be modified once deployed, and their execution is automatic. Decentralized Autonomous Organizations (DAOs) represent a new model of organizational governance. In the absence of a formal legal structure, courts may treat DAOs as "general partnerships," creating a risk for its members (token holders) who could be held personally liable for the obligations of the organization. Our Terms of Service explicitly disclaim the formation of any partnership to protect our users from these unintended consequences.</p>
 
-        <h2>3. How We Use Your Information</h2>
-        <p>We use the information we collect to:</p>
-        <ul>
-            <li>Operate and maintain the Evoque service.</li>
-            <li>Display your username and creator profile within the app.</li>
-            <li>Link your account to your creator profile and content.</li>
-            <li>(In the future) Process payments and subscriptions via the Pi SDK.</li>
-        </ul>
+            <h3>Section 3: Data Privacy in a Decentralized World</h3>
+            <p>The intersection of blockchain technology and data privacy regulations presents significant legal challenges. The core conflict arises from the immutability of public blockchains and a data subject's "right to erasure." Once data is written to a distributed ledger, it is designed to be permanent and tamper-proof, making traditional deletion technically impossible. Our approach is radical transparency, detailed further in this Privacy Policy.</p>
 
-        <h2>4. Data Storage</h2>
-        <p>Your creator profile information (name, bio, image URL, tiers, posts) is stored securely in our Firebase Firestore database. Your Pi authentication data is handled by the Pi platform and is not stored permanently on our servers.</p>
+            <h3>Section 4: Assumption of Risk and User Responsibility in Self-Custodial Environments</h3>
+            <p>The self-custodial nature of Web3 places an unprecedented level of responsibility on you, the user. This reality necessitates a comprehensive and explicit "Assumption of Risk" section in our Terms of Service, which details the practical dangers you face, including but not limited to: Private Key Responsibility, Transaction Finality, Smart Contract Risk, Regulatory Uncertainty, Third-Party Risks, and Network Risks.</p>
+        </section>
 
-        <h2>5. Sharing Your Information</h2>
-        <p>We do not share your personal information with third parties, except as required by law. Your public creator profile is, by design, visible to all other users of the Evoque app.</p>
+        <!-- Part III: Draft Privacy Policy -->
+        <section>
+            <h2>Part III: Privacy Policy</h2>
+            
+            <h3>1. Introduction and Scope</h3>
+            <p>This policy applies to the information we process through our Services. It is crucial to understand that our Services provide an interface to decentralized, public blockchains. This policy distinguishes between "Off-Chain Data," which we control, and "On-Chain Data," which is public and beyond our control.</p>
 
-        <h2>6. Contact Us</h2>
-        <p>If you have any questions about this Privacy Policy, please contact us at [Your Contact Email or Method].</p>
+            <h3>2. The Nature of Data on the Blockchain: An Essential Primer</h3>
+            <p>Blockchains are public, distributed, and immutable ledgers. When you conduct a transaction on a blockchain, data related to that transaction, including your public wallet address, the address you are interacting with, the amount of digital assets, and other details, are permanently recorded and visible to the public. Your wallet address is a "pseudonym." While it does not contain your real name, it can potentially be linked to your real-world identity through analysis of your on-chain and off-chain activities.</p>
+
+            <h3>3. Information We Process</h3>
+            <p>We have structured this section to clearly delineate the types of data associated with our Services:</p>
+            <ul>
+                <li><strong>A. Information You Provide to Us (Off-Chain):</strong> This is data you actively provide to us that we control as a data controller. This may include your email address if you contact our support team or identity information if you undergo KYC.</li>
+                <li><strong>B. Information We Collect Automatically (Off-Chain):</strong> This is data collected from your use of our website and software interface, such as Usage Data and Device Information (e.g., browser type, IP address). This data is collected using cookies and similar technologies.</li>
+                <li><strong>C. Information Processed On-Chain (Public Data):</strong> This is data that is publicly available on the blockchain. We do not collect or control this data. When you use our Services to interact with the blockchain, your public wallet address and transaction history are processed by the decentralized network.</li>
+            </ul>
+
+            <h3>4. How and Why We Use Information</h3>
+            <p>We use your Off-Chain Data to provide and maintain our Services, to communicate with you, to improve our Services, and for security and legal compliance. We do not link your Off-Chain personally identifiable information with your On-Chain public address without your explicit consent.</p>
+
+            <h3>5. Legal Basis for Processing (GDPR & Other Frameworks)</h3>
+            <p>We process your Off-Chain Data based on legal grounds under GDPR including Consent, Contractual Necessity, Legal Obligation, and Legitimate Interest.</p>
+            
+            <h3>6. How We Share Information</h3>
+            <p>We may share your Off-Chain Data with third-party service providers who perform services on our behalf, such as hosting or identity verification. Your On-Chain Data is, by its nature, public and shared with anyone who views the blockchain.</p>
+
+            <h3>7. Your Data Protection Rights and Their Limitations</h3>
+            <p>For your Off-Chain Data that we control, you have the right to access, rectify, port, restrict, or request erasure of your data. <strong>IMPORTANT LIMITATION REGARDING ON-CHAIN DATA:</strong> Regarding your On-Chain Data, the right to erasure ("right to be forgotten") cannot be fulfilled. Once data is written to the blockchain, it cannot be altered or deleted by us or any other single entity. By using our Services, you explicitly acknowledge and accept this fundamental limitation.</p>
+
+            <h3>8. Data Security, Integrity, and Retention</h3>
+            <p>We implement appropriate measures to protect your Off-Chain Data. On-Chain Data is secured by the cryptographic methods of the underlying blockchain and is retained permanently by the nature of that technology.</p>
+            
+            <h3>9. International Data Transfers</h3>
+            <p>Your Off-Chain Data may be transferred to and processed in countries other than your own. Blockchain networks are globally distributed, meaning your On-Chain Data is replicated across computer nodes in numerous jurisdictions worldwide, a fact that is inherent to the technology and beyond our control.</p>
+
+            <h3>10. Cookies and Other Tracking Technologies</h3>
+            <p>We use cookies and similar technologies on our website and interface to help us operate and improve the Services. You can manage your cookie preferences through your browser settings.</p>
+
+            <h3>11. Contact Information and Policy Updates</h3>
+            <p>If you have any questions about this Privacy Policy, please contact us at [Contact Email]. We may update this policy from time to time.</p>
+        </section>
+
+        <!-- Part IV: Recommendations for Implementation -->
+        <section>
+            <h2>Part IV: Recommendations for Implementation and Jurisdictional Review</h2>
+            <h3>Section 1: Consent Mechanisms for a Decentralized User Base</h3>
+            <p>Obtaining and documenting legally valid consent is paramount. A multi-layered approach is recommended to create a robust record of user acceptance, including Clickwrap Agreements, Signature-Based Consent, and Just-in-Time Disclosures for high-risk actions.</p>
+            
+            <h3>Section 2: Critical Areas for Localized Legal Counsel Review</h3>
+            <p>These templates are a foundation and must be reviewed and adapted by qualified local legal counsel. This review should focus on Securities Law Compliance, Tax Implications, Corporate Structure and DAO Wrappers, Jurisdictional Enforceability, and any specific local regulations governing digital assets.</p>
+        </section>
 
         <div style="text-align: center; margin-top: 40px;">
             <a href="index.html" class="btn btn-secondary">Back to App</a>

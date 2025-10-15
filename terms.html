@@ -6,40 +6,114 @@
     <title>Evoque - Terms of Service</title>
     <script>
     (function() {
-        const theme = localStorage.getItem('theme');
+        const theme = localStorage.getItem('theme') || 'dark';
         if (theme === 'light') {
             document.documentElement.setAttribute('data-theme', 'light');
         }
     })();
-</script>
+    </script>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Add some basic legal-doc styling for readability */
+        .legal-content h2 {
+            margin-top: 2em;
+            border-bottom: 1px solid var(--surface-color);
+            padding-bottom: 0.5em;
+        }
+        .legal-content h3 {
+            margin-top: 1.5em;
+        }
+        .legal-content ul {
+            padding-left: 20px;
+        }
+    </style>
 </head>
-<body style="padding: 20px 40px;">
+<body style="padding: 20px 40px; max-width: 900px; margin: 0 auto;">
 
     <header style="text-align: center; margin-bottom: 40px;">
         <img src="images/evoque-logo.png" alt="Evoque Logo" class="logo" style="width: 80px; height: 80px;">
         <h1>Terms of Service for Evoque</h1>
-        <p>Last Updated: October 6, 2025</p>
+        <p>Last Updated: October 15, 2025</p>
     </header>
 
-    <main>
-        <h2>1. Acceptance of Terms</h2>
-        <p>By accessing or using the Evoque application ("Service") within the Pi Browser, you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of the terms, you may not access the Service.</p>
-
-        <h2>2. Description of Service</h2>
-        <p>Evoque is a platform that allows users ("Supporters") to support content creators ("Creators") through subscriptions. The Service is provided as-is and is currently in a beta or hackathon development phase. All transactions are currently simulated and do not involve real Pi currency.</p>
-
-        <h2>3. User Accounts</h2>
-        <p>To use Evoque, you must authenticate using your Pi Network account. You are responsible for all activities that occur under your account.</p>
-
-        <h2>4. Creator Content</h2>
-        <p>Creators are solely responsible for the content they post. Evoque does not endorse and is not responsible for any content created by users on the platform.</p>
+    <main class="legal-content">
         
-        <h2>5. Limitation of Liability</h2>
-        <p>In no event shall Evoque, nor its developers, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.</p>
+        <!-- Part I: Foundational Legal & Technical Analysis -->
+        <section>
+            <h2>Part I: Foundational Legal & Technical Analysis for Web3 Platforms</h2>
+            <p>This initial section provides a comprehensive analysis of the fundamental legal and technological shifts inherent in the transition from Web2 to Web3. It serves as a foundational memorandum to contextualize and justify the specific drafting choices and risk allocations presented in the subsequent Terms of Service. Understanding these core distinctions is essential for constructing legally robust and operationally relevant documents for any decentralized application or protocol.</p>
+            
+            <h3>Section 1: The Paradigm Shift from Web2 to Web3: Core Legal Distinctions</h3>
+            <p>The evolution from Web2 to Web3 represents a fundamental restructuring of the digital landscape that redefines the relationship between users, platforms, and data. Web3 disrupts the centralized control model by leveraging decentralized technologies like blockchain to empower users with direct ownership and control over their data and digital assets through self-custodied cryptographic wallets. This transition from a "trust in company" model to a "trust in code" model reallocates risk and responsibility from the platform to the individual user. You, the user, are endowed with total sovereignty over your assets but also bear the absolute responsibility for their security.</p>
+            
+            <h3>Section 2: Navigating the Legal Status of On-Chain Components</h3>
+            <p>Smart contracts are self-executing computer programs where the terms of an agreement are written directly into code and deployed on a blockchain. While they can be legally binding, they are often immutable, meaning they cannot be modified once deployed, and their execution is automatic. Decentralized Autonomous Organizations (DAOs) represent a new model of organizational governance. In the absence of a formal legal structure, courts may treat DAOs as "general partnerships," creating a risk for its members (token holders) who could be held personally liable for the obligations of the organization. Our Terms of Service explicitly disclaim the formation of any partnership to protect our users from these unintended consequences.</p>
 
-        <h2>6. Changes</h2>
-        <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time.</p>
+            <h3>Section 3: Data Privacy in a Decentralized World</h3>
+            <p>The intersection of blockchain technology and data privacy regulations presents significant legal challenges. The core conflict arises from the immutability of public blockchains and a data subject's "right to erasure." Once data is written to a distributed ledger, it is designed to be permanent and tamper-proof, making traditional deletion technically impossible. Our approach is radical transparency, detailed further in our Privacy Policy.</p>
+
+            <h3>Section 4: Assumption of Risk and User Responsibility in Self-Custodial Environments</h3>
+            <p>The self-custodial nature of Web3 places an unprecedented level of responsibility on you, the user. This reality necessitates a comprehensive and explicit "Assumption of Risk" section, which details the practical dangers you face, including but not limited to: Private Key Responsibility, Transaction Finality, Smart Contract Risk, Regulatory Uncertainty, Third-Party Risks, and Network Risks.</p>
+        </section>
+
+        <!-- Part II: Draft Terms of Service -->
+        <section>
+            <h2>Part II: Terms of Service</h2>
+            <p>These Terms of Service ("Terms") govern your access to and use of the software, website, and interface (collectively, the "Services") provided by Evoque ("we," "us," or "our"). Our Services provide a non-custodial interface to a decentralized protocol on the Pi blockchain (the "Protocol").</p>
+            <p>PLEASE READ THESE TERMS CAREFULLY. BY CONNECTING YOUR WALLET, ACCESSING OUR SERVICES, OR SIGNING A TRANSACTION THROUGH OUR INTERFACE, YOU AGREE TO BE BOUND BY THESE TERMS. IF YOU DO NOT AGREE TO THESE TERMS, YOU MAY NOT ACCESS OR USE THE SERVICES.</p>
+
+            <h3>1. Agreement to Terms & Acceptance via On-Chain Interaction</h3>
+            <p>By using our Services, you agree that you have read, understood, and accept all of the terms and conditions contained herein. Furthermore, you acknowledge and agree that connecting a digital asset wallet ("Wallet") to the Services and/or signing a transaction or message via your Wallet to interact with the Services constitutes a legally binding electronic signature and your acceptance of these Terms.</p>
+
+            <h3>2. Description of the Protocol and Services</h3>
+            <p>Our Services provide a software interface that allows users to interact with the Protocol, which is a set of smart contracts deployed on a public blockchain. The Services are non-custodial, meaning we never have custody, possession, or control of your digital assets at any time. We do not store your private keys, seed phrases, or passwords. We are not a party to any transaction you conduct on the blockchain through the Services.</p>
+
+            <h3>3. Eligibility and Compliance (KYC/AML)</h3>
+            <p>You must be at least 18 years of age, or the age of legal majority in your jurisdiction, to use the Services. You represent and warrant that you are not a resident of any jurisdiction subject to comprehensive U.S. sanctions, nor are you listed on any U.S. sanctions list. To comply with applicable laws, we may require you to undergo identity verification procedures (Know Your Customer or "KYC").</p>
+
+            <h3>4. User Wallets and Digital Asset Security</h3>
+            <p>YOU ARE SOLELY AND EXCLUSIVELY RESPONSIBLE FOR THE SECURITY OF YOUR WALLET, INCLUDING YOUR PRIVATE KEYS AND SEED PHRASE. We have no access to your Wallet or your private keys. Losing access to your Wallet will result in the irreversible loss of any digital assets within it. We are not responsible for and disclaim all liability for any losses resulting from compromised user credentials or user error.</p>
+
+            <h3>5. The Role and Nature of Smart Contracts</h3>
+            <p>The Protocol is composed of smart contracts. All transactions executed through smart contracts are final, irreversible, and recorded on the public blockchain. You acknowledge that smart contracts may contain bugs, errors, or vulnerabilities that could result in the total loss of your digital assets. You interact with all smart contracts at your own sole risk.</p>
+
+            <h3>6. Assumption of Risk & Disclaimers of Warranties</h3>
+            <p>Your use of the Services and the Protocol is entirely at your own risk. You assume all risks associated with using digital assets and decentralized protocols, including but not limited to: Asset Volatility, Smart Contract Vulnerabilities, Transaction Irreversibility, Regulatory Risks, Network Risks, and Security Risks. THE SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND.</p>
+
+            <h3>7. Fees, Gas, and Taxes</h3>
+            <p>We may charge a fee for certain Services ("Protocol Fee"). You are responsible for paying all transaction fees required by the underlying blockchain network ("Gas Fees"). You are solely responsible for determining what, if any, taxes apply to your transactions.</p>
+
+            <h3>8. User Conduct and Prohibited Activities</h3>
+            <p>You agree not to use the Services to engage in any prohibited activities, including illegal activity, infringing on intellectual property rights, engaging in fraud, or distributing malware.</p>
+
+            <h3>9. Intellectual Property Rights</h3>
+            <p>We own all intellectual property and other rights in the Services. Your use of the Services does not grant you any rights to our intellectual property.</p>
+
+            <h3>10. Disclaimers for Third-Party Content and Services</h3>
+            <p>The Services may integrate with third-party services. We do not control, endorse, or assume any responsibility for any Third-Party Services.</p>
+
+            <h3>11. No Fiduciary Duty; No Partnership</h3>
+            <p>These Terms and your use of the Services do not create a fiduciary relationship between you and us. Furthermore, your use of the Services does not create a partnership, joint venture, or agency relationship between you and us, or between you and any other user of the Services.</p>
+
+            <h3>12. Indemnification and Limitation of Liability</h3>
+            <p>You agree to indemnify and hold us harmless from any claims arising out of your breach of these Terms. IN NO EVENT WILL WE BE LIABLE FOR ANY INDIRECT, SPECIAL, INCIDENTAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR FOR ANY LOSS OF FUNDS, REVENUE, OR PROFITS.</p>
+
+            <h3>13. Dispute Resolution, Arbitration, and Class Action Waiver</h3>
+            <p>All disputes arising out of these Terms shall be resolved by final and binding arbitration on an individual basis. YOU AND WE WAIVE ANY RIGHT TO A JURY TRIAL AND TO PARTICIPATE IN A CLASS ACTION LAWSUIT.</p>
+
+            <h3>14. Governing Law and Miscellaneous Provisions</h3>
+            <p>These Terms shall be governed by the laws of [Jurisdiction]. These Terms constitute the entire agreement between you and us regarding the Services.</p>
+        </section>
+
+        <!-- Part IV: Recommendations for Implementation -->
+        <section>
+            <h2>Part III: Recommendations for Implementation and Jurisdictional Review</h2>
+            <h3>Section 1: Consent Mechanisms for a Decentralized User Base</h3>
+            <p>Obtaining and documenting legally valid consent is paramount. A multi-layered approach is recommended to create a robust record of user acceptance, including Clickwrap Agreements, Signature-Based Consent, and Just-in-Time Disclosures for high-risk actions.</p>
+            
+            <h3>Section 2: Critical Areas for Localized Legal Counsel Review</h3>
+            <p>These templates are a foundation and must be reviewed and adapted by qualified local legal counsel. This review should focus on Securities Law Compliance, Tax Implications, Corporate Structure and DAO Wrappers, Jurisdictional Enforceability, and any specific local regulations governing digital assets.</p>
+        </section>
         
         <div style="text-align: center; margin-top: 40px;">
             <a href="index.html" class="btn btn-secondary">Back to App</a>
