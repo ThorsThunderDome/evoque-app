@@ -2,11 +2,12 @@
 import { db } from './app.js';
 import { collection, doc, getDoc, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
+// CRITICAL FIX: DO NOT import piUser here.
+
 const membershipsGrid = document.getElementById('memberships-grid');
 const nftModal = document.getElementById('nft-modal');
 const nftModalClose = document.getElementById('nft-modal-close');
 
-// This function to display the modal is unchanged
 function showNftModal(nftData, creatorData) {
     document.getElementById('nft-modal-image').src = creatorData.profileImage || 'images/default-avatar.png';
     document.getElementById('nft-modal-creator-name').textContent = creatorData.name;
@@ -33,11 +34,10 @@ nftModalClose.addEventListener('click', () => nftModal.classList.add('hidden'));
 nftModal.addEventListener('click', (e) => { if (e.target === nftModal) nftModal.classList.add('hidden'); });
 
 async function initializeDashboard() {
-    // FIX: Get piUser AFTER the app is ready to avoid race conditions
+    // CRITICAL FIX: Get the fresh piUser object from sessionStorage here.
     const piUser = JSON.parse(sessionStorage.getItem('piUser'));
     if (!piUser || !piUser.uid) {
-        console.error("Dashboard Error: User not found in session.");
-        membershipsGrid.innerHTML = '<p>Could not load your dashboard. Please try logging in again.</p>';
+        membershipsGrid.innerHTML = '<p>Could not load your dashboard. Please log in again.</p>';
         return;
     }
 
@@ -51,19 +51,16 @@ async function initializeDashboard() {
             return;
         }
 
-        // FIX: Fetch all creator data more efficiently and robustly
         const creatorIds = [...new Set(snapshot.docs.map(doc => doc.data().creatorUid))];
         const creatorPromises = creatorIds.map(id => getDoc(doc(db, 'creators', id)));
         const creatorDocs = await Promise.all(creatorPromises);
         
         const creatorsMap = new Map();
         creatorDocs.forEach(doc => {
-            if (doc.exists()) {
-                creatorsMap.set(doc.id, doc.data());
-            }
+            if (doc.exists()) creatorsMap.set(doc.id, doc.data());
         });
 
-        membershipsGrid.innerHTML = ''; // Clear grid before re-rendering
+        membershipsGrid.innerHTML = '';
         for (const creatorId of creatorIds) {
             const creator = creatorsMap.get(creatorId);
             if (!creator) continue;
@@ -99,8 +96,8 @@ async function initializeDashboard() {
                     if (nftsSnapshot.empty) {
                         nftHtml += '<li>No NFTs found for this creator.</li>';
                     } else {
-                        const nftDocs = nftsSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                        nftDocs.forEach(nft => {
+                        nftsSnapshot.forEach(nftDoc => {
+                            const nft = { id: nftDoc.id, ...nftDoc.data() };
                             const title = nft.type === 'first_supporter' ? `First Supporter #${nft.supporterNumber}` : `Membership: ${nft.tierName}`;
                             nftHtml += `<li class="nft-item" data-nft-id="${nft.id}"><strong>${title}</strong><br><small>Minted: ${new Date(nft.createdAt.seconds * 1000).toLocaleDateString()}</small></li>`;
                         });
@@ -124,6 +121,5 @@ async function initializeDashboard() {
     document.getElementById('royalties-list').innerHTML = "<p>You are not yet earning royalties from any creators.</p>";
 }
 
-// The entire script now waits for the 'app-ready' event
 window.addEventListener('app-ready', initializeDashboard);
 

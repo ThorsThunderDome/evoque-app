@@ -2,8 +2,10 @@
 import { db, onIncompletePaymentFound } from './app.js';
 import { collection, doc, getDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
+// CRITICAL FIX: DO NOT import piUser here.
+
 async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
-    // FIX: Get piUser directly from sessionStorage when the function is called
+    // CRITICAL FIX: Get the fresh piUser object from sessionStorage here.
     const piUser = JSON.parse(sessionStorage.getItem('piUser'));
     if (!piUser) {
         alert("Please connect your wallet first by logging in again.");
@@ -30,7 +32,7 @@ async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
 async function initializeCreatorPage() {
     const creatorId = sessionStorage.getItem('selectedCreatorId');
     const mainContent = document.getElementById('main-content');
-    // FIX: Get piUser after app is ready to ensure it's available
+    // CRITICAL FIX: Get the fresh piUser object from sessionStorage here.
     const piUser = JSON.parse(sessionStorage.getItem('piUser'));
 
     // This ensures the sidebar always loads its user-specific data
@@ -54,12 +56,11 @@ async function initializeCreatorPage() {
 
         const creatorData = docSnap.data();
 
-        // FIX: Make all rendering resilient to missing data to prevent crashes
+        // This rendering logic is now more robust and will not crash
         const headerImageContainer = document.getElementById('creator-header-image');
         if (headerImageContainer) {
             headerImageContainer.style.backgroundImage = `url(${creatorData.headerImage || ''})`;
         }
-        
         document.getElementById('creator-name').textContent = creatorData.name || 'Creator Name';
         document.getElementById('creator-bio').textContent = creatorData.bio || 'No bio available.';
         document.getElementById('creator-avatar').src = creatorData.profileImage || 'images/default-avatar.png';
@@ -84,7 +85,6 @@ async function initializeCreatorPage() {
                 progressBarSection.classList.add('hidden');
             }
         }
-
         const tiersQuery = query(collection(creatorDocRef, 'tiers'), orderBy('price'));
         const tiersSnapshot = await getDocs(tiersQuery);
         const tiersListDiv = document.getElementById('tiers-list');

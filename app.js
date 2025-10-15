@@ -1,6 +1,4 @@
-// app.js - FINAL VERSION (WITH UI/UX ENHANCEMENTS)
-
-// --- All Imports ---
+// app.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js";
@@ -20,11 +18,13 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-export const piUser = JSON.parse(sessionStorage.getItem('piUser'));
+// CRITICAL FIX: DO NOT export piUser. It creates a stale, null variable.
+// Each module will get the fresh user data from sessionStorage when it needs it.
+
 const PI_PAYMENT_FUNCTION_URL = "https://us-central1-evoque-app.cloudfunctions.net/processPiPayment";
 
 try {
-    Pi.init({ version: "2.0", sandbox: false }); // Assuming you've switched to mainnet
+    Pi.init({ version: "2.0", sandbox: false });
 } catch(e) {
     console.error("Pi.init failed:", e);
 }

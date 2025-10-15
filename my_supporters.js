@@ -2,13 +2,14 @@
 import { db } from './app.js';
 import { collection, doc, getDoc, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
+// CRITICAL FIX: DO NOT import piUser here.
+
 const tableBody = document.getElementById('supporters-table-body');
 
 async function initializePage() {
-    // FIX: Get piUser AFTER the app is ready
+    // CRITICAL FIX: Get the fresh piUser object from sessionStorage here.
     const piUser = JSON.parse(sessionStorage.getItem('piUser'));
     if (!piUser || !piUser.uid) {
-        console.error("My Supporters Error: User not found in session.");
         tableBody.innerHTML = '<tr><td colspan="4">Could not load supporters. Please log in again.</td></tr>';
         return;
     }
@@ -24,7 +25,6 @@ async function initializePage() {
             document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage || 'images/default-avatar.png';
         }
 
-        // FIX: Removed orderBy('createdAt') to prevent needing a composite index
         const supportersQuery = query(collection(db, 'subscriptions'), where('creatorUid', '==', piUser.uid));
 
         onSnapshot(supportersQuery, async (snapshot) => {
@@ -35,21 +35,16 @@ async function initializePage() {
 
             const tiersSnapshot = await getDocs(collection(creatorDocRef, 'tiers'));
             const tierInfo = {};
-            tiersSnapshot.forEach(tierDoc => {
-                tierInfo[tierDoc.id] = tierDoc.data();
-            });
+            tiersSnapshot.forEach(tierDoc => { tierInfo[tierDoc.id] = tierDoc.data(); });
             
             const supporterIds = snapshot.docs.map(subDoc => subDoc.data().supporterUid);
             const userDocsPromises = supporterIds.map(id => getDoc(doc(db, 'users', id)));
             const userDocs = await Promise.all(userDocsPromises);
             const usernames = {};
             userDocs.forEach(userDoc => {
-                if(userDoc.exists()) {
-                    usernames[userDoc.id] = userDoc.data().username;
-                }
+                if(userDoc.exists()) usernames[userDoc.id] = userDoc.data().username;
             });
 
-            // FIX: Sort the results manually in JavaScript instead of in the query
             const supporters = snapshot.docs.map(d => d.data());
             supporters.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
 
@@ -79,6 +74,5 @@ async function initializePage() {
     }
 }
 
-// The entire script now waits for the 'app-ready' event
 window.addEventListener('app-ready', initializePage);
 
