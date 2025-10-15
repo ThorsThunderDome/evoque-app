@@ -253,7 +253,7 @@ async function initializeCreatorPage() {
         }
         
         // Render content based on user's access level
-        renderPosts(postsSnap, userAccesslevel);
+        renderPosts(postsSnap, userAccessLevel); // <-- CORRECTED TYPO HERE
         renderMerch(merchSnap, userAccessLevel);
         renderBounties(bountiesSnap, userAccessLevel);
 
@@ -265,3 +265,4 @@ async function initializeCreatorPage() {
 
 // Ensure the page initializes after the app (and piUser) is ready
 window.addEventListener('app-ready', initializeCreatorPage);
+
