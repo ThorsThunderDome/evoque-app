@@ -49,17 +49,24 @@
             <h1>Manage Your Tiers</h1>
             <div class="content-section">
                 <h2>Create a New Tier</h2>
-                <form id="create-tier-form">
+                <form id="create-tier-form" class="management-card">
                     <div class="form-group"><label for="tier-name">Tier Name</label><input type="text" id="tier-name" required></div>
                     <div class="form-group"><label for="tier-price">Monthly Price (in π)</label><input type="number" id="tier-price" step="0.01" min="0" required></div>
                     <div class="form-group"><label for="tier-description">Benefits (one per line)</label><textarea id="tier-description" rows="5" required></textarea></div>
+                    <!-- NEW: Thank-You Note field -->
+                    <div class="form-group">
+                        <label for="tier-thank-you">Thank-You Note for NFT</label>
+                        <textarea id="tier-thank-you" rows="3" placeholder="e.g., Thank you for being an amazing supporter!"></textarea>
+                    </div>
                     <button type="submit" class="btn btn-primary">Create Tier</button>
-                    <p id="form-status"></p>
+                    <p id="form-status" class="status-message"></p>
                 </form>
             </div>
             <div class="content-section">
                 <h2>Your Existing Tiers</h2>
-                <div id="existing-tiers-list"><div class="loader"></div></div>
+                <div id="existing-tiers-list" class="grid-container">
+                    <div class="loader"></div>
+                </div>
             </div>
         </main>
     </div>

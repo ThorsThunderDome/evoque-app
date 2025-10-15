@@ -45,22 +45,21 @@
             </div>
         </aside>
         <main id="main-content">
-    <button id="sidebar-toggler"><span></span></button>
-    <h1>My Supporter Dashboard</h1>
+            <button id="sidebar-toggler"><span></span></button>
+            <h1>My Supporter Dashboard</h1>
 
-    <section id="my-memberships-section">
-        <h2>My Memberships</h2>
-        <div id="memberships-grid" class="grid-container">
-            <div class="loader"></div>
-        </div>
-    </section>
+            <section id="my-memberships-section">
+                <h2>My Memberships</h2>
+                <div id="memberships-grid" class="grid-container">
+                    <div class="loader"></div>
+                </div>
+            </section>
 
-    <section id="my-royalties-section" class="profile-content">
-        <h2>My Royalties (First 100 Program)</h2>
-        <p>Your potential earnings from being an early supporter. This is an estimate based on creator activity.</p>
-        <div id="royalties-list">
-            </div>
-    </section>
+            <section id="my-royalties-section" class="profile-content">
+                <h2>My Royalties (First 100 Program)</h2>
+                <p>Your potential earnings from being an early supporter. This is an estimate based on creator activity.</p>
+                <div id="royalties-list"></div>
+            </section>
 
     <section id="profile-settings-section" class="profile-content">
         <h2>Profile Settings</h2>
@@ -69,7 +68,38 @@
     </section>
     </main>
     </div>
-
+    <div id="nft-modal" class="modal-overlay hidden">
+        <div class="nft-modal-content">
+            <button id="nft-modal-close" class="nft-modal-close-btn">&times;</button>
+            <div class="nft-modal-body">
+                <div class="nft-modal-image-container">
+                    <img id="nft-modal-image" src="" alt="NFT Image">
+                    <div id="nft-modal-supporter-number" class="supporter-number-badge"></div>
+                </div>
+                <div class="nft-modal-details">
+                    <h2 id="nft-modal-title"></h2>
+                    <div class="nft-info-grid">
+                        <div>
+                            <span>Creator</span>
+                            <strong id="nft-modal-creator-name"></strong>
+                        </div>
+                        <div>
+                            <span>Minted On</span>
+                            <strong id="nft-modal-mint-date"></strong>
+                        </div>
+                    </div>
+                    <div class="nft-thank-you">
+                        <h3>Creator's Note</h3>
+                        <p id="nft-modal-thank-you-note"></p>
+                    </div>
+                    <div id="nft-modal-incentive-details" class="nft-incentive hidden">
+                        <h3>Incentive Details</h3>
+                        <p>As one of the first 100 supporters, you are eligible to earn royalties from this creator's future growth.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <script src="app.js" type="module"></script>
     <script src="dashboard.js" type="module"></script>

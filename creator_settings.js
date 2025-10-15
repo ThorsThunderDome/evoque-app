@@ -1,9 +1,24 @@
 // creator_settings.js
-import { db, piUser } from './app.js';
+import { db, piUser, uploadFile } from './app.js'; // Import uploadFile
 import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 // --- Page-Specific Logic ---
 const creatorDocRef = doc(db, 'creators', piUser.uid);
+
+// --- NEW: Image upload elements ---
+const profileImageInput = document.getElementById('profile-image-input');
+const profileImagePreview = document.getElementById('profile-image-preview');
+const saveProfileImageBtn = document.getElementById('save-profile-image-btn');
+const profileImageStatus = document.getElementById('profile-image-status');
+let selectedProfileFile = null;
+
+const headerImageInput = document.getElementById('header-image-input');
+const headerImagePreview = document.getElementById('header-image-preview');
+const saveHeaderImageBtn = document.getElementById('save-header-image-btn');
+const headerImageStatus = document.getElementById('header-image-status');
+let selectedHeaderFile = null;
+
+// --- Existing elements ---
 const incentiveToggle = document.getElementById('incentive-toggle');
 const incentiveStatus = document.getElementById('incentive-status');
 const editProfileForm = document.getElementById('edit-profile-form');
@@ -21,20 +36,20 @@ async function loadSettings() {
         if (docSnap.exists()) {
             const creatorData = docSnap.data();
             document.getElementById('creator-name-sidebar').textContent = creatorData.name;
-            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage;
-
-            // Incentive Toggle Logic
+            // Update image previews and sidebar avatar with existing images
+            profileImagePreview.src = creatorData.profileImage || 'images/default-avatar.png';
+            document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage || 'images/default-avatar.png';
+            headerImagePreview.src = creatorData.headerImage || 'images/default-header.png';
+            
             incentiveToggle.checked = creatorData.firstSupporterIncentiveActive;
             if (creatorData.firstSupporterIncentiveActive === false) {
                 incentiveToggle.disabled = true;
                 incentiveStatus.textContent = "This setting is permanently off.";
             }
 
-            // Pre-fill the edit form
             creatorNameInput.value = creatorData.name;
             creatorBioInput.value = creatorData.bio;
             
-            // Pre-fill social links
             if (creatorData.socialLinks) {
                 twitterInput.value = creatorData.socialLinks.twitter || '';
                 youtubeInput.value = creatorData.socialLinks.youtube || '';
@@ -44,6 +59,53 @@ async function loadSettings() {
         console.error("Error loading creator data", error);
     }
 }
+
+// --- NEW: Image Preview Logic ---
+profileImageInput.addEventListener('change', (e) => {
+    selectedProfileFile = e.target.files[0];
+    if (selectedProfileFile) {
+        profileImagePreview.src = URL.createObjectURL(selectedProfileFile);
+    }
+});
+
+headerImageInput.addEventListener('change', (e) => {
+    selectedHeaderFile = e.target.files[0];
+    if (selectedHeaderFile) {
+        headerImagePreview.src = URL.createObjectURL(selectedHeaderFile);
+    }
+});
+
+// --- NEW: Generic Image Upload Handler ---
+async function handleImageUpload(file, statusElement, storagePath, firestoreField) {
+    if (!file) {
+        statusElement.textContent = "Please choose a file first.";
+        return;
+    }
+    statusElement.textContent = "Uploading...";
+    try {
+        const imageUrl = await uploadFile(file, storagePath);
+        await updateDoc(creatorDocRef, { [firestoreField]: imageUrl });
+        statusElement.textContent = "Image updated successfully!";
+        // Update sidebar avatar if profile image was changed
+        if (firestoreField === 'profileImage') {
+             document.getElementById('creator-avatar-sidebar').src = imageUrl;
+        }
+    } catch (error) {
+        console.error(`Error uploading ${firestoreField}:`, error);
+        statusElement.textContent = "Upload failed. Please try again.";
+    }
+}
+
+saveProfileImageBtn.addEventListener('click', () => {
+    const filePath = `creators/${piUser.uid}/profileImage.jpg`;
+    handleImageUpload(selectedProfileFile, profileImageStatus, filePath, 'profileImage');
+});
+
+saveHeaderImageBtn.addEventListener('click', () => {
+    const filePath = `creators/${piUser.uid}/headerImage.jpg`;
+    handleImageUpload(selectedHeaderFile, headerImageStatus, filePath, 'headerImage');
+});
+
 
 incentiveToggle.addEventListener('change', async (e) => {
     const newValue = e.target.checked;

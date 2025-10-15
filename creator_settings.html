@@ -16,7 +16,7 @@
     <div id="app-content" class="sidebar-collapsed">
         <aside id="sidebar">
             <div class="sidebar-header">
-                <img id="creator-avatar-sidebar" src="" alt="Creator Avatar" class="logo">
+                <img id="creator-avatar-sidebar" src="images/default-avatar.png" alt="Creator Avatar" class="logo">
                 <h2 id="creator-name-sidebar">My Hub</h2>
             </div>
             <nav class="nav-menu">
@@ -30,7 +30,7 @@
                     <li><a href="creator_settings.html" class="active">Settings</a></li>
                     <li><a href="#" id="disconnect-btn" class="nav-link"><span class="icon">
                     <!-- Power Icon SVG -->
-                    <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg></span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg></span>
                     <span class="text disconnect-text">Disconnect</span></a></li>
                 </ul>
             </nav>
@@ -46,19 +46,31 @@
             <button id="sidebar-toggler"><span></span></button>
             <h1>Creator Settings</h1>
             
+            <!-- NEW: Image Upload Section -->
             <div class="content-section">
-                <h2>First 100 Supporters Program</h2>
-                <p>Allow your first 100 supporters to earn royalties. This can only be turned off once.</p>
-                <div class="settings-toggle" style="justify-content: left;">
-                    <span>Off</span>
-                    <label class="switch">
-                        <input type="checkbox" id="incentive-toggle">
-                        <span class="slider round"></span>
-                    </label>
-                    <span>On</span>
+                <h2>Profile & Header Images</h2>
+                <div class="image-upload-container">
+                    <!-- Profile Image Upload -->
+                    <div class="image-upload-wrapper">
+                        <label for="profile-image-input">Profile Image</label>
+                        <img id="profile-image-preview" src="images/default-avatar.png" alt="Profile image preview">
+                        <input type="file" id="profile-image-input" accept="image/*" class="hidden">
+                        <button onclick="document.getElementById('profile-image-input').click()" class="btn btn-secondary">Choose File</button>
+                        <button id="save-profile-image-btn" class="btn btn-primary">Save Profile Image</button>
+                        <p id="profile-image-status" class="status-message"></p>
+                    </div>
+                    <!-- Header Image Upload -->
+                    <div class="image-upload-wrapper">
+                        <label for="header-image-input">Header Image</label>
+                        <img id="header-image-preview" src="images/default-header.png" alt="Header image preview">
+                        <input type="file" id="header-image-input" accept="image/*" class="hidden">
+                        <button onclick="document.getElementById('header-image-input').click()" class="btn btn-secondary">Choose File</button>
+                        <button id="save-header-image-btn" class="btn btn-primary">Save Header Image</button>
+                        <p id="header-image-status" class="status-message"></p>
+                    </div>
                 </div>
-                <p id="incentive-status"></p>
             </div>
+            
             <div class="content-section">
                 <h2>Edit Your Profile</h2>
                 <form id="edit-profile-form">
@@ -71,9 +83,24 @@
                         <textarea id="creator-bio" rows="4" required></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
-                    <p id="edit-form-status"></p>
+                    <p id="edit-form-status" class="status-message"></p>
                 </form>
             </div>
+
+            <div class="content-section">
+                <h2>First 100 Supporters Program</h2>
+                <p>Allow your first 100 supporters to earn royalties. This can only be turned off once.</p>
+                <div class="settings-toggle" style="justify-content: left;">
+                    <span>Off</span>
+                    <label class="switch">
+                        <input type="checkbox" id="incentive-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                    <span>On</span>
+                </div>
+                <p id="incentive-status" class="status-message"></p>
+            </div>
+
             <div class="content-section">
                 <h2>Social Links</h2>
                 <p>Add links to your other social media profiles.</p>
@@ -87,7 +114,7 @@
                         <input type="url" id="link-youtube" placeholder="https://youtube.com/c/channelname">
                     </div>
                     <button type="submit" class="btn btn-primary">Save Social Links</button>
-                    <p id="social-form-status"></p>
+                    <p id="social-form-status" class="status-message"></p>
                 </form>
             </div>
             </main>
@@ -96,6 +123,5 @@
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <script src="app.js" type="module"></script>
     <script src="creator_settings.js" type="module"></script>
-</body>
 </body>
 </html>

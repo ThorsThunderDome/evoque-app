@@ -17,42 +17,16 @@
 <body>
     <div id="app-content" class="sidebar-collapsed">
         <aside id="sidebar">
-            <div class="sidebar-header">
-                <img src="images/evoque-logo.png" alt="Evoque Logo" class="logo">
-                <h2>Evoque</h2>
-            </div>
-            <nav class="nav-menu">
-                <ul>
-                    <li><a href="dashboard.html">Dashboard</a></li>
-                    <li><a href="explore.html" class="active">Explore</a></li>
-                    <li><a href="#">Chat</a></li>
-                    <li><a href="#" id="disconnect-btn" class="nav-link"><span class="icon">
-                    <!-- Power Icon SVG -->
-                    <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg></span>
-                    <span class="text disconnect-text">Disconnect</span></a></li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer">
-                <a href="creator_hub.html" class="btn btn-secondary">Switch to Creator Space</a>
-                
-                <div class="theme-switcher">
-                    <span>Light</span>
-                    <label class="switch">
-                        <input type="checkbox" id="theme-toggle">
-                        <span class="slider round"></span>
-                    </label>
-                    <span>Dark</span>
-                </div>
-
-                <div id="user-profile">
-                    <p>Connected as: <strong id="username-display"></strong></p>
-                </div>
-            </div>
+            <!-- Sidebar content remains the same -->
         </aside>
         <main id="main-content">
             <button id="sidebar-toggler"><span></span></button>
+            
+            <!-- NEW: Container for the stylish header image -->
+            <div id="creator-header-image"></div>
+            
             <div id="creator-profile-header">
-                <img id="creator-avatar" src="" alt="Creator avatar" class="creator-avatar-large">
+                <img id="creator-avatar" src="images/default-avatar.png" alt="Creator avatar" class="creator-avatar-large">
                 <div>
                     <h1 id="creator-name">Loading...</h1>
                     <p id="creator-bio">Loading bio...</p>

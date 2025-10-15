@@ -1,7 +1,8 @@
-// creator.js - FINAL VERSION (WITH INITIALIZATION EVENT)
+// creator.js
 import { db, piUser, onIncompletePaymentFound } from './app.js';
 import { collection, doc, getDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
+// handleSubscription function remains the same
 async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
     try {
         const scopes = ['username', 'payments'];
@@ -23,7 +24,6 @@ async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
 async function initializeCreatorPage() {
     const creatorId = sessionStorage.getItem('selectedCreatorId');
     const mainContent = document.getElementById('main-content');
-
     if (!creatorId) {
         mainContent.innerHTML = "<h1>Error: Creator ID not found. Please go back and select a creator.</h1>";
         return;
@@ -40,10 +40,19 @@ async function initializeCreatorPage() {
 
         const creatorData = docSnap.data();
 
-        // --- Render All Page Content ---
+         // --- NEW: Set Header Image ---
+        const headerImageContainer = document.getElementById('creator-header-image');
+        if (creatorData.headerImage) {
+            headerImageContainer.style.backgroundImage = `url(${creatorData.headerImage})`;
+        } else {
+            // Optional: apply a default style if no header image exists
+            headerImageContainer.style.backgroundColor = 'var(--surface-color)';
+        }
+
+        // --- Render the rest of the page content (existing code) ---
         document.getElementById('creator-name').textContent = creatorData.name;
         document.getElementById('creator-bio').textContent = creatorData.bio;
-        document.getElementById('creator-avatar').src = creatorData.profileImage;
+        document.getElementById('creator-avatar').src = creatorData.profileImage || 'images/default-avatar.png';
         
         const socialIconsContainer = document.getElementById('social-icons-container');
         socialIconsContainer.innerHTML = '';
@@ -136,11 +145,10 @@ async function initializeCreatorPage() {
         bountyCard.innerHTML = `<h3>${mockBounty.title}</h3><p>Help fund this project! Every contribution gets a special recognition NFT.</p><div class="progress-bar-container"><div class="progress-bar-fill" style="width: ${progress}%;"></div><span class="progress-bar-text">${mockBounty.current} / ${mockBounty.goal} π</span></div><p>${mockBounty.supporters} have contributed so far.</p><button class="btn btn-primary" style="margin-top: 15px;">Contribute (Coming Soon)</button>`;
         bountiesListDiv.appendChild(bountyCard);
 
-    } catch (error) {
+     } catch (error) {
         console.error("Error loading creator page:", error);
         mainContent.innerHTML = "<h1>Error loading page. Please check the console for details.</h1>";
     }
 }
 
-// CRITICAL FIX: Listen for the app-ready event before running the page logic
 window.addEventListener('app-ready', initializeCreatorPage);
