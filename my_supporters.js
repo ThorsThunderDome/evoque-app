@@ -1,14 +1,11 @@
 // my_supporters.js
-import { db } from './app.js';
+import { db, piUser } from './app.js';
 import { collection, doc, getDoc, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-
-// CRITICAL FIX: DO NOT import piUser here.
 
 const tableBody = document.getElementById('supporters-table-body');
 
 async function initializePage() {
-    // CRITICAL FIX: Get the fresh piUser object from sessionStorage here.
-    const piUser = JSON.parse(sessionStorage.getItem('piUser'));
+    // REVERTED: piUser is now imported.
     if (!piUser || !piUser.uid) {
         tableBody.innerHTML = '<tr><td colspan="4">Could not load supporters. Please log in again.</td></tr>';
         return;

@@ -18,8 +18,8 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-// CRITICAL FIX: DO NOT export piUser. It creates a stale, null variable.
-// Each module will get the fresh user data from sessionStorage when it needs it.
+// REVERTED: Re-exporting piUser to restore previous session handling.
+export const piUser = JSON.parse(sessionStorage.getItem('piUser'));
 
 const PI_PAYMENT_FUNCTION_URL = "https://us-central1-evoque-app.cloudfunctions.net/processPiPayment";
 
@@ -48,7 +48,6 @@ async function callPiPaymentAPI(payload) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     });
-
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
         let detailedMessage = errorData.error || 'Unknown server error';
@@ -83,12 +82,7 @@ async function authenticateWithPi() {
 
 async function createPiPayment(paymentDetails) {
     try {
-        const paymentData = {
-            amount: paymentDetails.amount,
-            memo: paymentDetails.memo,
-            metadata: paymentDetails.metadata
-        };
-
+        const paymentData = { amount: paymentDetails.amount, memo: paymentDetails.memo, metadata: paymentDetails.metadata };
         const callbacks = {
             onReadyForServerApproval: (paymentId) => {
                 const payload = { action: 'approve', paymentId: paymentId };
@@ -103,15 +97,13 @@ async function createPiPayment(paymentDetails) {
                 const payload = { action: 'complete', paymentId: paymentId, txid: txid };
                 callPiPaymentAPI(payload)
                     .then(result => {
-                        console.log('[COMPLETION] Backend completion successful:', result);
                         if (result.success && result.subscription) {
                             const { creatorId, tierId } = result.subscription;
-                            const membershipKey = `membership_${creatorId}`;
-                            sessionStorage.setItem(membershipKey, JSON.stringify({ tierId }));
+                            sessionStorage.setItem(`membership_${creatorId}`, JSON.stringify({ tierId }));
                             alert("Payment Completed! Your access has been updated. The page will now refresh.");
-                            window.location.reload(); 
+                            window.location.reload();
                         } else {
-                            alert("Payment Completed! Please refresh the page to see your new access.");
+                            alert("Payment Completed! Please refresh the page.");
                         }
                     })
                     .catch(error => {
@@ -125,47 +117,30 @@ async function createPiPayment(paymentDetails) {
         await Pi.createPayment(paymentData, callbacks);
     } catch (err) {
         console.error("createPiPayment error:", err);
-        throw err;
     }
 }
 
-// --- NEW: Disconnect Function ---
 function disconnect() {
-    sessionStorage.removeItem('piUser');
-    // Clear all membership keys as well
-    Object.keys(sessionStorage).forEach(key => {
-        if (key.startsWith('membership_')) {
-            sessionStorage.removeItem(key);
-        }
-    });
+    sessionStorage.clear();
     window.location.href = 'index.html';
 }
 
-// --- NEW: Scroll to Top Logic ---
 function initializeScrollToTop() {
     const scrollToTopBtn = document.getElementById('scrollToTopBtn');
     if (!scrollToTopBtn) return;
-
-    // Show or hide the button based on scroll position
-    window.onscroll = function() {
-        const scrollTrigger = window.innerHeight / 2; // Show button after scrolling half a screen
-        if (document.body.scrollTop > scrollTrigger || document.documentElement.scrollTop > scrollTrigger) {
+    window.onscroll = () => {
+        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
             scrollToTopBtn.style.display = "block";
         } else {
             scrollToTopBtn.style.display = "none";
         }
     };
-
-    // Scroll to the top when the button is clicked
     scrollToTopBtn.addEventListener('click', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 }
 
-
-// --- Main App Initialization Logic ---
 function initializeAppLogic() {
-    // --- Theme Toggle ---
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
         const applyTheme = (theme) => {
@@ -177,16 +152,11 @@ function initializeAppLogic() {
         applyTheme(currentTheme);
         themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
     }
-
-    // --- Sidebar Toggle ---
     const sidebarToggler = document.getElementById('sidebar-toggler');
     const appContent = document.getElementById('app-content');
     if (sidebarToggler && appContent) {
         sidebarToggler.addEventListener('click', () => appContent.classList.toggle('sidebar-collapsed'));
     }
-
-    // --- Auth Check (Persistent Login) ---
-    // This logic correctly uses sessionStorage, so refreshing the page will keep the user logged in.
     const usernameDisplay = document.getElementById('username-display');
     const isAuthPage = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
     if (!piUser && !isAuthPage) {
@@ -194,28 +164,19 @@ function initializeAppLogic() {
     } else if (usernameDisplay && piUser) {
         usernameDisplay.textContent = piUser.username;
     }
-
-    // --- Attach Global Listeners ---
     const connectButtons = document.querySelectorAll('.connect-button');
     connectButtons.forEach(button => button.addEventListener('click', authenticateWithPi));
-    
-    // --- NEW: Attach Disconnect Listener ---
     const disconnectBtn = document.getElementById('disconnect-btn');
     if (disconnectBtn) {
         disconnectBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevent the link from navigating
+            e.preventDefault();
             disconnect();
         });
     }
-
-    // Make functions globally available
     window.createPiPayment = createPiPayment;
-    
-    // --- NEW: Initialize Scroll to Top Button ---
     initializeScrollToTop();
-
-    // Announce that the app is ready for other scripts
     window.dispatchEvent(new CustomEvent('app-ready'));
 }
 
 document.addEventListener('DOMContentLoaded', initializeAppLogic);
+

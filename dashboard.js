@@ -1,8 +1,6 @@
 // dashboard.js
-import { db } from './app.js';
+import { db, piUser } from './app.js';
 import { collection, doc, getDoc, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-
-// CRITICAL FIX: DO NOT import piUser here.
 
 const membershipsGrid = document.getElementById('memberships-grid');
 const nftModal = document.getElementById('nft-modal');
@@ -13,10 +11,8 @@ function showNftModal(nftData, creatorData) {
     document.getElementById('nft-modal-creator-name').textContent = creatorData.name;
     document.getElementById('nft-modal-mint-date').textContent = new Date(nftData.createdAt.seconds * 1000).toLocaleDateString();
     document.getElementById('nft-modal-thank-you-note').textContent = nftData.thankYouNote || "Thank you for your support!";
-
     const supporterNumBadge = document.getElementById('nft-modal-supporter-number');
     const incentiveDetails = document.getElementById('nft-modal-incentive-details');
-
     if (nftData.type === 'first_supporter') {
         document.getElementById('nft-modal-title').textContent = 'First Supporter Badge';
         supporterNumBadge.textContent = `#${nftData.supporterNumber}`;
@@ -34,8 +30,7 @@ nftModalClose.addEventListener('click', () => nftModal.classList.add('hidden'));
 nftModal.addEventListener('click', (e) => { if (e.target === nftModal) nftModal.classList.add('hidden'); });
 
 async function initializeDashboard() {
-    // CRITICAL FIX: Get the fresh piUser object from sessionStorage here.
-    const piUser = JSON.parse(sessionStorage.getItem('piUser'));
+    // REVERTED: piUser is now imported, not fetched from sessionStorage here.
     if (!piUser || !piUser.uid) {
         membershipsGrid.innerHTML = '<p>Could not load your dashboard. Please log in again.</p>';
         return;
