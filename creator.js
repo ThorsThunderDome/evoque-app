@@ -1,8 +1,8 @@
 // creator.js
-import { db, piUser, onIncompletePaymentFound } from './app.js';
+import { db, onIncompletePaymentFound } from './app.js';
 import { collection, doc, getDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-// handleSubscription function remains the same
+// --- handleSubscription function remains the same ---
 async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
     try {
         const scopes = ['username', 'payments'];
@@ -21,9 +21,22 @@ async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
     }
 }
 
+// --- NEW: Function to specifically load sidebar data for the logged-in user ---
+async function loadSidebarData() {
+    const piUser = JSON.parse(sessionStorage.getItem('piUser'));
+    if (!piUser) return; // Don't run if not logged in
+    
+    // The supporter's sidebar is generic and doesn't need creator-specific data
+    document.getElementById('username-display').textContent = piUser.username;
+}
+
 async function initializeCreatorPage() {
+    // --- FIX: Call the new sidebar function immediately ---
+    loadSidebarData();
+
     const creatorId = sessionStorage.getItem('selectedCreatorId');
     const mainContent = document.getElementById('main-content');
+
     if (!creatorId) {
         mainContent.innerHTML = "<h1>Error: Creator ID not found. Please go back and select a creator.</h1>";
         return;
@@ -39,6 +52,7 @@ async function initializeCreatorPage() {
         }
 
         const creatorData = docSnap.data();
+        const piUser = JSON.parse(sessionStorage.getItem('piUser')); // Get user again for logic
 
          // --- NEW: Set Header Image ---
         const headerImageContainer = document.getElementById('creator-header-image');
@@ -152,3 +166,5 @@ async function initializeCreatorPage() {
 }
 
 window.addEventListener('app-ready', initializeCreatorPage);
+
+

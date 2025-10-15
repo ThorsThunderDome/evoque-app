@@ -1,6 +1,6 @@
 // my_supporters.js
 import { db } from './app.js';
-import { collection, doc, getDoc, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+import { collection, doc, getDoc, getDocs, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
 const tableBody = document.getElementById('supporters-table-body');
 
@@ -16,7 +16,6 @@ async function initializePage() {
     tableBody.innerHTML = '<tr><td colspan="4"><div class="loader"></div></td></tr>';
     const creatorDocRef = doc(db, 'creators', piUser.uid);
     
-    // Load sidebar info once
     try {
         const docSnap = await getDoc(creatorDocRef);
         if (docSnap.exists()) {
@@ -24,30 +23,23 @@ async function initializePage() {
             document.getElementById('creator-name-sidebar').textContent = creatorData.name;
             document.getElementById('creator-avatar-sidebar').src = creatorData.profileImage || 'images/default-avatar.png';
         }
-    } catch (error) {
-        console.error("Error loading sidebar data:", error);
-    }
 
-    // --- Real-time listener for supporters ---
-    const supportersQuery = query(collection(db, 'subscriptions'), where('creatorUid', '==', piUser.uid), orderBy('createdAt', 'desc'));
+        const supportersQuery = query(collection(db, 'subscriptions'), where('creatorUid', '==', piUser.uid), orderBy('createdAt', 'desc'));
 
-    onSnapshot(supportersQuery, async (snapshot) => {
-        if (snapshot.empty) {
-            tableBody.innerHTML = '<tr><td colspan="4">You have no supporters yet.</td></tr>';
-            return;
-        }
-
-        try {
-            const tiersSnapshot = await getDoc(collection(creatorDocRef, 'tiers'));
-            const tierInfo = {};
-            if (tiersSnapshot && !tiersSnapshot.empty) {
-                tiersSnapshot.forEach(tierDoc => {
-                    tierInfo[tierDoc.id] = tierDoc.data();
-                });
+        onSnapshot(supportersQuery, async (snapshot) => {
+            if (snapshot.empty) {
+                tableBody.innerHTML = '<tr><td colspan="4">You have no supporters yet.</td></tr>';
+                return;
             }
+
+            // --- FIX: Used getDocs on a collection, which is correct ---
+            const tiersSnapshot = await getDocs(collection(creatorDocRef, 'tiers'));
+            const tierInfo = {};
+            tiersSnapshot.forEach(tierDoc => {
+                tierInfo[tierDoc.id] = tierDoc.data();
+            });
             
             const supporterIds = snapshot.docs.map(doc => doc.data().supporterUid);
-            // Fetch all supporter user profiles in parallel
             const userDocsPromises = supporterIds.map(id => getDoc(doc(db, 'users', id)));
             const userDocs = await Promise.all(userDocsPromises);
             const usernames = {};
@@ -72,15 +64,17 @@ async function initializePage() {
                 `;
                 tableBody.appendChild(row);
             });
-        } catch (error) {
-            console.error("Error processing supporters list:", error);
-            tableBody.innerHTML = '<tr><td colspan="4">Error rendering supporters. Please try again.</td></tr>';
-        }
-    }, (error) => {
-        console.error("Error listening to supporters list:", error);
-        tableBody.innerHTML = '<tr><td colspan="4">Error loading supporters. Please try again.</td></tr>';
-    });
+
+        }, (error) => {
+            console.error("Error listening to supporters list:", error);
+            tableBody.innerHTML = '<tr><td colspan="4">Error loading supporters. Please try again.</td></tr>';
+        });
+        
+    } catch (error) {
+        console.error("Error initializing supporters page:", error);
+        tableBody.innerHTML = '<tr><td colspan="4">An unexpected error occurred. Please check the console.</td></tr>';
+    }
 }
 
-// --- FIX: The entire script now waits for the 'app-ready' event ---
 window.addEventListener('app-ready', initializePage);
+

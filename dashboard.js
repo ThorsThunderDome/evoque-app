@@ -2,11 +2,11 @@
 import { db } from './app.js';
 import { collection, doc, getDoc, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
+// --- All modal and NFT display functions remain the same ---
 const membershipsGrid = document.getElementById('memberships-grid');
 const nftModal = document.getElementById('nft-modal');
 const nftModalClose = document.getElementById('nft-modal-close');
 
-// --- All modal and NFT functions remain the same ---
 function showNftModal(nftData, creatorData) {
     document.getElementById('nft-modal-image').src = creatorData.profileImage || 'images/default-avatar.png';
     document.getElementById('nft-modal-creator-name').textContent = creatorData.name;
@@ -30,17 +30,11 @@ function showNftModal(nftData, creatorData) {
 }
 
 nftModalClose.addEventListener('click', () => nftModal.classList.add('hidden'));
-nftModal.addEventListener('click', (e) => {
-    if (e.target === nftModal) {
-        nftModal.classList.add('hidden');
-    }
-});
+nftModal.addEventListener('click', (e) => { if (e.target === nftModal) nftModal.classList.add('hidden'); });
 
 async function initializeDashboard() {
-    // --- FIX: Get piUser AFTER the app is ready ---
+    // --- FIX: Get piUser AFTER the app is ready to avoid race conditions ---
     const piUser = JSON.parse(sessionStorage.getItem('piUser'));
-
-    // This check prevents all subsequent errors if the user isn't properly loaded
     if (!piUser || !piUser.uid) {
         console.error("Dashboard Error: User not found in session.");
         membershipsGrid.innerHTML = '<p>Could not load your dashboard. Please try logging in again.</p>';
@@ -49,7 +43,6 @@ async function initializeDashboard() {
 
     membershipsGrid.innerHTML = '<div class="loader"></div>';
     
-    // Listen for subscriptions in real-time
     const subscriptionsQuery = query(collection(db, 'subscriptions'), where('supporterUid', '==', piUser.uid));
     
     onSnapshot(subscriptionsQuery, async (snapshot) => {
@@ -58,11 +51,10 @@ async function initializeDashboard() {
             return;
         }
 
-        // Use a Set to avoid re-fetching data for the same creator
         const creatorIds = new Set();
         snapshot.forEach(doc => creatorIds.add(doc.data().creatorUid));
+        membershipsGrid.innerHTML = ''; 
 
-        membershipsGrid.innerHTML = ''; // Clear the grid before rendering
         for (const creatorId of creatorIds) {
             try {
                 const creatorDoc = await getDoc(doc(db, 'creators', creatorId));
@@ -93,6 +85,7 @@ async function initializeDashboard() {
                     event.target.innerHTML = isHidden ? 'My NFTs ▼' : 'My NFTs ▲';
 
                     if (!isHidden && !content.dataset.loaded) {
+                        // --- FIX: Ensured piUser is correctly referenced here ---
                         const nftsQuery = query(collection(db, 'nfts'), where('supporterUid', '==', piUser.uid), where('creatorUid', '==', creatorId));
                         const nftsSnapshot = await getDocs(nftsQuery);
                         
@@ -100,8 +93,8 @@ async function initializeDashboard() {
                         if (nftsSnapshot.empty) {
                             nftHtml += '<li>No NFTs found.</li>';
                         } else {
-                            nftsSnapshot.forEach(nftDoc => {
-                                const nft = { id: nftDoc.id, ...nftDoc.data() };
+                            const nftDocs = nftsSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                            nftDocs.forEach(nft => {
                                 const title = nft.type === 'first_supporter' ? `First Supporter #${nft.supporterNumber}` : `Membership: ${nft.tierName}`;
                                 nftHtml += `<li class="nft-item" data-nft-id="${nft.id}"><strong>${title}</strong><br><small>Minted: ${new Date(nft.createdAt.seconds * 1000).toLocaleDateString()}</small></li>`;
                             });
@@ -110,7 +103,6 @@ async function initializeDashboard() {
                         content.innerHTML = nftHtml;
                         content.dataset.loaded = "true";
 
-                        // Add click listeners to the new NFT items
                         content.querySelectorAll('.nft-item').forEach(item => {
                             item.addEventListener('click', () => {
                                 const nftId = item.dataset.nftId;
@@ -120,14 +112,12 @@ async function initializeDashboard() {
                         });
                     }
                 });
-            } catch (error) { console.error("Error fetching subscription details for creator:", creatorId, error); }
+            } catch (error) { console.error("Error fetching subscription details", error); }
         }
     });
 
-    // Mock Royalties - this can be developed later
-    const royaltiesListDiv = document.getElementById('royalties-list');
-    royaltiesListDiv.innerHTML = "<p>You are not yet earning royalties from any creators.</p>";
+    // Mock Royalties logic remains the same
+    document.getElementById('royalties-list').innerHTML = "<p>You are not yet earning royalties from any creators.</p>";
 }
 
-// --- FIX: The entire script now waits for the 'app-ready' event ---
 window.addEventListener('app-ready', initializeDashboard);
