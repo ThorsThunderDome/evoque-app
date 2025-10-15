@@ -118,6 +118,11 @@ async function initializeCreatorPage() {
     const mainContent = document.getElementById('main-content');
     const currentUser = JSON.parse(sessionStorage.getItem('piUser'));
 
+    // This part remains correct for the sidebar
+    if (currentUser && document.getElementById('username-display')) {
+        document.getElementById('username-display').textContent = currentUser.username;
+    }
+
     if (!creatorId) {
         mainContent.innerHTML = "<h1>Error: Creator ID not found. Please go back and select a creator.</h1>";
         return;
@@ -126,6 +131,7 @@ async function initializeCreatorPage() {
     try {
         // Step 1: Fetch all primary creator data in parallel
         const creatorDocRef = doc(db, "creators", creatorId);
+        // --- FIX: Removed orderBy from queries to prevent index errors ---
         const tiersQuery = query(collection(creatorDocRef, 'tiers'));
         const postsQuery = query(collection(db, 'posts'), where('creatorId', '==', creatorId));
         const merchQuery = query(collection(db, 'merch'), where('creatorId', '==', creatorId));
@@ -145,9 +151,10 @@ async function initializeCreatorPage() {
         }
         
         const creatorData = creatorSnap.data();
+        // --- FIX: Manually sort tiers by price in the browser ---
         const tiers = tiersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a, b) => a.price - b.price);
         
-        // --- Step 2: Securely check for the user's subscription ---
+        // --- Step 2: Securely check for the user's subscription (This logic is correct) ---
         let subscribedTierId = null;
         let userAccessLevel = 0;
         if (currentUser) {
