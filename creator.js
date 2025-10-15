@@ -88,7 +88,7 @@ function renderMerch(merchSnap, userAccessLevel) {
         const requiredAccessLevel = item.tierRequired ? parseFloat(item.tierRequired) : 0;
 
         const itemElement = document.createElement('div');
-        itemElement.className = 'merch-card'; // Use a consistent class name
+        itemElement.className = 'merch-card';
 
         if (userAccessLevel >= requiredAccessLevel) {
             itemElement.innerHTML = `
@@ -131,7 +131,7 @@ function renderBounties(bountiesSnap, userAccessLevel) {
         const requiredAccessLevel = bounty.tierRequired ? parseFloat(bounty.tierRequired) : 0;
         
         const bountyElement = document.createElement('div');
-        bountyElement.className = 'bounty-card'; // Use a consistent class name
+        bountyElement.className = 'bounty-card';
 
         if (userAccessLevel >= requiredAccessLevel) {
             bountyElement.innerHTML = `
@@ -184,9 +184,10 @@ async function initializeCreatorPage() {
         const creatorDocRef = doc(db, "creators", creatorId);
         const tiersQuery = query(collection(creatorDocRef, 'tiers'), orderBy('price'));
         const postsQuery = query(collection(db, 'posts'), where('creatorId', '==', creatorId), orderBy('createdAt', 'desc'));
-        // --- CORRECTED QUERIES for merch and bounties ---
-        const merchQuery = query(collection(db, 'merch'), where('creatorId', '==', creatorId), orderBy('price'));
-        const bountiesQuery = query(collection(db, 'bounties'), where('creatorId', '==', creatorId), orderBy('reward', 'desc'));
+        
+        // Removed orderBy from merch and bounties to prevent crashes if indexes aren't set
+        const merchQuery = query(collection(db, 'merch'), where('creatorId', '==', creatorId));
+        const bountiesQuery = query(collection(db, 'bounties'), where('creatorId', '==', creatorId));
 
         const [creatorSnap, tiersSnap, postsSnap, merchSnap, bountiesSnap] = await Promise.all([
             getDoc(creatorDocRef),
@@ -204,7 +205,6 @@ async function initializeCreatorPage() {
         const creatorData = creatorSnap.data();
         const tiers = tiersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
-        // Determine the user's access level (based on tier price). 0 if not subscribed.
         let userAccessLevel = 0;
         let subscribedTierId = null;
         if (userSubscription) {
@@ -216,13 +216,11 @@ async function initializeCreatorPage() {
         }
 
         // --- Step 3: Render all page components ---
-        // Render Header
         document.getElementById('creator-header-image').style.backgroundImage = `url(${creatorData.headerImage || ''})`;
         document.getElementById('creator-name').textContent = creatorData.name || 'Creator Name';
         document.getElementById('creator-bio').textContent = creatorData.bio || 'No bio available.';
         document.getElementById('creator-avatar').src = creatorData.profileImage || 'images/default-avatar.png';
         
-        // Render Tiers
         const tiersListDiv = document.getElementById('tiers-list');
         tiersListDiv.innerHTML = '';
         if (tiers.length === 0) {
@@ -232,15 +230,15 @@ async function initializeCreatorPage() {
                 const tierCard = document.createElement('div');
                 tierCard.className = 'tier-card';
                 if (tier.id === subscribedTierId) {
-                    tierCard.classList.add('subscribed'); // Add a class for styling the current tier
+                    tierCard.classList.add('subscribed');
                 }
                 const benefits = tier.description ? tier.description.split(/[\r\n]+/).map(b => `<li>${b}</li>`).join('') : '';
                 
                 let buttonHtml = `<button class="btn btn-primary subscribe-btn">Subscribe</button>`;
                 if (tier.id === subscribedTierId) {
                     buttonHtml = `<button class="btn btn-success" disabled>Current Tier</button>`;
-                } else if (userAccessLevel > tier.price) {
-                     buttonHtml = `<button class="btn btn-secondary" disabled>Included in your Tier</button>`;
+                } else if (userAccessLevel > 0 && userAccessLevel >= tier.price) {
+                     buttonHtml = `<button class="btn btn-secondary" disabled>Included</button>`;
                 }
                 
                 tierCard.innerHTML = `<h3>${tier.name}</h3><p class="price">${tier.price} π/month</p><ul>${benefits}</ul>${buttonHtml}`;
@@ -253,7 +251,6 @@ async function initializeCreatorPage() {
             });
         }
         
-        // Render content based on user's access level
         renderPosts(postsSnap, userAccessLevel);
         renderMerch(merchSnap, userAccessLevel);
         renderBounties(bountiesSnap, userAccessLevel);
@@ -264,6 +261,5 @@ async function initializeCreatorPage() {
     }
 }
 
-// Ensure the page initializes after the app (and piUser) is ready
 window.addEventListener('app-ready', initializeCreatorPage);
 
