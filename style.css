@@ -43,12 +43,13 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    display: flex;
-    flex-direction: column;
+    display: flex; /* ENSURE THIS IS PRESENT */
+    flex-direction: column; /* ENSURE THIS IS PRESENT */
     z-index: 1000;
     transition: transform 0.35s ease-in-out;
     box-sizing: border-box;
 }
+
 #main-content {
     flex-grow: 1;
     padding: 20px 40px;
@@ -63,7 +64,12 @@ body {
 .sidebar-header .logo { filter: var(--logo-filter); width: 40px; height: 40px; margin-right: 10px; }
 .sidebar-header { display: flex; align-items: center; margin-bottom: 30px; }
 .sidebar-header h2 { margin: 0; }
-.nav-menu { flex-grow: 1; }
+.nav-menu {
+    flex-grow: 1;
+    overflow-y: auto; /* This adds a scrollbar ONLY if the content is taller than the available space. */
+    overflow-x: hidden; /* This prevents any unwanted horizontal scrolling */
+}
+
 .nav-menu ul { list-style: none; padding: 0; margin: 0; }
 .nav-menu a { display: block; padding: 12px 15px; color: var(--text-secondary-color); text-decoration: none; border-radius: 8px; margin-bottom: 5px; transition: background-color 0.2s, color 0.2s; }
 .nav-menu a:hover, .nav-menu a.active { background-color: var(--primary-color); color: var(--text-color); }
@@ -523,24 +529,14 @@ input:checked + .slider:before { transform: translateX(22px); }
 .cta-section {
     color: #FFFFFF; /* Forces all text inside to be white */
 }
-/* Add this to your main stylesheet */
-.sidebar .nav-menu {
-  /* This tells the menu to take all available space between the header and footer */
-  flex-grow: 1; 
-  /* This adds a vertical scrollbar ONLY when the content is too tall to fit */
-  overflow-y: auto; 
-  /* This prevents any unwanted horizontal scrolling */
-  overflow-x: hidden;
-}
-
-/* Optional: Style the new scrollbar to be more sleek */
-.sidebar .nav-menu::-webkit-scrollbar {
+/* Optional: These rules style the scrollbar to look sleek. */
+.nav-menu::-webkit-scrollbar {
   width: 6px;
 }
-.sidebar .nav-menu::-webkit-scrollbar-track {
+.nav-menu::-webkit-scrollbar-track {
   background: transparent;
 }
-.sidebar .nav-menu::-webkit-scrollbar-thumb {
+.nav-menu::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
 }
