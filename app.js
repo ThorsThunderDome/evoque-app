@@ -1,4 +1,4 @@
-// app.js - FINAL VERSION (WITH DETAILED ERROR REPORTING)
+// app.js - FINAL VERSION (WITH UI/UX ENHANCEMENTS)
 
 // --- All Imports ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
@@ -24,7 +24,7 @@ export const piUser = JSON.parse(sessionStorage.getItem('piUser'));
 const PI_PAYMENT_FUNCTION_URL = "https://us-central1-evoque-app.cloudfunctions.net/processPiPayment";
 
 try {
-    Pi.init({ version: "2.0", sandbox: false });
+    Pi.init({ version: "2.0", sandbox: false }); // Assuming you've switched to mainnet
 } catch(e) {
     console.error("Pi.init failed:", e);
 }
@@ -51,8 +51,6 @@ async function callPiPaymentAPI(payload) {
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
-        // --- THIS IS THE CRITICAL CHANGE ---
-        // We now construct a more detailed error message, including the 'details' field from the server.
         let detailedMessage = errorData.error || 'Unknown server error';
         if (errorData.details) {
             const detailsString = typeof errorData.details === 'object' ? JSON.stringify(errorData.details) : errorData.details;
@@ -93,39 +91,30 @@ async function createPiPayment(paymentDetails) {
 
         const callbacks = {
             onReadyForServerApproval: (paymentId) => {
-                console.log(`[APPROVAL] Received paymentId: ${paymentId}`);
                 const payload = { action: 'approve', paymentId: paymentId };
                 callPiPaymentAPI(payload)
-                    .then((result) => console.log('[APPROVAL] Backend approval successful:', result))
-                    .catch((error) => {
+                    .then(result => console.log('[APPROVAL] Backend approval successful:', result))
+                    .catch(error => {
                         console.error('[APPROVAL] Backend approval failed:', error);
                         alert(`Payment approval failed: ${error.message}.`);
                     });
             },
             onReadyForServerCompletion: (paymentId, txid) => {
-                console.log(`[COMPLETION] Received paymentId: ${paymentId}, txid: ${txid}`);
                 const payload = { action: 'complete', paymentId: paymentId, txid: txid };
-                
                 callPiPaymentAPI(payload)
-                    .then((result) => {
+                    .then(result => {
                         console.log('[COMPLETION] Backend completion successful:', result);
-                        
-                        // --- NEW LOGIC: Save subscription to sessionStorage and reload ---
                         if (result.success && result.subscription) {
                             const { creatorId, tierId } = result.subscription;
                             const membershipKey = `membership_${creatorId}`;
-                            const membershipData = { tierId: tierId };
-                            sessionStorage.setItem(membershipKey, JSON.stringify(membershipData));
-                            
+                            sessionStorage.setItem(membershipKey, JSON.stringify({ tierId }));
                             alert("Payment Completed! Your access has been updated. The page will now refresh.");
-                            // Reload the page to show the newly unlocked content
                             window.location.reload(); 
                         } else {
-                            // Fallback for safety
                             alert("Payment Completed! Please refresh the page to see your new access.");
                         }
                     })
-                    .catch((error) => {
+                    .catch(error => {
                         console.error('[COMPLETION] Backend completion failed:', error);
                         alert(`Payment completion failed: ${error.message}.`);
                     });
@@ -140,8 +129,43 @@ async function createPiPayment(paymentDetails) {
     }
 }
 
+// --- NEW: Disconnect Function ---
+function disconnect() {
+    sessionStorage.removeItem('piUser');
+    // Clear all membership keys as well
+    Object.keys(sessionStorage).forEach(key => {
+        if (key.startsWith('membership_')) {
+            sessionStorage.removeItem(key);
+        }
+    });
+    window.location.href = 'index.html';
+}
+
+// --- NEW: Scroll to Top Logic ---
+function initializeScrollToTop() {
+    const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+    if (!scrollToTopBtn) return;
+
+    // Show or hide the button based on scroll position
+    window.onscroll = function() {
+        const scrollTrigger = window.innerHeight / 2; // Show button after scrolling half a screen
+        if (document.body.scrollTop > scrollTrigger || document.documentElement.scrollTop > scrollTrigger) {
+            scrollToTopBtn.style.display = "block";
+        } else {
+            scrollToTopBtn.style.display = "none";
+        }
+    };
+
+    // Scroll to the top when the button is clicked
+    scrollToTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
+
+
 // --- Main App Initialization Logic ---
 function initializeAppLogic() {
+    // --- Theme Toggle ---
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
         const applyTheme = (theme) => {
@@ -153,12 +177,16 @@ function initializeAppLogic() {
         applyTheme(currentTheme);
         themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
     }
+
+    // --- Sidebar Toggle ---
     const sidebarToggler = document.getElementById('sidebar-toggler');
     const appContent = document.getElementById('app-content');
     if (sidebarToggler && appContent) {
         sidebarToggler.addEventListener('click', () => appContent.classList.toggle('sidebar-collapsed'));
     }
 
+    // --- Auth Check (Persistent Login) ---
+    // This logic correctly uses sessionStorage, so refreshing the page will keep the user logged in.
     const usernameDisplay = document.getElementById('username-display');
     const isAuthPage = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
     if (!piUser && !isAuthPage) {
@@ -167,10 +195,26 @@ function initializeAppLogic() {
         usernameDisplay.textContent = piUser.username;
     }
 
+    // --- Attach Global Listeners ---
     const connectButtons = document.querySelectorAll('.connect-button');
     connectButtons.forEach(button => button.addEventListener('click', authenticateWithPi));
     
+    // --- NEW: Attach Disconnect Listener ---
+    const disconnectBtn = document.getElementById('disconnect-btn');
+    if (disconnectBtn) {
+        disconnectBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent the link from navigating
+            disconnect();
+        });
+    }
+
+    // Make functions globally available
     window.createPiPayment = createPiPayment;
+    
+    // --- NEW: Initialize Scroll to Top Button ---
+    initializeScrollToTop();
+
+    // Announce that the app is ready for other scripts
     window.dispatchEvent(new CustomEvent('app-ready'));
 }
 
