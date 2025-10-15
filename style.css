@@ -524,20 +524,23 @@ input:checked + .slider:before { transform: translateX(22px); }
     color: #FFFFFF; /* Forces all text inside to be white */
 }
 /* Add this to your main stylesheet */
-.sidebar .sidebar-nav {
-  height: calc(100vh - 200px); /* Adjust 200px to account for header/footer height in your sidebar */
-  overflow-y: auto;
+.sidebar .nav-menu {
+  /* This tells the menu to take all available space between the header and footer */
+  flex-grow: 1; 
+  /* This adds a vertical scrollbar ONLY when the content is too tall to fit */
+  overflow-y: auto; 
+  /* This prevents any unwanted horizontal scrolling */
   overflow-x: hidden;
 }
 
-/* Optional: Style the scrollbar to be more sleek */
-.sidebar .sidebar-nav::-webkit-scrollbar {
+/* Optional: Style the new scrollbar to be more sleek */
+.sidebar .nav-menu::-webkit-scrollbar {
   width: 6px;
 }
-.sidebar .sidebar-nav::-webkit-scrollbar-track {
+.sidebar .nav-menu::-webkit-scrollbar-track {
   background: transparent;
 }
-.sidebar .sidebar-nav::-webkit-scrollbar-thumb {
+.sidebar .nav-menu::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
 }
@@ -562,4 +565,21 @@ input:checked + .slider:before { transform: translateX(22px); }
 
 #scrollToTopBtn:hover {
   opacity: 0.8;
+}
+/* Add these styles to style.css for the new disconnect button */
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Creates space between the icon and text */
+}
+
+.nav-link .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.disconnect-text {
+    font-size: 0.8em; /* Makes the "Disconnect" text smaller */
+    opacity: 0.7;     /* Makes it slightly faded */
 }
