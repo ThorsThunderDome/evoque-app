@@ -24,7 +24,7 @@ export const storage = getStorage(app);
 const PI_PAYMENT_FUNCTION_URL = "https://us-central1-evoque-app.cloudfunctions.net/processPiPayment";
 
 try {
-    Pi.init({ version: "2.0", sandbox: false });
+    Pi.init({ version: "2.0", sandbox: true });
 } catch(e) {
     console.error("Pi.init failed:", e);
 }
