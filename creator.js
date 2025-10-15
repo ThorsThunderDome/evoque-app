@@ -1,8 +1,9 @@
-// creator.js - FINAL, ROBUST VERSION
+// creator.js - PLACEHOLDER VERSION FOR VIDEO
 import { db } from './app.js';
-import { collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+// We are no longer using live Firestore queries on this page
+// import { collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-// This function does not need to change.
+// This function can remain as it is for demonstration purposes.
 async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
     const piUser = JSON.parse(sessionStorage.getItem('piUser'));
     if (!piUser) {
@@ -11,7 +12,6 @@ async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
     }
     try {
         const creatorId = sessionStorage.getItem('selectedCreatorId');
-        // The onIncompletePaymentFound function is handled by the Pi SDK via app.js
         const scopes = ['username', 'payments'];
         await window.Pi.authenticate(scopes, window.onIncompletePaymentFound); 
         await window.createPiPayment({
@@ -25,7 +25,7 @@ async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
     }
 }
 
-// All three render functions are correct and have been preserved for consistency.
+// All render functions are preserved but will now receive placeholder data.
 function renderPosts(postDocs, userAccessLevel) {
     const feed = document.getElementById('posts-feed');
     feed.innerHTML = '';
@@ -34,11 +34,11 @@ function renderPosts(postDocs, userAccessLevel) {
         return;
     }
     // Sort posts by date here to avoid index issues
-    postDocs.sort((a, b) => b.data().createdAt.seconds - a.data().createdAt.seconds);
+    postDocs.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
 
     let visiblePosts = 0;
     postDocs.forEach(postDoc => {
-        const post = postDoc.data();
+        const post = postDoc; // Data is already clean
         const requiredAccessLevel = post.tierRequired ? parseFloat(post.tierRequired) : 0;
         const tierName = post.tierName || 'a higher';
 
@@ -75,16 +75,15 @@ function renderMerch(merchDocs, userAccessLevel) {
         list.innerHTML = '<p>This creator has no merchandise available yet.</p>';
         return;
     }
-    merchDocs.forEach(merchDoc => {
-        const item = merchDoc.data();
+    merchDocs.forEach(item => {
         const itemElement = document.createElement('div');
-        itemElement.className = 'merch-card management-card'; // Added management-card for consistent styling
+        itemElement.className = 'merch-card management-card';
         itemElement.innerHTML = `
-            <img src="${item.imageUrl || 'images/default-merch.png'}" alt="${item.name}" class="merch-image">
+            <img src="${item.imageUrl || 'https://placehold.co/600x400/7E57C2/FFFFFF?text=Merch'}" alt="${item.name}" class="merch-image">
             <h3>${item.name}</h3>
             <p class="price">${item.price} π</p>
             <p>${item.description || ''}</p>
-            <button class="btn btn-primary" style="margin-top:auto;">View Details (Coming Soon)</button>
+            <button class="btn btn-primary" style="margin-top:auto;">View Details</button>
         `;
         list.appendChild(itemElement);
     });
@@ -97,123 +96,114 @@ function renderBounties(bountyDocs, userAccessLevel) {
         list.innerHTML = '<p>This creator has no active bounties.</p>';
         return;
     }
-    bountyDocs.forEach(bountyDoc => {
-        const bounty = bountyDoc.data();
+    bountyDocs.forEach(bounty => {
         const bountyElement = document.createElement('div');
-        bountyElement.className = 'bounty-card management-card'; // Consistent styling
+        bountyElement.className = 'bounty-card management-card';
         bountyElement.innerHTML = `
             <h3>${bounty.title}</h3>
             <p>${bounty.description}</p>
             <div class="bounty-reward">Reward: ${bounty.reward} π</div>
-            <button class="btn btn-secondary" style="margin-top:15px;">Submit Work (Coming Soon)</button>
+            <button class="btn btn-secondary" style="margin-top:15px;">Submit Work</button>
         `;
         list.appendChild(bountyElement);
     });
 }
 
 
-// --- REWRITTEN INITIALIZATION LOGIC ---
+// --- REWRITTEN LOGIC USING PLACEHOLDERS ---
 async function initializeCreatorPage() {
-    const creatorId = sessionStorage.getItem('selectedCreatorId');
     const mainContent = document.getElementById('main-content');
     const currentUser = JSON.parse(sessionStorage.getItem('piUser'));
 
-    // This part remains correct for the sidebar
+    // Sidebar logic remains the same
     if (currentUser && document.getElementById('username-display')) {
         document.getElementById('username-display').textContent = currentUser.username;
     }
 
-    if (!creatorId) {
-        mainContent.innerHTML = "<h1>Error: Creator ID not found. Please go back and select a creator.</h1>";
-        return;
-    }
-
     try {
-        // Step 1: Fetch all primary creator data in parallel
-        const creatorDocRef = doc(db, "creators", creatorId);
-        // --- FIX: Removed orderBy from queries to prevent index errors ---
-        const tiersQuery = query(collection(creatorDocRef, 'tiers'));
-        const postsQuery = query(collection(db, 'posts'), where('creatorId', '==', creatorId));
-        const merchQuery = query(collection(db, 'merch'), where('creatorId', '==', creatorId));
-        const bountiesQuery = query(collection(db, 'bounties'), where('creatorId', '==', creatorId));
+        // --- STEP 1: DEFINE ALL PLACEHOLDER DATA ---
+        const placeholderCreator = {
+            name: "Placeholder Creator",
+            bio: "This is a placeholder bio for the video presentation. All data on this page is for demonstration purposes.",
+            profileImage: "https://placehold.co/150x150/512DA8/FFFFFF?text=Creator",
+            headerImage: "https://placehold.co/1200x400/1E1E1E/FFFFFF?text=+"
+        };
 
-        const [creatorSnap, tiersSnap, postsSnap, merchSnap, bountiesSnap] = await Promise.all([
-            getDoc(creatorDocRef),
-            getDocs(tiersQuery),
-            getDocs(postsQuery),
-            getDocs(merchQuery),
-            getDocs(bountiesQuery)
-        ]);
+        const placeholderTiers = [
+            { id: 'tier1', name: 'Bronze Supporter', price: 5, description: 'Access to supporter-only posts.\nYour name in the credits.' },
+            { id: 'tier2', name: 'Silver Supporter', price: 10, description: 'All Bronze benefits.\nEarly access to content.' },
+            { id: 'tier3', name: 'Gold Supporter', price: 25, description: 'All Silver benefits.\nExclusive monthly Q&A.' }
+        ].sort((a, b) => a.price - b.price);
 
-        if (!creatorSnap.exists()) {
-            mainContent.innerHTML = "<h1>Creator not found.</h1>";
-            return;
-        }
+        const placeholderPosts = [
+            { title: 'Welcome to the Community!', content: 'Thank you for supporting my work. Here is some content that is available to everyone.', tierRequired: 0, createdAt: { seconds: Date.now() / 1000 - 86400 } },
+            { title: 'Exclusive Behind-the-Scenes', content: 'This is some exclusive content available only to Bronze Supporters and above.', tierRequired: 5, tierName: 'Bronze', createdAt: { seconds: Date.now() / 1000 - 172800 } },
+            { title: 'Secret Project Update (Gold Tier Only)', content: 'This is top-secret content only for my most dedicated Gold Supporters. Thank you!', tierRequired: 25, tierName: 'Gold', createdAt: { seconds: Date.now() / 1000 } }
+        ];
+
+        const placeholderMerch = [
+            { name: 'Official Logo Tee', price: 20, description: 'High-quality cotton t-shirt.', imageUrl: 'https://placehold.co/600x400/9575CD/FFFFFF?text=T-Shirt' },
+            { name: 'Signed Poster', price: 15, description: 'A limited edition signed poster.', imageUrl: 'https://placehold.co/600x400/7E57C2/FFFFFF?text=Poster' }
+        ];
         
-        const creatorData = creatorSnap.data();
-        // --- FIX: Manually sort tiers by price in the browser ---
-        const tiers = tiersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a, b) => a.price - b.price);
-        
-        // --- Step 2: Securely check for the user's subscription (This logic is correct) ---
+        const placeholderBounties = [
+            { title: 'Design a New Logo', description: 'Submit your best design for a new channel logo.', reward: 100 }
+        ];
+
+        // --- Step 2: Determine user access level (using placeholder tiers) ---
         let subscribedTierId = null;
         let userAccessLevel = 0;
+        // This part is left dynamic to show the subscribe/subscribed states correctly
         if (currentUser) {
-            const subsQuery = query(collection(db, 'subscriptions'), 
-                where('supporterUid', '==', currentUser.uid), 
-                where('creatorUid', '==', creatorId)
-            );
-            const subsSnapshot = await getDocs(subsQuery);
-            if (!subsSnapshot.empty) {
-                const userSubscription = subsSnapshot.docs[0].data();
-                subscribedTierId = userSubscription.tierId;
-                const subscribedTier = tiers.find(t => t.id === subscribedTierId);
+            const membershipKey = `membership_${sessionStorage.getItem('selectedCreatorId')}`;
+            const membershipData = JSON.parse(sessionStorage.getItem(membershipKey));
+            if(membershipData) {
+                subscribedTierId = membershipData.tierId;
+                const subscribedTier = placeholderTiers.find(t => t.id === subscribedTierId);
                 if (subscribedTier) {
                     userAccessLevel = parseFloat(subscribedTier.price);
                 }
             }
         }
-
-        // --- Step 3: Render all page components ---
-        document.getElementById('creator-header-image').style.backgroundImage = `url(${creatorData.headerImage || ''})`;
-        document.getElementById('creator-name').textContent = creatorData.name || 'Creator Name';
-        document.getElementById('creator-bio').textContent = creatorData.bio || 'No bio available.';
-        document.getElementById('creator-avatar').src = creatorData.profileImage || 'images/default-avatar.png';
+        
+        // --- Step 3: Render all page components with placeholder data ---
+        document.getElementById('creator-header-image').style.backgroundImage = `url(${placeholderCreator.headerImage})`;
+        document.getElementById('creator-name').textContent = placeholderCreator.name;
+        document.getElementById('creator-bio').textContent = placeholderCreator.bio;
+        document.getElementById('creator-avatar').src = placeholderCreator.profileImage;
         
         const tiersListDiv = document.getElementById('tiers-list');
         tiersListDiv.innerHTML = '';
-        if (tiers.length === 0) {
-            tiersListDiv.innerHTML = '<p>This creator has not set up any tiers yet.</p>';
-        } else {
-            tiers.forEach(tier => {
-                const tierCard = document.createElement('div');
-                tierCard.className = 'tier-card';
-                if (tier.id === subscribedTierId) { tierCard.classList.add('subscribed'); }
-                const benefits = tier.description ? tier.description.split(/[\r\n]+/).map(b => `<li>${b}</li>`).join('') : '';
-                
-                let buttonHtml = `<button class="btn btn-primary subscribe-btn">Subscribe</button>`;
-                if (tier.id === subscribedTierId) {
-                    buttonHtml = `<button class="btn btn-success" disabled>Current Tier</button>`;
-                } else if (userAccessLevel > 0 && userAccessLevel >= tier.price) {
-                     buttonHtml = `<button class="btn btn-secondary" disabled>Included</button>`;
-                }
-                
-                tierCard.innerHTML = `<h3>${tier.name}</h3><p class="price">${tier.price} π/month</p><ul>${benefits}</ul>${buttonHtml}`;
-                
-                if (!tierCard.querySelector('button').disabled) {
-                    tierCard.querySelector('.subscribe-btn').addEventListener('click', () => handleSubscription(creatorData, tier.id, tier.name, tier.price));
-                }
-                
-                tiersListDiv.appendChild(tierCard);
-            });
-        }
+        placeholderTiers.forEach(tier => {
+            const tierCard = document.createElement('div');
+            tierCard.className = 'tier-card';
+            if (tier.id === subscribedTierId) { tierCard.classList.add('subscribed'); }
+            const benefits = tier.description.split(/[\r\n]+/).map(b => `<li>${b}</li>`).join('');
+            
+            let buttonHtml = `<button class="btn btn-primary subscribe-btn">Subscribe</button>`;
+            if (tier.id === subscribedTierId) {
+                buttonHtml = `<button class="btn btn-success" disabled>Current Tier</button>`;
+            } else if (userAccessLevel > 0 && userAccessLevel >= tier.price) {
+                 buttonHtml = `<button class="btn btn-secondary" disabled>Included</button>`;
+            }
+            
+            tierCard.innerHTML = `<h3>${tier.name}</h3><p class="price">${tier.price} π/month</p><ul>${benefits}</ul>${buttonHtml}`;
+            
+            if (!tierCard.querySelector('button').disabled) {
+                tierCard.querySelector('.subscribe-btn').addEventListener('click', () => handleSubscription(placeholderCreator, tier.id, tier.name, tier.price));
+            }
+            
+            tiersListDiv.appendChild(tierCard);
+        });
         
-        renderPosts(postsSnap.docs, userAccessLevel);
-        renderMerch(merchSnap.docs, userAccessLevel);
-        renderBounties(bountiesSnap.docs, userAccessLevel);
+        renderPosts(placeholderPosts, userAccessLevel);
+        renderMerch(placeholderMerch, userAccessLevel);
+        renderBounties(placeholderBounties, userAccessLevel);
 
     } catch (error) {
-        console.error("Error loading creator page:", error);
-        mainContent.innerHTML = `<h1>Error loading page.</h1><p>There was a problem fetching the creator's data. Please try again later.</p>`;
+        // This catch block is now unlikely to be triggered
+        console.error("Error rendering placeholder page:", error);
+        mainContent.innerHTML = `<h1>An unexpected error occurred.</h1>`;
     }
 }
 
