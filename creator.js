@@ -184,8 +184,9 @@ async function initializeCreatorPage() {
         const creatorDocRef = doc(db, "creators", creatorId);
         const tiersQuery = query(collection(creatorDocRef, 'tiers'), orderBy('price'));
         const postsQuery = query(collection(db, 'posts'), where('creatorId', '==', creatorId), orderBy('createdAt', 'desc'));
-        const merchQuery = query(collection(creatorDocRef, 'merch'), orderBy('price'));
-        const bountiesQuery = query(collection(creatorDocRef, 'bounties'), orderBy('reward', 'desc'));
+        // --- CORRECTED QUERIES for merch and bounties ---
+        const merchQuery = query(collection(db, 'merch'), where('creatorId', '==', creatorId), orderBy('price'));
+        const bountiesQuery = query(collection(db, 'bounties'), where('creatorId', '==', creatorId), orderBy('reward', 'desc'));
 
         const [creatorSnap, tiersSnap, postsSnap, merchSnap, bountiesSnap] = await Promise.all([
             getDoc(creatorDocRef),
@@ -253,7 +254,7 @@ async function initializeCreatorPage() {
         }
         
         // Render content based on user's access level
-        renderPosts(postsSnap, userAccessLevel); // <-- CORRECTED TYPO HERE
+        renderPosts(postsSnap, userAccessLevel);
         renderMerch(merchSnap, userAccessLevel);
         renderBounties(bountiesSnap, userAccessLevel);
 
