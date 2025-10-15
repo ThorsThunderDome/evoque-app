@@ -579,3 +579,40 @@ input:checked + .slider:before { transform: translateX(22px); }
     font-size: 0.8em; /* Makes the "Disconnect" text smaller */
     opacity: 0.7;     /* Makes it slightly faded */
 }
+/* This wrapper will contain the horizontal-scroll and the new arrow buttons */
+.horizontal-scroll-wrapper {
+    position: relative;
+}
+
+/* Style for the arrow buttons */
+.scroll-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 44px;
+    height: 44px;
+    background-color: rgba(30, 30, 30, 0.7); /* Semi-transparent dark background */
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, opacity 0.4s;
+    opacity: 0; /* Hidden by default, JS will show them */
+    pointer-events: none; /* Disabled by default */
+}
+
+.scroll-arrow:hover {
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+.scroll-arrow.left {
+    left: -22px; /* Position halfway outside the container */
+}
+
+.scroll-arrow.right {
+    right: -22px; /* Position halfway outside the container */
+}
