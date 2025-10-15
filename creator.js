@@ -48,7 +48,7 @@ async function initializeCreatorPage() {
         const [creatorSnap, tiersSnap, postsSnap] = await Promise.all([
             getDoc(creatorDocRef),
             getDocs(tiersQuery),
-            getDocs(postsSnap)
+            getDocs(postsQuery)
         ]);
 
         if (!creatorSnap.exists()) {
