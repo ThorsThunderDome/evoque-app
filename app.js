@@ -1,7 +1,9 @@
 // app.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js";
 
-// --- Firebase Initialization ---
-// IMPORTANT: Replace with your actual Firebase config
+// --- Firebase Configuration ---
 const firebaseConfig = {
   apiKey: "AIzaSyAJpReP6wVK925owZPC2U3J-Lv1fT7QKI4",
   authDomain: "evoque-app.firebaseapp.com",
@@ -12,135 +14,169 @@ const firebaseConfig = {
   measurementId: "G-DG6WWPYQ3Z"
 };
 
+// --- Global Variables & Initialization ---
+export const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+// REVERTED: Re-exporting piUser to restore previous session handling.
+export const piUser = JSON.parse(sessionStorage.getItem('piUser'));
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+const PI_PAYMENT_FUNCTION_URL = "https://us-central1-evoque-app.cloudfunctions.net/processPiPayment";
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+try {
+    Pi.init({ version: "2.0", sandbox: true });
+} catch(e) {
+    console.error("Pi.init failed:", e);
+}
 
-let piUser = null; // This will hold the authenticated user object
+// --- Reusable Functions ---
+export async function uploadFile(file, path) {
+  if (!file) return null;
+  const storageRef = ref(storage, path);
+  try {
+    const snapshot = await uploadBytes(storageRef, file);
+    return await getDownloadURL(snapshot.ref);
+  } catch (error) {
+    console.error("File upload failed:", error);
+    throw new Error("File upload failed.");
+  }
+}
 
-// --- Pi SDK Initialization ---
-window.Pi.init({ version: "2.0", sandbox: true });
+async function callPiPaymentAPI(payload) {
+    const response = await fetch(PI_PAYMENT_FUNCTION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
+        let detailedMessage = errorData.error || 'Unknown server error';
+        if (errorData.details) {
+            const detailsString = typeof errorData.details === 'object' ? JSON.stringify(errorData.details) : errorData.details;
+            detailedMessage += ` | Details: ${detailsString}`;
+        }
+        throw new Error(detailedMessage);
+    }
+    return response.json();
+}
 
-// --- Core Authentication Flow ---
+export const onIncompletePaymentFound = async (payment) => {
+    try {
+        await callPiPaymentAPI({ action: 'complete', paymentId: payment.identifier, txid: payment.transaction.txid });
+        alert("Your previous payment was successfully completed!");
+    } catch (error) {
+        console.error("Failed to complete previous payment.", error);
+    }
+};
+
 async function authenticateWithPi() {
     try {
         const scopes = ['username', 'payments'];
-        const user = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
-        if (user && user.auth_token) {
-            // Sign in to Firebase with the custom token from Pi
-            const credential = await signInWithCustomToken(auth, user.auth_token);
-            // The onAuthStateChanged listener below will handle the rest
-            console.log("Firebase sign-in successful.");
-        }
+        const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
+        sessionStorage.setItem('piUser', JSON.stringify(authResult.user));
+        window.location.href = 'dashboard.html';
     } catch (err) {
-        console.error("Pi authentication failed:", err);
-        // Handle failed authentication, e.g., show a message to the user
+        console.error("Authentication failed:", err);
     }
 }
 
-// Listener for Firebase Auth state changes
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        // User is signed in.
-        piUser = user; // Set the global piUser object
-        console.log("Firebase user authenticated:", piUser.uid);
-
-        // Check if user exists in Firestore, if not, create them
-        const userRef = doc(db, "users", piUser.uid);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-            await setDoc(userRef, {
-                username: user.username, // Assuming username comes from Pi auth
-                createdAt: serverTimestamp(),
-                uid: piUser.uid
-            });
-            console.log("New user profile created in Firestore.");
-        } else {
-             console.log("Existing user found in Firestore.");
-        }
-
-        // IMPORTANT: Dispatch a custom event to notify all other scripts that authentication is complete.
-        // All other pages will wait for this event before fetching data.
-        window.dispatchEvent(new CustomEvent('app-ready'));
-        
-        // Update UI elements that are common across all pages
-        updateCommonUI(piUser.username);
-
-    } else {
-        // User is signed out.
-        piUser = null;
-        console.log("User is signed out.");
-        updateCommonUI(null);
-    }
-});
-
-// --- Incomplete Payment Handling ---
-// This function needs to be globally accessible
-async function onIncompletePaymentFound(payment) {
-    console.log("Incomplete payment found:", payment);
+async function createPiPayment(paymentDetails) {
     try {
-        // Example: Update your Firestore database to mark the subscription as complete
-        const { supporterUid, creatorUid, tierId } = payment.metadata;
-        const supporterRef = doc(db, "creators", creatorUid, "supporters", supporterUid);
-        await setDoc(supporterRef, {
-            tierId: tierId,
-            subscribedAt: serverTimestamp(),
-            paymentId: payment.identifier
-        }, { merge: true });
-        console.log("Subscription recorded for incomplete payment.");
-        // Potentially redirect or show a success message
-    } catch (error) {
-        console.error("Failed to process incomplete payment:", error);
+        const paymentData = { amount: paymentDetails.amount, memo: paymentDetails.memo, metadata: paymentDetails.metadata };
+        const callbacks = {
+            onReadyForServerApproval: (paymentId) => {
+                const payload = { action: 'approve', paymentId: paymentId };
+                callPiPaymentAPI(payload)
+                    .then(result => console.log('[APPROVAL] Backend approval successful:', result))
+                    .catch(error => {
+                        console.error('[APPROVAL] Backend approval failed:', error);
+                        alert(`Payment approval failed: ${error.message}.`);
+                    });
+            },
+            onReadyForServerCompletion: (paymentId, txid) => {
+                const payload = { action: 'complete', paymentId: paymentId, txid: txid };
+                callPiPaymentAPI(payload)
+                    .then(result => {
+                        if (result.success && result.subscription) {
+                            const { creatorId, tierId } = result.subscription;
+                            sessionStorage.setItem(`membership_${creatorId}`, JSON.stringify({ tierId }));
+                            alert("Payment Completed! Your access has been updated. The page will now refresh.");
+                            window.location.reload();
+                        } else {
+                            alert("Payment Completed! Please refresh the page.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error('[COMPLETION] Backend completion failed:', error);
+                        alert(`Payment completion failed: ${error.message}.`);
+                    });
+            },
+            onCancel: (paymentId) => alert(`Payment (#${paymentId}) was cancelled.`),
+            onError: (error) => alert(`An error occurred during payment: ${error.message}.`)
+        };
+        await Pi.createPayment(paymentData, callbacks);
+    } catch (err) {
+        console.error("createPiPayment error:", err);
     }
 }
 
-// --- UI Helper Functions ---
-function updateCommonUI(username) {
-    const usernameDisplay = document.getElementById('username-display');
-    if (usernameDisplay) {
-        usernameDisplay.textContent = username || 'Not logged in';
-    }
-    // Add logic for login/logout buttons if they exist in your sidebar
+function disconnect() {
+    sessionStorage.clear();
+    window.location.href = 'index.html';
 }
 
+function initializeScrollToTop() {
+    const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+    if (!scrollToTopBtn) return;
+    window.onscroll = () => {
+        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+            scrollToTopBtn.style.display = "block";
+        } else {
+            scrollToTopBtn.style.display = "none";
+        }
+    };
+    scrollToTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
 
-// --- Event Listeners ---
-document.addEventListener('DOMContentLoaded', () => {
-    // Attempt to authenticate when the app loads
-    authenticateWithPi();
-
-    // Sidebar toggler for mobile view
+function initializeAppLogic() {
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        const applyTheme = (theme) => {
+            document.documentElement.setAttribute('data-theme', theme);
+            themeToggle.checked = theme === 'dark';
+            localStorage.setItem('theme', theme);
+        };
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        applyTheme(currentTheme);
+        themeToggle.addEventListener('change', function() { applyTheme(this.checked ? 'dark' : 'light'); });
+    }
     const sidebarToggler = document.getElementById('sidebar-toggler');
     const appContent = document.getElementById('app-content');
     if (sidebarToggler && appContent) {
-        sidebarToggler.addEventListener('click', () => {
-            appContent.classList.toggle('sidebar-collapsed');
+        sidebarToggler.addEventListener('click', () => appContent.classList.toggle('sidebar-collapsed'));
+    }
+    const usernameDisplay = document.getElementById('username-display');
+    const isAuthPage = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
+    if (!piUser && !isAuthPage) {
+        window.location.href = 'index.html';
+    } else if (usernameDisplay && piUser) {
+        usernameDisplay.textContent = piUser.username;
+    }
+    const connectButtons = document.querySelectorAll('.connect-button');
+    connectButtons.forEach(button => button.addEventListener('click', authenticateWithPi));
+    const disconnectBtn = document.getElementById('disconnect-btn');
+    if (disconnectBtn) {
+        disconnectBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            disconnect();
         });
     }
+    window.createPiPayment = createPiPayment;
+    initializeScrollToTop();
+    window.dispatchEvent(new CustomEvent('app-ready'));
+}
 
-    // Scroll to top button
-    const scrollToTopBtn = document.getElementById("scrollToTopBtn");
-    if (scrollToTopBtn) {
-        window.onscroll = function() {
-            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
-                scrollToTopBtn.style.display = "block";
-            } else {
-                scrollToTopBtn.style.display = "none";
-            }
-        };
-        scrollToTopBtn.addEventListener('click', () => {
-            document.body.scrollTop = 0;
-            document.documentElement.scrollTop = 0;
-        });
-    }
-});
+document.addEventListener('DOMContentLoaded', initializeAppLogic);
 
-
-// Export necessary variables and functions for other modules to use
-export { db, auth, piUser, onIncompletePaymentFound };
