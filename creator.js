@@ -1,4 +1,4 @@
-// creator.js - Reverted to stable, live-data version
+// creator.js - FINAL ROBUST VERSION
 import { db } from './app.js';
 import { collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
@@ -11,9 +11,8 @@ async function handleSubscription(creatorData, tierId, tierName, tierPrice) {
     }
     try {
         const creatorId = sessionStorage.getItem('selectedCreatorId');
-        // The onIncompletePaymentFound function is handled by the Pi SDK via app.js
-        const scopes = ['username', 'payments'];
-        await window.Pi.authenticate(scopes, window.onIncompletePaymentFound); 
+        // onIncompletePaymentFound is globally available from app.js
+        await window.Pi.authenticate(['username', 'payments'], window.onIncompletePaymentFound); 
         await window.createPiPayment({
             amount: parseFloat(tierPrice),
             memo: `Subscription to ${creatorData.name} - ${tierName}`,
@@ -111,16 +110,11 @@ function renderBounties(bountyDocs, userAccessLevel) {
     });
 }
 
-
-// --- REVERTED AND ROBUST INITIALIZATION LOGIC ---
+// --- REWRITTEN INITIALIZATION LOGIC ---
 async function initializeCreatorPage() {
     const creatorId = sessionStorage.getItem('selectedCreatorId');
     const mainContent = document.getElementById('main-content');
     const currentUser = JSON.parse(sessionStorage.getItem('piUser'));
-
-    if (currentUser && document.getElementById('username-display')) {
-        document.getElementById('username-display').textContent = currentUser.username;
-    }
 
     if (!creatorId) {
         mainContent.innerHTML = "<h1>Error: Creator ID not found. Please go back and select a creator.</h1>";
@@ -130,7 +124,7 @@ async function initializeCreatorPage() {
     try {
         // Step 1: Fetch all primary creator data in parallel
         const creatorDocRef = doc(db, "creators", creatorId);
-        // --- FIX: Removed orderBy from queries to prevent index errors ---
+        // --- FIX: Removed orderBy from tiers query to prevent index errors ---
         const tiersQuery = query(collection(creatorDocRef, 'tiers'));
         const postsQuery = query(collection(db, 'posts'), where('creatorId', '==', creatorId));
         const merchQuery = query(collection(db, 'merch'), where('creatorId', '==', creatorId));
@@ -153,11 +147,10 @@ async function initializeCreatorPage() {
         // --- FIX: Manually sort tiers by price in the browser ---
         const tiers = tiersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a, b) => a.price - b.price);
         
-        // --- Step 2: Securely check for the user's subscription ---
+        // Step 2: Securely check for the user's subscription 
         let subscribedTierId = null;
         let userAccessLevel = 0;
         if (currentUser) {
-            // This query is allowed by the new rules
             const subsQuery = query(collection(db, 'subscriptions'), 
                 where('supporterUid', '==', currentUser.uid), 
                 where('creatorUid', '==', creatorId)
@@ -173,7 +166,7 @@ async function initializeCreatorPage() {
             }
         }
 
-        // --- Step 3: Render all page components ---
+        // Step 3: Render all page components
         document.getElementById('creator-header-image').style.backgroundImage = `url(${creatorData.headerImage || ''})`;
         document.getElementById('creator-name').textContent = creatorData.name || 'Creator Name';
         document.getElementById('creator-bio').textContent = creatorData.bio || 'No bio available.';
