@@ -2,13 +2,11 @@
 import { db } from './app.js';
 import { collection, doc, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp, onSnapshot, query } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-// Modal elements and functions remain correct
 const deleteModal = document.getElementById('delete-modal');
 const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
 const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
 let tierToDeleteId = null;
 
-// Renders a single editable tier card - this function is correct
 function renderTier(tierListDiv, tierData) {
     const tierElement = document.createElement('div');
     tierElement.className = 'tier-item management-card';
@@ -30,6 +28,8 @@ function renderTier(tierListDiv, tierData) {
 function toggleEditState(tierCard, isEditing) {
     tierCard.querySelectorAll('input, textarea').forEach(input => {
         input.readOnly = !isEditing;
+        if(isEditing) input.classList.add('editable');
+        else input.classList.remove('editable');
     });
     const editBtn = tierCard.querySelector('.edit-btn, .save-btn');
     if (isEditing) {
@@ -43,7 +43,6 @@ function toggleEditState(tierCard, isEditing) {
     }
 }
 
-// Main initialization function
 async function initializePage() {
     const piUser = JSON.parse(sessionStorage.getItem('piUser'));
     if (!piUser || !piUser.uid) {
@@ -54,7 +53,6 @@ async function initializePage() {
     const creatorDocRef = doc(db, 'creators', piUser.uid);
     const tiersCollectionRef = collection(creatorDocRef, 'tiers');
 
-    // Load sidebar info
     try {
         const docSnap = await getDoc(creatorDocRef);
         if (docSnap.exists()) {
@@ -64,7 +62,6 @@ async function initializePage() {
         }
     } catch (error) { console.error("Error loading sidebar data:", error); }
     
-    // Set up real-time listener for tiers
     const q = query(tiersCollectionRef);
     onSnapshot(q, (snapshot) => {
         const tierListDiv = document.getElementById('existing-tiers-list');
@@ -78,28 +75,17 @@ async function initializePage() {
         }
     }, (error) => {
         console.error("Error listening to tiers:", error);
-        document.getElementById('existing-tiers-list').innerHTML = `<p>Error loading tiers.</p>`;
+        document.getElementById('existing-tiers-list').innerHTML = `<p>Error loading tiers. Please try again.</p>`;
     });
 
-    // --- EVENT LISTENERS ---
     const createTierForm = document.getElementById('create-tier-form');
     createTierForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formStatus = document.getElementById('form-status');
         formStatus.textContent = 'Creating...';
         
-        // --- THIS WAS THE BUG: piUser was not defined in this scope ---
-        // Now we get it from sessionStorage again to ensure it's available.
-        const currentUser = JSON.parse(sessionStorage.getItem('piUser'));
-        if (!currentUser || !currentUser.uid) {
-            formStatus.textContent = 'Error: User not found. Please re-login.';
-            return;
-        }
-        const creatorRef = doc(db, 'creators', currentUser.uid);
-        const tiersRef = collection(creatorRef, 'tiers');
-
         try {
-            await addDoc(tiersRef, {
+            await addDoc(tiersCollectionRef, {
                 name: document.getElementById('tier-name').value,
                 price: parseFloat(document.getElementById('tier-price').value),
                 description: document.getElementById('tier-description').value,
@@ -110,7 +96,7 @@ async function initializePage() {
             createTierForm.reset();
         } catch (error) {
             console.error("Error creating tier:", error);
-            formStatus.textContent = 'Error creating tier.';
+            formStatus.textContent = 'Error creating tier. Check security rules.';
         }
     });
 
@@ -133,8 +119,10 @@ async function initializePage() {
                     thankYouNote: tierCard.querySelector('.tier-thank-you-input').value
                 });
                 statusEl.textContent = "Saved!";
+                setTimeout(() => statusEl.textContent = "", 2000);
                 toggleEditState(tierCard, false);
             } catch (error) {
+                console.error("Error updating tier:", error);
                 statusEl.textContent = "Error saving.";
             }
         } 
@@ -154,6 +142,7 @@ async function initializePage() {
         try {
             await deleteDoc(doc(tiersCollectionRef, tierToDeleteId));
         } catch (error) {
+            console.error("Error deleting tier:", error);
             alert("Could not delete tier.");
         } finally {
             tierToDeleteId = null;
